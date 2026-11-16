@@ -56,7 +56,17 @@ class GrantsModuleTest : FunSpec({
         }
     }
 
-    test("PATCH delegated ENDUSER can revoke as the originalId person matching grantedBy") {
+    test("PATCH system cannot revoke a grant") {
+        GrantPatchFixture(tokenType = "elhub-service", authInfo = "null").use { fixture ->
+            val response = fixture.patch(AuthorizationGrantStatus.Revoked)
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 0) { fixture.repository.find(any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+        }
+    }
+
+    test("PATCH delegated ENDUSER can revoke as the originalId person matching grantedTo") {
         GrantPatchFixture(tokenType = "enduser", authInfo = delegatedAuthInfo).use { fixture ->
             val response = fixture.patch(AuthorizationGrantStatus.Revoked, onBehalfOfOrganisation = "999888771")
 
@@ -97,6 +107,32 @@ class GrantsModuleTest : FunSpec({
         }
     }
 
+    test("PATCH grantedBy alone cannot revoke a grant") {
+        GrantPatchFixture(
+            tokenType = "enduser",
+            authInfo = """{"actingId":"grantedBy-person","actingType":"person","originalId":"grantor-person"}""",
+        ).use { fixture ->
+            val response = fixture.patch(AuthorizationGrantStatus.Revoked)
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+        }
+    }
+
+    test("PATCH principal can revoke a grant") {
+        GrantPatchFixture(
+            tokenType = "enduser",
+            authInfo = """{"actingId":"person-2","actingType":"person","originalId":"person-2"}""",
+        ).use { fixture ->
+            val response = fixture.patch(AuthorizationGrantStatus.Revoked)
+
+            response.status shouldBe HttpStatusCode.OK
+            response.assertGrant(fixture.grant.id, AuthorizationGrantStatus.Revoked)
+            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked) }
+        }
+    }
+
     test("PATCH Maskinporten cannot revoke a grant even with matching person authInfo") {
         GrantPatchFixture(
             tokenType = "maskinporten",
@@ -122,8 +158,8 @@ private class GrantPatchFixture(
         sourceType = AuthorizationGrantSourceType.Request,
         sourceId = UUID.randomUUID(),
         principal = AuthorizationAgent("person-2", AgentType.Person),
-        grantedBy = AuthorizationAgent("person-1", AgentType.Person),
-        grantedTo = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity),
+        grantedBy = AuthorizationAgent("grantedBy-person", AgentType.Person),
+        grantedTo = AuthorizationAgent("person-1", AgentType.Person),
         approvedBy = AuthorizationAgent("person-2", AgentType.Person),
         validFrom = Instant.parse("2026-10-01T08:00:00Z"),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
@@ -143,8 +179,9 @@ private class GrantPatchFixture(
                 } else {
                     pdpRequest.completeExceptionally(AssertionError("Unexpected PDP request: ${exchange.requestURI}"))
                 }
-                val response = """{"result":{"tokenInfo":{"partyId":"system-1","tokenStatus":"verified","tokenType":"$tokenType"},"authInfo":$authInfo}}"""
-                    .toByteArray()
+                val response =
+                    """{"result":{"tokenInfo":{"partyId":"system-1","tokenStatus":"verified","tokenType":"$tokenType"},"authInfo":$authInfo}}"""
+                        .toByteArray()
                 exchange.responseHeaders.add("Content-Type", "application/json")
                 exchange.sendResponseHeaders(200, response.size.toLong())
                 exchange.responseBody.use { it.write(response) }
