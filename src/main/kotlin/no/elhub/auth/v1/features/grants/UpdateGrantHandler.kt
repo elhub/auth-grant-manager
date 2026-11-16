@@ -33,7 +33,9 @@ class UpdateGrantHandler(
                     throw UpdateGrantError.NotAuthorized("Only the principal or grantedTo may revoke an AuthorizationGrant.")
                 }
             }
+
             AuthorizationGrantStatus.Exhausted -> Unit
+
             else -> throw UpdateGrantError.InvalidTransition()
         }
 

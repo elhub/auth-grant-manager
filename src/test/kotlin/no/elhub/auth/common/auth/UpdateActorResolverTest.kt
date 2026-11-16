@@ -59,5 +59,4 @@ class UpdateActorResolverTest : FunSpec({
         resolveUpdateActor(response(actingId = null)).shouldBeNull()
         resolveUpdateActor(delegated(originalId = "")).shouldBeNull()
     }
-
 })

@@ -201,7 +201,11 @@ class GrantsModuleTest : FunSpec({
     test("PATCH Maskinporten with PDP inputFailed cannot revoke even with matching actingGLN") {
         GrantPatchFixture(
             tokenType = "maskinporten",
-            authInfo = """{"actingGLN":"7080005053246","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}],"inputFailed":"invalid input"}""",
+            authInfo = """{
+                "actingGLN":"7080005053246",
+                "authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}],
+                "inputFailed":"invalid input"
+            }""",
         ).use { fixture ->
             val response = fixture.patch(
                 AuthorizationGrantStatus.Revoked,
