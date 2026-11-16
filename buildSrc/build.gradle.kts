@@ -7,8 +7,8 @@ repositories {
 }
 
 dependencies {
-    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
-    implementation("org.bouncycastle:bcpkix-jdk18on:1.86")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.87")
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.87")
     implementation("com.github.erosb:json-sKema:0.32.0")
 
     testImplementation("io.kotest:kotest-runner-junit5:6.2.6")
