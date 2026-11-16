@@ -12,9 +12,9 @@ import io.ktor.server.application.Application
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.ApiHeaders
 import no.elhub.auth.common.auth.AuthorizedPartyKey
-import no.elhub.auth.common.auth.UpdateAuthInfoPolicy
+import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.common.auth.resolveAuthorizedParty
-import no.elhub.auth.common.auth.resolveUpdateActor
+import no.elhub.auth.common.auth.resolveUpdateRequestActor
 import no.elhub.auth.plugin.authorization
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 
@@ -66,7 +66,7 @@ fun Application.configureAuthorization() {
             }
         }
 
-        tokenPolicy(UpdateAuthInfoPolicy) {
+        tokenPolicy(UpdateRequestAuthInfoPolicy) {
             buildPayload {
                 AuthInfoPolicy.Request(
                     onBehalfOfOrganisationId = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]?.ifBlank { null },
@@ -74,7 +74,7 @@ fun Application.configureAuthorization() {
             }
 
             enforce { response ->
-                val party = resolveUpdateActor(response.result)
+                val party = resolveUpdateRequestActor(response.result)
                 if (party != null) {
                     attributes.put(AuthorizedPartyKey, party)
                     true

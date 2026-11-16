@@ -5,14 +5,14 @@ import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.policies.token.core.TokenPolicy
 import org.slf4j.LoggerFactory
 
-private val log = LoggerFactory.getLogger("UpdateActorResolver")
+private val log = LoggerFactory.getLogger("UpdateRequestActorResolver")
 
 /**
  * Same PDP authinfo route as [AuthInfoPolicy], registered under its own key so the
- * update routes can resolve the person rather than the organisation they represent.
+ * AuthorizationRequest update route can enforce its own rules.
  */
-object UpdateAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy.Response>(
-    key = "token.authinfo.update",
+object UpdateRequestAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy.Response>(
+    key = "token.authinfo.update-authorization-request",
     route = AUTHINFO_POLICY_ROUTE,
 ) {
     override val requestSerializer = AuthInfoPolicy.Request.serializer()
@@ -20,13 +20,13 @@ object UpdateAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy
 }
 
 /**
- * Resolves the person performing an update, or null if not allowed.
+ * Resolves the person acting on an AuthorizationRequest update, or null if not allowed.
  * When acting on behalf of an organisation, the PDP verifies the delegation; the person is still returned.
  */
-fun resolveUpdateActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
+fun resolveUpdateRequestActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
     val tokenType = response.tokenInfo?.tokenType
     if (tokenType != TokenType.ENDUSER) {
-        log.warn("Unsupported tokenType={} for update", tokenType)
+        log.warn("Unsupported tokenType={} for updating authorization request", tokenType)
         return null
     }
 
@@ -52,7 +52,7 @@ fun resolveUpdateActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
         }
 
         else -> {
-            log.warn("Unsupported actingType={} for update", actingType)
+            log.warn("Unsupported actingType={} for updating authorization request", actingType)
             return null
         }
     }

@@ -4,7 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.common.auth.UpdateAuthInfoPolicy
+import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
 import no.elhub.auth.common.integrations.ediel.EdielRedirectClient
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
@@ -60,7 +60,7 @@ fun Application.requestsModule() {
                 route(listHandler)
             }
         }
-        tokenAuthorize(UpdateAuthInfoPolicy) {
+        tokenAuthorize(UpdateRequestAuthInfoPolicy) {
             route(V1_REQUESTS_PATH) {
                 route(updateHandler)
             }
