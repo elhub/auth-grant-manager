@@ -3,7 +3,6 @@
     "linkUrl": {
       "description": "A link relative to the API base URL, for example `/access/v1/authorization-grants?page[number]=0&page[size]=100`.",
       "type": "string",
-      "format": "uri-reference",
       "$comment": "URI regex as per https://tools.ietf.org/html/rfc3986#appendix-B",
       "pattern": "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?"
     },

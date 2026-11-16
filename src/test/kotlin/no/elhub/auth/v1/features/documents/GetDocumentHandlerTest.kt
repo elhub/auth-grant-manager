@@ -57,7 +57,7 @@ class GetDocumentHandlerTest : FunSpec({
 
     beforeTest { clearMocks(documentRepository, grantRepository) }
 
-    listOf(requestedBy, requestedOf).forEach { agent ->
+    listOf(requestedBy, requestedPrincipal).forEach { agent ->
         test("returns the document with linked grants for ${agent.id}") {
             coEvery { documentRepository.find(documentId) } returns document
             coEvery {
@@ -89,7 +89,7 @@ class GetDocumentHandlerTest : FunSpec({
     }
 
     listOf(
-        requestedPrincipal,
+        requestedOf,
         AuthorizationAgent("unrelated-person", AgentType.Person),
         requestedBy.copy(type = AgentType.Person),
     ).forEach { agent ->

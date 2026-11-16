@@ -138,11 +138,11 @@ fun AuthorizationDocument.toGrants(
             val moveInDateConstraint = scope.constraints.singleOrNull {
                 it.constraintKind == AuthorizationScopeConstraintKind.AllowedChanges &&
                     it.attribute == AuthorizationScopeConstraintAttribute.ValidFrom
-            } ?: throw InvalidDocumentScopes("$documentType requires exactly one AllowedChanges move-in-date constraint")
-            if (moveInDateConstraint.value !is ResourceConstraint.ValidFrom) {
+            }
+            if (moveInDateConstraint != null && moveInDateConstraint.value !is ResourceConstraint.ValidFrom) {
                 throw InvalidDocumentScopes("$documentType requires a move-in date")
             }
-            if (scope.constraints.size != 3) {
+            if (scope.constraints.size != (if (moveInDateConstraint == null) 2 else 3)) {
                 throw InvalidDocumentScopes("$documentType has unexpected scope constraints")
             }
 
@@ -155,7 +155,7 @@ fun AuthorizationDocument.toGrants(
                     scope = GrantedAuthorizationScope(
                         capability = PermissionCapability.Write,
                         resourceType = ResourceType.MeteringPointContract,
-                        constraints = listOf(
+                        constraints = listOfNotNull(
                             meteringPointConstraint.copy(value = ResourceConstraint.MeteringPoints(setOf(meteringPointId))),
                             contractTypeConstraint,
                             moveInDateConstraint,

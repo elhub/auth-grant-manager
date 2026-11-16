@@ -621,7 +621,7 @@ paths:
       summary: '[WIP] List authorization documents'
       description: >
         Retrieve a paginated list of authorization documents available to the calling agent. A document
-        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
+        is available when the calling agent is the requestedBy or the requestedPrincipal.
         Results are ordered by createdAt DESC (newest first), and each document includes its linked
         authorization grants.
       operationId: listV1AuthorizationDocuments
@@ -630,8 +630,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: page[number]
           in: query
           required: false
@@ -681,8 +683,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
       requestBody:
         required: true
         content:
@@ -718,7 +722,7 @@ paths:
       summary: '[WIP] Get an authorization document by ID'
       description: >
         Retrieve a specific authorization document, including its status, agents, and linked authorization
-        grants. The document is available to the requestedBy, the requestedOf, and the requestedPrincipal.
+        grants. The document is available to the requestedBy and the requestedPrincipal.
         The status is Pending until the signed document is submitted, Approved once it has been submitted,
         and Expired if validTo passes before submission.
       operationId: getV1AuthorizationDocument
@@ -727,8 +731,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -760,7 +766,7 @@ paths:
       description: >
         Retrieve the PDF representation of an authorization document. Before submission this is the PDF
         generated and signed by Elhub; after submission it is the signed document. The document is available
-        to the requestedBy, the requestedOf, and the requestedPrincipal. The response is always
+        to the requestedBy and the requestedPrincipal. The response is always
         `application/pdf`. The Accept header is optional; if provided, it must allow `application/pdf`
         (for example, `application/pdf`, `application/*`, or `*/*`).
       x-status: Work in progress
@@ -768,8 +774,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -811,8 +819,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -858,7 +868,7 @@ paths:
       summary: '[WIP] List authorization grants'
       description: >
         Retrieve a paginated list of authorization grants available to the calling agent. A grant is
-        available when the calling agent is the grantedTo, the principal, or the grantedBy. Results are
+        available when the calling agent is the grantedTo or the principal. Results are
         ordered by createdAt DESC (newest first).
         Agent filters match the IDs returned in `relationships.<role>.data.id` and their implied agent
         types: a Person is identified by their Elhub ID,
@@ -870,8 +880,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: filter[status]
           in: query
           required: false
@@ -977,7 +989,7 @@ paths:
       summary: '[WIP] Get an authorization grant by ID'
       description: >
         Retrieve a specific authorization grant, including its scopes and the source document or request
-        it was created from. The grant is available to the principal, the grantedBy, the grantedTo, and
+        it was created from. The grant is available to the principal, the grantedTo, and
         internal Elhub systems. validTo may be null, meaning the grant has no end date.
       operationId: getV1AuthorizationGrant
       x-status: Work in progress
@@ -985,8 +997,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUserOptional'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -1016,13 +1030,17 @@ paths:
       description: >
         Update an authorization grant by setting its status to Exhausted or Revoked.
         Only internal Elhub systems may exhaust active consumable grants; pending grants cannot be exhausted.
-        The principal, grantedBy agent, or internal Elhub systems may revoke pending or active grants.
+        The principal or grantedTo agent may revoke pending or active grants.
         The request body ID must match the path ID.
       operationId: updateV1AuthorizationGrant
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
       parameters:
         - $ref: '#/components/parameters/UserAgent'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -1073,7 +1091,7 @@ paths:
       summary: '[WIP] List authorization requests'
       description: >
         Retrieve a paginated list of authorization requests available to the calling agent. A request
-        is available when the calling agent is the requestedBy, the requestedOf, or the requestedPrincipal.
+        is available when the calling agent is the requestedBy or the requestedPrincipal.
         Results are ordered by createdAt DESC (newest first).
       operationId: listV1AuthorizationRequests
       x-status: Work in progress
@@ -1081,8 +1099,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: filter[status]
           in: query
           required: false
@@ -1143,8 +1163,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
-        - $ref: '#/components/parameters/SenderGlnRequired'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
       requestBody:
         required: true
         content:
@@ -1202,7 +1224,7 @@ paths:
       summary: '[WIP] Get an authorization request by ID'
       description: >
         Retrieve a specific authorization request, including its status, agents, and linked authorization
-        grants. The request is available to the requestedBy, the requestedOf, and the requestedPrincipal.
+        grants. The request is available to the requestedBy and the requestedPrincipal.
         The status is Pending until decided, Approved or Rejected once decided, and Expired if validTo
         passes before a decision.
       operationId: getV1AuthorizationRequest
@@ -1211,8 +1233,10 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserAgent'
         - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
-        - $ref: '#/components/parameters/SenderGlnOptional'
-        - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - $ref: '#/components/parameters/V1SenderGlnPreferred'
+        - $ref: '#/components/parameters/V1SenderGlnLegacy'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
+        - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
         - name: id
           in: path
           required: true
@@ -1380,6 +1404,50 @@ components:
       description: >
         GLN of the organization on whose behalf the sender is acting,
         used in delegated Maskinporten flows.
+      schema:
+        type: string
+
+    V1SenderGlnPreferred:
+      name: Elhub-Sender-Gln
+      in: header
+      required: false
+      description: >
+        GLN of the party issuing the request. Supply this header or the legacy SenderGln header
+        when a sender GLN is required. If both are supplied, this header takes precedence.
+      schema:
+        type: string
+
+    V1SenderGlnLegacy:
+      name: SenderGln
+      in: header
+      required: false
+      deprecated: true
+      description: >
+        Deprecated legacy alias for Elhub-Sender-Gln. Accepted temporarily to give existing
+        consumers time to migrate; use Elhub-Sender-Gln for new integrations. Supply either header
+        when a sender GLN is required; if both are supplied, Elhub-Sender-Gln takes precedence.
+      schema:
+        type: string
+
+    V1OnBehalfOfGlnPreferred:
+      name: Elhub-On-Behalf-Of-Gln
+      in: header
+      required: false
+      description: >
+        GLN of the organization on whose behalf the sender is acting in delegated Maskinporten flows.
+        If supplied alongside the legacy OnBehalfOfGln header, this header takes precedence.
+      schema:
+        type: string
+
+    V1OnBehalfOfGlnLegacy:
+      name: OnBehalfOfGln
+      in: header
+      required: false
+      deprecated: true
+      description: >
+        Deprecated legacy alias for Elhub-On-Behalf-Of-Gln. Accepted temporarily to give existing
+        consumers time to migrate; use Elhub-On-Behalf-Of-Gln for new integrations. If both headers
+        are supplied, Elhub-On-Behalf-Of-Gln takes precedence.
       schema:
         type: string
 

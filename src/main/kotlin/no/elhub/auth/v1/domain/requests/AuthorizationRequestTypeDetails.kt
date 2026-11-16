@@ -11,7 +11,7 @@ sealed interface AuthorizationRequestTypeDetails {
 
     data class MoveInAndChangeOfEnergySupplierForOrganization(
         val meteringPointIds: ResourceConstraint.MeteringPoints,
-        val moveInDate: LocalDate,
+        val moveInDate: LocalDate?,
     ) : AuthorizationRequestTypeDetails
 
     data class EnergySupplierFrameworkAgreement(

@@ -40,7 +40,7 @@ class GetGrantHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    listOf(grantedTo, principal, grantedBy, system).forEach { agent ->
+    listOf(grantedTo, principal, system).forEach { agent ->
         test("returns the grant for ${agent.type} ${agent.id}") {
             coEvery { grantRepository.find(grantId) } returns grant
 
@@ -49,6 +49,7 @@ class GetGrantHandlerTest : FunSpec({
     }
 
     listOf(
+        grantedBy,
         AuthorizationAgent("unrelated-org", AgentType.OrganizationEntity),
         grantedTo.copy(type = AgentType.Person),
     ).forEach { agent ->

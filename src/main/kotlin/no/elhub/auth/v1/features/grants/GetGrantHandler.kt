@@ -17,8 +17,7 @@ class GetGrantHandler(
 
         if (authorizedAgent.type != AgentType.System &&
             authorizedAgent != grant.grantedTo &&
-            authorizedAgent != grant.principal &&
-            authorizedAgent != grant.grantedBy
+            authorizedAgent != grant.principal
         ) {
             throw GetGrantError.NotAuthorized()
         }

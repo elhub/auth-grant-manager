@@ -138,7 +138,6 @@ class ExposedGrantRepository(
         val agentCondition = listOf(
             AuthorizationGrantTable.principal eq agentId,
             AuthorizationGrantTable.grantedTo eq agentId,
-            AuthorizationGrantTable.grantedBy eq agentId,
         ).compoundOr()
 
         val statusConditions = statuses.map { status ->

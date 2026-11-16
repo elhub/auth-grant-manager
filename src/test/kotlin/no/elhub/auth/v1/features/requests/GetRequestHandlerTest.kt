@@ -47,7 +47,7 @@ class GetRequestHandlerTest : FunSpec({
 
     beforeTest { clearMocks(requestRepository) }
 
-    listOf(requestedBy, requestedOf).forEach { agent ->
+    listOf(requestedBy, requestedPrincipal).forEach { agent ->
         test("returns the request for ${agent.id}") {
             coEvery { requestRepository.find(requestId) } returns request
 
@@ -56,7 +56,7 @@ class GetRequestHandlerTest : FunSpec({
     }
 
     listOf(
-        requestedPrincipal,
+        requestedOf,
         AuthorizationAgent("unrelated-person", AgentType.Person),
         requestedBy.copy(type = AgentType.Person),
     ).forEach { agent ->

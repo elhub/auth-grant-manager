@@ -33,6 +33,7 @@ import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
 import no.elhub.auth.v1.features.requests.CreateRequestHandler
+import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.repositories.RequestRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import java.util.UUID
@@ -118,7 +119,7 @@ class CreateRequestRouteTest : FunSpec({
                 agents.getValue("requestedOf").right(),
             )
             val repository = mockk<RequestRepository>()
-            val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), repository)
+            val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), mockk<RedirectUriValidator>(relaxed = true), repository)
 
             testApplication {
                 setupAppWith(agents.getValue("requestedBy")) {
@@ -320,6 +321,32 @@ class CreateRequestRouteTest : FunSpec({
             body.errors.single().detail shouldBe
                 "Expected 'data.type' to be 'AuthorizationRequest', but received 'OtherResource'"
             coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
+    }
+
+    listOf(
+        "ChangeOfEnergySupplierForOrganization",
+        "MoveInAndChangeOfEnergySupplierForOrganization",
+    ).forEach { type ->
+        test("POST / returns 422 for duplicate metering-point IDs in $type") {
+            testApplication {
+                setupAppWith(authorizedAgent) {
+                    route(agentService, handler)
+                }
+
+                val body = scopedRequestBody(type).replace(
+                    "\"value\": [\"707057500000000001\"]",
+                    "\"value\": [\"707057500000000001\", \"707057500000000001\"]",
+                )
+                val response = client.postJson("/", body)
+
+                response.status shouldBe HttpStatusCode.UnprocessableEntity
+                val error: JsonApiErrorCollection = response.body()
+                error.errors.single().detail shouldBe
+                    "requestedScopes[0].appliesTo meteringPoint.id must not contain duplicate metering points"
+                coVerify(exactly = 0) { agentService.resolve(any()) }
+                coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+            }
         }
     }
 

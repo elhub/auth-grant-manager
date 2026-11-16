@@ -14,7 +14,7 @@ class GetRequestHandler(
     ): AuthorizationRequest {
         val request = requestRepository.find(id)
 
-        if (authorizedAgent != request.requestedBy && authorizedAgent != request.requestedOf) {
+        if (authorizedAgent != request.requestedBy && authorizedAgent != request.requestedPrincipal) {
             throw GetRequestError.NotAuthorized()
         }
 

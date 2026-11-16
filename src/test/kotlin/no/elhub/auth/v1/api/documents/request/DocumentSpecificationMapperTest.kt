@@ -27,7 +27,7 @@ class DocumentSpecificationMapperTest : FunSpec({
     val resourceTypeDetail = "requestedScopes[0].resourceType must be 'MeteringPointContract'"
     val oneScopeDetail = "requestedScopes must contain exactly one scope for this document type"
     val validFromConstraintDetail =
-        "requestedScopes[0].allowedChanges must contain exactly one validFrom constraint"
+        "requestedScopes[0].allowedChanges must be empty or contain exactly one validFrom constraint"
 
     fun meteringPointConstraint(values: List<String> = listOf(validMeteringPointId)) =
         ScopeConstraint(attribute = "meteringPoint.id", value = values)
@@ -184,6 +184,13 @@ class DocumentSpecificationMapperTest : FunSpec({
                 )
             }
         }
+
+        test("$type rejects duplicate metering-point IDs") {
+            invalidPayload(
+                { toDocumentSpecification(type, scopes(listOf(validMeteringPointId, validMeteringPointId))) },
+                "requestedScopes[0].appliesTo meteringPoint.id must not contain duplicate metering points",
+            )
+        }
     }
 
     context("ChangeOfEnergySupplierForOrganization") {
@@ -192,9 +199,7 @@ class DocumentSpecificationMapperTest : FunSpec({
                 supplierChangeType,
                 listOf(
                     supplierScope(
-                        appliesTo = listOf(
-                            meteringPointConstraint(listOf(validMeteringPointId, validMeteringPointId)),
-                        ),
+                        appliesTo = listOf(meteringPointConstraint()),
                     ),
                 ),
             )
@@ -298,6 +303,27 @@ class DocumentSpecificationMapperTest : FunSpec({
     }
 
     context("MoveInAndChangeOfEnergySupplierForOrganization") {
+        test("omits validFrom from the scope when not requested") {
+            val specification = toDocumentSpecification(moveInType, listOf(moveInScope(allowedChanges = emptyList())))
+                as DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization
+
+            specification.validFrom shouldBe null
+            specification.toRequestedAuthorizationScope().constraints.any {
+                it.attribute == AuthorizationScopeConstraintAttribute.ValidFrom
+            } shouldBe false
+        }
+
+        test("rejects future Oslo dates, but accepts today") {
+            val now = Instant.parse("2026-10-01T12:00:00Z")
+            toDocumentSpecification(moveInType, listOf(moveInScope()), now = now)
+                .let { (it as DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization).validFrom } shouldBe
+                LocalDate(2026, 10, 1)
+            invalidPayload(
+                { toDocumentSpecification(moveInType, listOf(moveInScope(validFrom = listOf("2026-10-02"))), now = now) },
+                "requestedScopes[0].allowedChanges validFrom must be today or in the past",
+            )
+        }
+
         test("maps validFrom and metering points to its typed specification") {
             val specification = toDocumentSpecification(moveInType, listOf(moveInScope()))
 
@@ -395,10 +421,6 @@ class DocumentSpecificationMapperTest : FunSpec({
         }
 
         test("allows exactly one validFrom allowedChanges constraint") {
-            invalidPayload(
-                { toDocumentSpecification(moveInType, listOf(moveInScope(allowedChanges = emptyList()))) },
-                validFromConstraintDetail,
-            )
             invalidPayload(
                 {
                     toDocumentSpecification(
