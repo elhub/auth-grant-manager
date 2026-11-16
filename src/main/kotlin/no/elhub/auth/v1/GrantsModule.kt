@@ -4,7 +4,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.elhub.auth.common.auth.GrantUpdateAuthInfoPolicy
 import no.elhub.auth.plugin.policies.token.base.authinfo.AuthInfoPolicy
 import no.elhub.auth.plugin.tokenAuthorize
 import no.elhub.auth.v1.api.grants.routes.route
@@ -33,10 +32,6 @@ fun Application.grantsModule() {
             route(V1_GRANTS_PATH) {
                 route(getHandler)
                 route(listHandler)
-            }
-        }
-        tokenAuthorize(GrantUpdateAuthInfoPolicy) {
-            route(V1_GRANTS_PATH) {
                 route(updateHandler)
             }
         }

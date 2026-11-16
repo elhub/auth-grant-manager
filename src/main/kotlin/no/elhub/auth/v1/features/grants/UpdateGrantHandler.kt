@@ -18,20 +18,23 @@ class UpdateGrantHandler(
         status: AuthorizationGrantStatus,
         type: AuthorizationGrantType,
     ): AuthorizationGrant {
-        if (authorizedAgent.type == AgentType.System && status == AuthorizationGrantStatus.Revoked) {
+        val isSystem = authorizedAgent.type == AgentType.System
+        if (isSystem && status == AuthorizationGrantStatus.Revoked) {
             throw UpdateGrantError.NotAuthorized("System cannot revoke an AuthorizationGrant.")
         }
-        if (authorizedAgent.type != AgentType.System && status != AuthorizationGrantStatus.Revoked) {
+        if (!isSystem && status != AuthorizationGrantStatus.Revoked) {
             throw UpdateGrantError.NotAuthorized("${authorizedAgent.type} cannot update authorization grant to status $status")
         }
 
         val grant = grantRepository.find(id)
-        if (authorizedAgent.type != AgentType.System && authorizedAgent != grant.principal && authorizedAgent != grant.grantedTo) {
-            throw UpdateGrantError.NotAuthorized("Only the principal or grantedTo may revoke an AuthorizationGrant.")
-        }
-
-        if (status != AuthorizationGrantStatus.Revoked && status != AuthorizationGrantStatus.Exhausted) {
-            throw UpdateGrantError.InvalidTransition()
+        when (status) {
+            AuthorizationGrantStatus.Revoked -> {
+                if (authorizedAgent != grant.principal && authorizedAgent != grant.grantedTo) {
+                    throw UpdateGrantError.NotAuthorized("Only the principal or grantedTo may revoke an AuthorizationGrant.")
+                }
+            }
+            AuthorizationGrantStatus.Exhausted -> Unit
+            else -> throw UpdateGrantError.InvalidTransition()
         }
 
         if (type != grant.type) {

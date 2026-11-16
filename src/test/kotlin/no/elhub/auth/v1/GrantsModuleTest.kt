@@ -11,6 +11,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.server.application.install
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.testing.testApplication
@@ -23,6 +24,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.common.ApiHeaders
 import no.elhub.auth.common.auth.AUTHINFO_POLICY_ROUTE
+import no.elhub.auth.common.config.ResolveAuthorizationHeaders
 import no.elhub.auth.common.config.configureAuthorization
 import no.elhub.auth.common.config.configureRequestTracing
 import no.elhub.auth.common.config.configureSerialization
@@ -67,11 +69,11 @@ class GrantsModuleTest : FunSpec({
         }
     }
 
-    test("PATCH delegated ENDUSER can revoke as the organisation matching grantedTo") {
+    test("PATCH delegated ENDUSER can revoke as the organisation principal") {
         GrantPatchFixture(
             tokenType = "enduser",
             authInfo = delegatedAuthInfo,
-            grantedTo = AuthorizationAgent("999888771", AgentType.Organization),
+            principal = AuthorizationAgent("999888771", AgentType.Organization),
         ).use { fixture ->
             val response = fixture.patch(AuthorizationGrantStatus.Revoked, onBehalfOfOrganisation = "999888771")
 
@@ -85,8 +87,12 @@ class GrantsModuleTest : FunSpec({
         }
     }
 
-    test("PATCH unrelated organisation cannot revoke even when originalId matches the person recipient") {
-        GrantPatchFixture(tokenType = "enduser", authInfo = delegatedAuthInfo).use { fixture ->
+    test("PATCH unrelated organisation cannot revoke even when originalId matches the person principal") {
+        GrantPatchFixture(
+            tokenType = "enduser",
+            authInfo = delegatedAuthInfo,
+            principal = AuthorizationAgent("person-1", AgentType.Person),
+        ).use { fixture ->
             val response = fixture.patch(AuthorizationGrantStatus.Revoked, onBehalfOfOrganisation = "999888771")
 
             response.status shouldBe HttpStatusCode.Forbidden
@@ -99,7 +105,7 @@ class GrantsModuleTest : FunSpec({
         GrantPatchFixture(
             tokenType = "enduser",
             authInfo = delegatedAuthInfo,
-            grantedTo = AuthorizationAgent("999888771", AgentType.Organization),
+            principal = AuthorizationAgent("999888771", AgentType.Organization),
         ).use { fixture ->
             val response = fixture.patch(AuthorizationGrantStatus.Exhausted, onBehalfOfOrganisation = "999888771")
 
@@ -152,12 +158,73 @@ class GrantsModuleTest : FunSpec({
         }
     }
 
-    test("PATCH Maskinporten cannot revoke a grant even with matching person authInfo") {
+    test("PATCH Maskinporten can revoke using PDP actingGLN matching grantedTo rather than sender") {
         GrantPatchFixture(
             tokenType = "maskinporten",
-            authInfo = """{"actingId":"person-1","actingType":"person","originalId":"person-1"}""",
+            authInfo = """{"actingGLN":"7080005053246","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}]}""",
         ).use { fixture ->
-            val response = fixture.patch(AuthorizationGrantStatus.Revoked)
+            val response = fixture.patch(
+                AuthorizationGrantStatus.Revoked,
+                senderGln = "7080005053013",
+                onBehalfOfGln = "7080005053246",
+            )
+
+            response.status shouldBe HttpStatusCode.OK
+            response.assertGrant(fixture.grant.id, AuthorizationGrantStatus.Revoked)
+            val input = fixture.pdpInput()
+            input.getValue("token").jsonPrimitive.content shouldBe "test-token"
+            val payload = input.getValue("payload").jsonObject
+            payload.getValue("SenderGLN").jsonPrimitive.content shouldBe "7080005053013"
+            payload.getValue("OnBehalfOfGLN").jsonPrimitive.content shouldBe "7080005053246"
+            coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
+            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked) }
+        }
+    }
+
+    test("PATCH unrelated Maskinporten actingGLN cannot revoke even when headers match grantedTo") {
+        GrantPatchFixture(
+            tokenType = "maskinporten",
+            authInfo = """{"actingGLN":"7080005053013","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}]}""",
+        ).use { fixture ->
+            val response = fixture.patch(
+                AuthorizationGrantStatus.Revoked,
+                senderGln = "7080005053246",
+                onBehalfOfGln = "7080005053246",
+            )
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+        }
+    }
+
+    test("PATCH Maskinporten with PDP inputFailed cannot revoke even with matching actingGLN") {
+        GrantPatchFixture(
+            tokenType = "maskinporten",
+            authInfo = """{"actingGLN":"7080005053246","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}],"inputFailed":"invalid input"}""",
+        ).use { fixture ->
+            val response = fixture.patch(
+                AuthorizationGrantStatus.Revoked,
+                senderGln = "7080005053013",
+                onBehalfOfGln = "7080005053246",
+            )
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 0) { fixture.repository.find(any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+        }
+    }
+
+    test("PATCH Maskinporten cannot exhaust a grant even with matching actingGLN") {
+        GrantPatchFixture(
+            tokenType = "maskinporten",
+            authInfo = """{"actingGLN":"7080005053246","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}]}""",
+        ).use { fixture ->
+            val response = fixture.patch(
+                AuthorizationGrantStatus.Exhausted,
+                senderGln = "7080005053013",
+                onBehalfOfGln = "7080005053246",
+            )
 
             response.status shouldBe HttpStatusCode.Forbidden
             fixture.pdpInput().getValue("token").jsonPrimitive.content shouldBe "test-token"
@@ -170,16 +237,16 @@ class GrantsModuleTest : FunSpec({
 private class GrantPatchFixture(
     tokenType: String,
     authInfo: String,
-    grantedTo: AuthorizationAgent = AuthorizationAgent("person-1", AgentType.Person),
+    principal: AuthorizationAgent = AuthorizationAgent("person-2", AgentType.Person),
 ) : AutoCloseable {
     val repository = mockk<GrantRepository>()
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Request,
         sourceId = UUID.randomUUID(),
-        principal = AuthorizationAgent("person-2", AgentType.Person),
+        principal = principal,
         grantedBy = AuthorizationAgent("grantedBy-person", AgentType.Person),
-        grantedTo = grantedTo,
+        grantedTo = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity),
         approvedBy = AuthorizationAgent("person-2", AgentType.Person),
         validFrom = Instant.parse("2026-10-01T08:00:00Z"),
         validTo = Instant.parse("2100-01-01T00:00:00Z"),
@@ -210,7 +277,12 @@ private class GrantPatchFixture(
         pdp.start()
     }
 
-    fun patch(status: AuthorizationGrantStatus, onBehalfOfOrganisation: String? = null): GrantPatchResponse {
+    fun patch(
+        status: AuthorizationGrantStatus,
+        onBehalfOfOrganisation: String? = null,
+        senderGln: String? = null,
+        onBehalfOfGln: String? = null,
+    ): GrantPatchResponse {
         lateinit var result: GrantPatchResponse
         testApplication {
             environment {
@@ -220,6 +292,7 @@ private class GrantPatchFixture(
                 )
             }
             application {
+                install(ResolveAuthorizationHeaders)
                 configureRequestTracing()
                 configureSerialization()
                 configureErrorHandling()
@@ -234,6 +307,12 @@ private class GrantPatchFixture(
                 bearerAuth("test-token")
                 if (onBehalfOfOrganisation != null) {
                     header(ApiHeaders.ON_BEHALF_OF_ORGANISATION, onBehalfOfOrganisation)
+                }
+                if (senderGln != null) {
+                    header(ApiHeaders.SENDER_GLN, senderGln)
+                }
+                if (onBehalfOfGln != null) {
+                    header(ApiHeaders.ON_BEHALF_OF_GLN, onBehalfOfGln)
                 }
                 accept(jsonApiContentType)
                 contentType(jsonApiContentType)

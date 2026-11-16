@@ -19,15 +19,6 @@ object UpdateAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy
     override val responsePayloadSerializer = AuthInfoPolicy.Response.serializer()
 }
 
-/** Grant updates additionally allow systems, which are the only actors permitted to exhaust grants. */
-object GrantUpdateAuthInfoPolicy : TokenPolicy<AuthInfoPolicy.Request, AuthInfoPolicy.Response>(
-    key = "token.authinfo.update-authorization-grant",
-    route = AUTHINFO_POLICY_ROUTE,
-) {
-    override val requestSerializer = AuthInfoPolicy.Request.serializer()
-    override val responsePayloadSerializer = AuthInfoPolicy.Response.serializer()
-}
-
 /**
  * Resolves the person performing an update, or null if not allowed.
  * When acting on behalf of an organisation, the PDP verifies the delegation; the person is still returned.
@@ -68,22 +59,4 @@ fun resolveUpdateActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
 
     return AuthorizationParty(id = personId, type = PartyType.Person)
         .also { log.info("Authorized party is $it") }
-}
-
-/** Resolves the party represented by a person for revocation, or a system for exhaustion. */
-fun resolveGrantUpdateActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
-    if (response.tokenInfo?.tokenType == TokenType.ELHUB_SERVICE) {
-        return resolveAuthorizedParty(response)
-    }
-    // Require a valid end-user person, but authorize against the party they are acting for.
-    if (resolveUpdateActor(response) == null) {
-        return null
-    }
-    if (response.authInfo?.actingType?.trim()?.lowercase() == "organisation" &&
-        response.authInfo?.actingOrganisationNumber.isNullOrBlank()
-    ) {
-        log.warn("PDP response missing actingOrganisationNumber")
-        return null
-    }
-    return resolveAuthorizedParty(response)
 }

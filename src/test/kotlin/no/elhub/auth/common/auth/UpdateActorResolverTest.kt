@@ -60,42 +60,4 @@ class UpdateActorResolverTest : FunSpec({
         resolveUpdateActor(delegated(originalId = "")).shouldBeNull()
     }
 
-    test("grant updates allow systems but request updates reject them") {
-        val response = AuthInfoPolicy.Response(
-            tokenInfo = TokenInfo(tokenStatus = "verified", tokenType = TokenType.ELHUB_SERVICE, partyId = "system-1"),
-        )
-
-        resolveGrantUpdateActor(response) shouldBe AuthorizationParty("system-1", PartyType.System)
-        resolveUpdateActor(response).shouldBeNull()
-    }
-
-    test("grant updates reject systems without a party ID") {
-        resolveGrantUpdateActor(response(tokenType = TokenType.ELHUB_SERVICE)).shouldBeNull()
-    }
-
-    test("grant updates resolve a person acting for themselves") {
-        resolveGrantUpdateActor(response()) shouldBe person
-    }
-
-    test("grant updates resolve the represented organisation rather than the person") {
-        resolveGrantUpdateActor(delegated()) shouldBe AuthorizationParty("999888771", PartyType.Organization)
-        resolveUpdateActor(delegated()) shouldBe person
-    }
-
-    test("grant updates reject Maskinporten tokens") {
-        resolveGrantUpdateActor(response(tokenType = TokenType.MASKINPORTEN)).shouldBeNull()
-    }
-
-    test("grant updates reject delegation without an original person") {
-        resolveGrantUpdateActor(delegated(originalId = "")).shouldBeNull()
-    }
-
-    test("grant updates reject missing or blank organisation numbers without falling back to the person") {
-        resolveGrantUpdateActor(response(actingType = "organisation", actingOrganisationNumber = null)).shouldBeNull()
-        resolveGrantUpdateActor(response(actingType = "organisation", actingOrganisationNumber = "")).shouldBeNull()
-    }
-
-    test("grant updates reject PDP delegation errors") {
-        resolveGrantUpdateActor(response(actingType = "organisation", error = "Delegation denied")).shouldBeNull()
-    }
 })
