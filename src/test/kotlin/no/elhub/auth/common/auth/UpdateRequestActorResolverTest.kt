@@ -15,6 +15,7 @@ class UpdateRequestActorResolverTest : FunSpec({
         actingType: String? = "person",
         actingId: String? = "person-1",
         originalId: String? = "person-1",
+        actingOrganisationNumber: String? = "999888771",
         error: String? = null,
         tokenType: TokenType = TokenType.ENDUSER,
     ) = AuthInfoPolicy.Response(
@@ -23,6 +24,7 @@ class UpdateRequestActorResolverTest : FunSpec({
             actingType = actingType,
             actingId = actingId,
             originalId = originalId,
+            actingOrganisationNumber = actingOrganisationNumber,
             error = error,
         ),
     )

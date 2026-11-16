@@ -44,25 +44,29 @@ class UpdateGrantHandlerTest : FunSpec({
 
     beforeTest { clearMocks(grantRepository) }
 
-    listOf(
-        AuthorizationGrantType.Consumable to AuthorizationGrantStatus.Revoked,
-        AuthorizationGrantType.Persistent to AuthorizationGrantStatus.Revoked,
-        AuthorizationGrantType.Consumable to AuthorizationGrantStatus.Exhausted,
-    ).forEach { (type, status) ->
-        test("a system can update a $type grant to $status") {
-            val existing = grant.copy(type = type)
-            val updated = existing.copy(status = status, updatedAt = Instant.parse("2026-10-27T12:00:00Z"))
-            coEvery { grantRepository.find(id) } returns existing
-            coEvery { grantRepository.update(id, status) } returns updated
+    test("a system can exhaust a consumable grant") {
+        val updated = grant.copy(status = AuthorizationGrantStatus.Exhausted)
+        coEvery { grantRepository.find(id) } returns grant
+        coEvery { grantRepository.update(id, AuthorizationGrantStatus.Exhausted) } returns updated
 
-            handler(id, system, status, type) shouldBeSameInstanceAs updated
+        handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable) shouldBeSameInstanceAs updated
 
-            coVerify(exactly = 1) { grantRepository.update(id, status) }
-            coVerify(exactly = 1) { grantRepository.find(id) }
-        }
+        coVerify(exactly = 1) { grantRepository.update(id, AuthorizationGrantStatus.Exhausted) }
+        coVerify(exactly = 1) { grantRepository.find(id) }
     }
 
-    listOf(principal, grantedBy).forEach { agent ->
+    test("a system cannot revoke a grant") {
+        coEvery { grantRepository.find(id) } returns grant.copy(type = AuthorizationGrantType.Persistent, grantedTo = system)
+
+        shouldThrow<UpdateGrantError.NotAuthorized> {
+            handler(id, system, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent)
+        }
+
+        coVerify(exactly = 0) { grantRepository.find(any()) }
+        coVerify(exactly = 0) { grantRepository.update(any(), any()) }
+    }
+
+    listOf(principal, grantedTo).forEach { agent ->
         listOf(AuthorizationGrantType.Consumable, AuthorizationGrantType.Persistent).forEach { type ->
             test("${agent.type} ${agent.id} can revoke a $type grant") {
                 val existing = grant.copy(type = type)
@@ -77,7 +81,7 @@ class UpdateGrantHandlerTest : FunSpec({
         }
     }
 
-    listOf(system, principal, grantedBy).forEach { agent ->
+    listOf(principal, grantedTo).forEach { agent ->
         listOf(AuthorizationGrantType.Consumable, AuthorizationGrantType.Persistent).forEach { type ->
             test("${agent.type} ${agent.id} can revoke a pending $type grant") {
                 val existing = grant.copy(
@@ -115,12 +119,12 @@ class UpdateGrantHandlerTest : FunSpec({
         AuthorizationGrantType.Persistent to AuthorizationGrantType.Consumable,
         AuthorizationGrantType.Consumable to AuthorizationGrantType.Persistent,
     ).forEach { (suppliedType, storedType) ->
-        listOf(system, principal, grantedBy).forEach { agent ->
+        listOf(system, principal, grantedTo).forEach { agent ->
             test("rejects $suppliedType supplied for a stored $storedType grant by ${agent.type} ${agent.id}") {
                 coEvery { grantRepository.find(id) } returns grant.copy(type = storedType)
 
                 shouldThrow<UpdateGrantError.TypeMismatch> {
-                    val status = if (agent == system && storedType == AuthorizationGrantType.Consumable) {
+                    val status = if (agent == system) {
                         AuthorizationGrantStatus.Exhausted
                     } else {
                         AuthorizationGrantStatus.Revoked
@@ -135,11 +139,11 @@ class UpdateGrantHandlerTest : FunSpec({
     }
 
     listOf(
-        grantedTo,
+        grantedBy,
         AuthorizationAgent("unrelated-person", AgentType.Person),
         AuthorizationAgent("unrelated-org", AgentType.Organization),
         principal.copy(type = AgentType.OrganizationEntity),
-        grantedBy.copy(type = AgentType.Organization),
+        grantedTo.copy(type = AgentType.Organization),
     ).forEach { agent ->
         test("denies ${agent.type} ${agent.id} revoking a grant") {
             coEvery { grantRepository.find(id) } returns grant
@@ -171,11 +175,12 @@ class UpdateGrantHandlerTest : FunSpec({
         RepositoryReadError.UnexpectedError("Database unavailable"),
     ).forEach { error ->
         listOf(system, principal).forEach { agent ->
-            test("propagates ${error::class.simpleName} when loading a grant for revocation by ${agent.type}") {
+            test("propagates ${error::class.simpleName} when loading a grant for update by ${agent.type}") {
                 coEvery { grantRepository.find(id) } throws error
 
                 shouldThrow<RepositoryReadError> {
-                    handler(id, agent, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Consumable)
+                    val status = if (agent == system) AuthorizationGrantStatus.Exhausted else AuthorizationGrantStatus.Revoked
+                    handler(id, agent, status, AuthorizationGrantType.Consumable)
                 } shouldBeSameInstanceAs error
 
                 coVerify(exactly = 0) { grantRepository.update(any(), any()) }
@@ -206,7 +211,8 @@ class UpdateGrantHandlerTest : FunSpec({
                 coEvery { grantRepository.update(id, status) } throws repositoryError
 
                 shouldThrow<UpdateGrantError> {
-                    handler(id, system, status, AuthorizationGrantType.Consumable)
+                    val agent = if (status == AuthorizationGrantStatus.Exhausted) system else grantedTo
+                    handler(id, agent, status, AuthorizationGrantType.Consumable)
                 }::class shouldBe expectedError
             }
         }
@@ -222,7 +228,8 @@ class UpdateGrantHandlerTest : FunSpec({
                 coEvery { grantRepository.update(id, status) } throws error
 
                 shouldThrow<RepositoryWriteError> {
-                    handler(id, system, status, AuthorizationGrantType.Consumable)
+                    val agent = if (status == AuthorizationGrantStatus.Exhausted) system else grantedTo
+                    handler(id, agent, status, AuthorizationGrantType.Consumable)
                 } shouldBeSameInstanceAs error
             }
         }
