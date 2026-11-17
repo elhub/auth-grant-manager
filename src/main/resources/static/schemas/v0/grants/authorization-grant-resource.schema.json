@@ -43,7 +43,7 @@
         },
         "meta": {
           "type": "object",
-          "description": "Read-only context and human-readable metadata. Omitted when there are no grant properties and in collection items.",
+          "description": "Read-only context and human-readable metadata.",
           "properties": {
             "moveInDate": {
               "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
