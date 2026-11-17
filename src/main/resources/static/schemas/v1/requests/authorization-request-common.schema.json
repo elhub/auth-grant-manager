@@ -57,13 +57,11 @@
     },
     "requestedPrincipal": {
       "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
-      "pattern": "^[0-9]{9}$",
-      "description": "Organization number of the agent the authorization concerns, for example the owner of the metering point. All currently supported request types require an organization. The resolved agent becomes requestedPrincipal on the request."
+      "description": "Identifier of the agent the authorization concerns, for example the owner of the metering point. The resolved agent becomes requestedPrincipal on the request."
     },
     "requestedOf": {
       "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
-      "pattern": "^[0-9]{9}$",
-      "description": "Organization number of the agent asked to approve the request. All currently supported request types require an organization. The resolved agent becomes requestedOf on the request."
+      "description": "Identifier of the agent asked to approve the request. The resolved agent becomes requestedOf on the request."
     }
   }
 }
