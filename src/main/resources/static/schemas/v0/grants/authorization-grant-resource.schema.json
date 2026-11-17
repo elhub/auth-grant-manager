@@ -3,14 +3,6 @@
   "title": "Authorization Grant",
   "description": "Schema for returning a single authorization grant object in the Elhub authorization manager.",
   "type": "object",
-  "$comment": "Require resource links only for single responses; collection items reuse /properties/data and omit links.",
-  "allOf": [
-    {
-      "properties": {
-        "data": {"required": ["links"]}
-      }
-    }
-  ],
   "properties": {
     "data": {
       "type": "object",
@@ -18,7 +10,8 @@
         "id",
         "type",
         "attributes",
-        "relationships"
+        "relationships",
+        "links"
       ],
       "properties": {
         "id": {
@@ -58,7 +51,6 @@
           }
         },
         "links": {
-          "description": "Resource link returned for single-grant responses; omitted in collection items.",
           "$ref": "authorization-grant-common.schema.json#/$defs/links",
           "required": ["self"]
         }
