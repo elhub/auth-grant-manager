@@ -53,7 +53,7 @@
     "redirectUri": {
       "type": "string",
       "format": "uri",
-      "description": "Absolute HTTPS URI the user is redirected to after approving or rejecting the request. Leading and trailing whitespace is trimmed; user info and fragments are not accepted. The host must match, or be a subdomain of, the redirect URL registered in Ediel for the requestedBy agent."
+      "description": "Absolute HTTPS URI the user is redirected to after approving or rejecting the request. The host must match, or be a subdomain of, the redirect URL registered in Ediel for the requestedBy agent."
     },
     "requestedPrincipal": {
       "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
