@@ -20,8 +20,7 @@
           "properties": {
             "status": {
               "type": "string",
-              "const": "Exhausted",
-              "description": "The only supported status transition for the v0 grant update endpoint."
+              "const": "Exhausted"
             }
           },
           "required": ["status"]
