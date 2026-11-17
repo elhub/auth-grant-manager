@@ -55,7 +55,9 @@ class GrantsModuleTest : FunSpec({
             response.assertGrant(fixture.grant.id, AuthorizationGrantStatus.Exhausted)
             fixture.pdpInput().getValue("token").jsonPrimitive.content shouldBe "test-token"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Exhausted) }
+            coVerify(exactly = 1) {
+                fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Exhausted, AuthorizationAgent("system-1", AgentType.System))
+            }
         }
     }
 
@@ -65,7 +67,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 
@@ -83,7 +85,7 @@ class GrantsModuleTest : FunSpec({
             input.getValue("token").jsonPrimitive.content shouldBe "test-token"
             input.getValue("payload").jsonObject.getValue("OnBehalfOfOrganisationId").jsonPrimitive.content shouldBe "999888771"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked) }
+            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked, fixture.grant.principal) }
         }
     }
 
@@ -97,7 +99,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 
@@ -114,7 +116,7 @@ class GrantsModuleTest : FunSpec({
             input.getValue("token").jsonPrimitive.content shouldBe "test-token"
             input.getValue("payload").jsonObject.getValue("OnBehalfOfOrganisationId").jsonPrimitive.content shouldBe "999888771"
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 
@@ -128,7 +130,7 @@ class GrantsModuleTest : FunSpec({
             response.status shouldBe HttpStatusCode.Forbidden
             fixture.pdpInput().getValue("token").jsonPrimitive.content shouldBe "test-token"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 
@@ -141,7 +143,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 
@@ -154,7 +156,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.OK
             response.assertGrant(fixture.grant.id, AuthorizationGrantStatus.Revoked)
-            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked) }
+            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked, fixture.grant.principal) }
         }
     }
 
@@ -177,7 +179,7 @@ class GrantsModuleTest : FunSpec({
             payload.getValue("SenderGLN").jsonPrimitive.content shouldBe "7080005053013"
             payload.getValue("OnBehalfOfGLN").jsonPrimitive.content shouldBe "7080005053246"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked) }
+            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked, fixture.grant.grantedTo) }
         }
     }
 
@@ -194,7 +196,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 
@@ -215,7 +217,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 
@@ -233,7 +235,7 @@ class GrantsModuleTest : FunSpec({
             response.status shouldBe HttpStatusCode.Forbidden
             fixture.pdpInput().getValue("token").jsonPrimitive.content shouldBe "test-token"
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
         }
     }
 })
@@ -261,7 +263,7 @@ private class GrantPatchFixture(
 
     init {
         coEvery { repository.find(grant.id) } returns grant
-        coEvery { repository.update(grant.id, any()) } answers { grant.copy(status = secondArg()) }
+        coEvery { repository.update(grant.id, any(), any()) } answers { grant.copy(status = secondArg()) }
         pdp.createContext(AUTHINFO_POLICY_ROUTE) { exchange ->
             exchange.use {
                 val body = exchange.requestBody.bufferedReader().use { it.readText() }
