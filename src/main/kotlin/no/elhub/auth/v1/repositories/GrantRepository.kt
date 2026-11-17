@@ -313,7 +313,7 @@ class ExposedGrantRepository(
         AuthorizationAuditLogTable.insert {
             it[AuthorizationAuditLogTable.grantId] = grantId
             it[changedAt] = now
-            it[AuthorizationAuditLogTable.changedBy] = "${changedBy.type}:${changedBy.id}"
+            it[AuthorizationAuditLogTable.changedBy] = changedBy.id
             it[valueChanged] = "status"
             it[valueBefore] = row[AuthorizationGrantTable.status].name
             it[valueAfter] = target.name

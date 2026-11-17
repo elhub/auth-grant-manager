@@ -722,7 +722,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             assertGrant(repository.find(grant.id), result)
             val audit = auditRows(grant.id).single()
             audit[AuthorizationAuditLogTable.changedAt] shouldBe result.updatedAt
-            audit[AuthorizationAuditLogTable.changedBy] shouldBe "${changedBy.type}:${changedBy.id}"
+            audit[AuthorizationAuditLogTable.changedBy] shouldBe changedBy.id
             audit[AuthorizationAuditLogTable.valueChanged] shouldBe "status"
             audit[AuthorizationAuditLogTable.valueBefore] shouldBe "Active"
             audit[AuthorizationAuditLogTable.valueAfter] shouldBe status.name
@@ -789,7 +789,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             assertGrant(result, grant.copy(status = AuthorizationGrantStatus.Revoked, updatedAt = result.updatedAt))
             assertGrant(repository.find(grant.id), result)
             val audit = auditRows(grant.id).single()
-            audit[AuthorizationAuditLogTable.changedBy] shouldBe "${grant.grantedTo.type}:${grant.grantedTo.id}"
+            audit[AuthorizationAuditLogTable.changedBy] shouldBe grant.grantedTo.id
             audit[AuthorizationAuditLogTable.valueBefore] shouldBe "Active"
             audit[AuthorizationAuditLogTable.valueAfter] shouldBe "Revoked"
             withTransaction {
