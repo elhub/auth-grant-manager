@@ -70,7 +70,7 @@
             "id": {
               "type": "string",
               "minLength": 1,
-              "description": "Elhub ID (UUID) of the person, not their national identity number."
+              "description": "Elhub ID (UUID) of the person."
             }
           }
         }
