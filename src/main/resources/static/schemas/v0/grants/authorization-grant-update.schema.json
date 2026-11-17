@@ -19,7 +19,9 @@
           "description": "The attributes of the authorization grant to  update.",
           "properties": {
             "status": {
-              "$ref": "authorization-grant-common.schema.json#/$defs/authorizationGrantStatus"
+              "type": "string",
+              "const": "Exhausted",
+              "description": "The only supported status transition for the v0 grant update endpoint."
             }
           },
           "required": ["status"]

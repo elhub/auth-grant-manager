@@ -19,7 +19,7 @@
     "authorizationGrantStatus": {
       "type": "string",
       "description": "The status of the authorization grant.",
-      "enum": ["Active", "Exhausted", "Expired", "Revoked"]
+      "enum": ["Active", "Exhausted", "Revoked"]
     },
     "attributes": {
       "type": "object",
@@ -41,7 +41,7 @@
           "examples": ["2025-12-29T10:13:18+01:00"]
         },
         "validFrom": {
-          "$ref": "../elhub-common.schema.json#/$defs/validTo"
+          "$ref": "../elhub-common.schema.json#/$defs/validFrom"
         },
         "validTo": {
           "$ref": "../elhub-common.schema.json#/$defs/validTo"
@@ -95,7 +95,7 @@
               "properties": {
                 "self": {
                   "type": "string",
-                  "format": "uri"
+                  "format": "uri-reference"
                 }
               },
               "examples": [
@@ -141,7 +141,7 @@
       "properties": {
         "self": {
           "type": "string",
-          "format": "uri",
+          "format": "uri-reference",
           "description": "The canonical URI for retrieving this specific authorization grant.",
           "examples": [
             "/access/v0/authorization-grants/123e4567-e89b-12d3-a456-426614174000"
