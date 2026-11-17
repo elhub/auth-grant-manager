@@ -3,9 +3,11 @@
   "title": "Authorization Document Resource",
   "description": "Schema for returning an authorization document.",
   "type": "object",
+  "required": ["data", "links", "meta"],
   "properties": {
     "data": {
       "type": "object",
+      "required": ["id", "type", "attributes", "meta", "relationships", "links"],
       "properties": {
         "id": {
           "$ref": "authorization-document-common.schema.json#/$defs/id"
@@ -15,12 +17,14 @@
         },
         "attributes": {
           "type": "object",
+          "required": ["documentType", "requestedScopes", "status", "validFrom", "validTo", "createdAt", "updatedAt"],
           "properties": {
             "documentType": {
               "$ref": "authorization-document-common.schema.json#/$defs/documentType"
             },
             "requestedScopes": {
-              "$ref": "authorization-document-common.schema.json#/$defs/requestedScopes"
+              "$ref": "authorization-document-common.schema.json#/$defs/requestedScopes",
+              "items": { "required": ["allowedChanges"] }
             },
             "externalReference": {
               "$ref": "authorization-document-common.schema.json#/$defs/externalReference"
@@ -50,8 +54,13 @@
             }
           }
         },
+        "meta": {
+          "type": "object",
+          "description": "Business metadata, varying by document type. Supported keys include balanceSupplierName and organizationName; supplier change and move-in also include requestedMeteringPoints (objects with id and optional address and meterNumber). Address contains postalCode and optional streetName, houseNumber and city. Move-in may include validFrom as an ISO date (YYYY-MM-DD). Additional metadata keys are allowed."
+        },
         "relationships": {
           "type": "object",
+          "required": ["requestedBy", "requestedPrincipal", "requestedOf"],
           "properties": {
             "requestedBy": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
@@ -76,6 +85,7 @@
         },
         "links": {
           "type": "object",
+          "required": ["self", "file"],
           "properties": {
             "self": {
               "type": "string",
@@ -90,6 +100,19 @@
           }
         }
       }
+    },
+    "links": {
+      "type": "object",
+      "required": ["self"],
+      "properties": {
+        "self": {
+          "$ref": "#/properties/data/properties/links/properties/self"
+        }
+      }
+    },
+    "meta": {
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta",
+      "required": ["createdAt"]
     }
   }
 }
