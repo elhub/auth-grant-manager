@@ -20,8 +20,7 @@
           "properties": {
             "status": {
               "type": "string",
-              "enum": ["Accepted", "Rejected"],
-              "description": "The supported decisions for the v0 request update endpoint."
+              "enum": ["Accepted", "Rejected"]
             }
           },
           "required": ["status"]
