@@ -9,7 +9,7 @@
         "attribute": {
           "type": "string",
           "minLength": 1,
-          "description": "Attribute the constraint applies to: `meteringPoint.id`, `type` (server-generated allowed contract types), or `validFrom`."
+          "description": "Attribute the constraint applies to, for example `meteringPoint.id` or `validFrom`."
         },
         "value": {
           "type": "array",
@@ -27,7 +27,7 @@
         "attribute": {
           "type": "string",
           "minLength": 1,
-          "description": "Attribute the constraint applies to: `meteringPoint.id`, `type`, or `validFrom`."
+          "description": "Attribute the constraint applies to, for example `meteringPoint.id` or `validFrom`."
         },
         "value": {
           "type": "array",
