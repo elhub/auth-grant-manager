@@ -59,6 +59,15 @@
             "balanceSupplierContractName": {
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
             },
+            "language": {
+              "$ref": "../authorization-common.schema.json#/$defs/language"
+            },
+            "textVersion": {
+              "$ref": "authorization-request-common.schema.json#/$defs/meta/properties/textVersion"
+            },
+            "moveInDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
+            },
             "redirectURI": {
               "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
