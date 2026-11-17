@@ -4,7 +4,7 @@
     "requestedScope": {
       "type": "object",
       "description": "A scope requested for the authorization grant that is created when the document is signed or the request is approved.",
-      "required": ["resourceType"],
+      "required": ["resourceType", "appliesTo"],
       "properties": {
         "resourceType": {
           "description": "Kind of resource the scope covers.",
@@ -30,7 +30,7 @@
         },
         "allowedChanges": {
           "type": "array",
-          "description": "Constraints on which changes the grant permits, for example the move-in `validFrom`.",
+          "description": "Constraints on which changes the grant permits. Input defaults to an empty array; supplier changes require it to be empty, and move-in accepts at most one validFrom constraint with one ISO date or timestamp, today or in the past in Europe/Oslo. Responses also include server-generated type constraints (EndUser and/or EnergySupplier).",
           "items": {
             "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint"
           }
@@ -40,6 +40,7 @@
     "authorizationScope": {
       "type": "object",
       "description": "A scope of an authorization grant, describing what the grantedTo agent is authorized to do.",
+      "required": ["capability", "resourceType", "appliesTo", "allowedChanges"],
       "properties": {
         "capability": {
           "description": "What the grant permits on the resource.",
@@ -47,7 +48,7 @@
         },
         "resourceType": {
           "type": "string",
-          "minLength": 1,
+          "enum": ["MeteringPointContract"],
           "description": "Kind of resource the scope covers, for example `MeteringPointContract`."
         },
         "appliesTo": {
