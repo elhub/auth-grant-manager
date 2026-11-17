@@ -118,6 +118,9 @@
           "description": "The unique identifier of the metering point associated with the authorization request.",
           "examples": ["1234567890123"]
         },
+        "requestedForMeterNumber": {
+          "$ref": "../authorization-common.schema.json#/$defs/requestedForMeterNumber"
+        },
         "requestedForMeteringPointAddress": {
           "type": "string",
           "description": "The address of the metering point associated with the authorization request.",
@@ -140,6 +143,12 @@
         },
         "moveInDate": {
           "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
+        },
+        "language": {
+          "$ref": "../authorization-common.schema.json#/$defs/language"
+        },
+        "redirectURI": {
+          "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
         }
       },
       "additionalProperties": false
@@ -150,7 +159,7 @@
       "properties": {
         "self": {
           "type": "string",
-          "format": "uri",
+          "format": "uri-reference",
           "description": "A link to this resource.",
           "examples": [
             {
