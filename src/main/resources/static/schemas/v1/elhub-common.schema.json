@@ -78,7 +78,7 @@
     },
     "authorizationGrantRelationship": {
       "type": "object",
-      "description": "References to the authorization grants created from this resource. The relationship may be omitted when grants have not been loaded or none exist; when present, data may be an empty array.",
+      "description": "References to the authorization grants created from this resource. Empty until the document is signed or the request is approved.",
       "required": ["data"],
       "properties": {
         "data": {
