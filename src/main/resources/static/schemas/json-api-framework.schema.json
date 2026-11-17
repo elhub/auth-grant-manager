@@ -12,7 +12,7 @@
       "pattern": "^[a-zA-Z0-9]{1}(?:[-\\w]*[a-zA-Z0-9])?$"
     },
     "topLevelLinks": {
-      "description": "The top-level links object for a collection response, including self and pagination links.",
+      "description": "Links for a response, including self and optional pagination links.",
       "type": "object",
       "properties": {
         "self": {
@@ -36,7 +36,12 @@
           "$ref": "#/$defs/linkUrl"
         }
       },
-      "required": ["self", "first", "last"]
+      "required": ["self"]
+    },
+    "paginationLinks": {
+      "$ref": "#/$defs/topLevelLinks",
+      "description": "Links for a paginated collection response.",
+      "required": ["first", "last"]
     },
     "topLevelMeta": {
       "description": "Meta-information for the JSON document.",
