@@ -30,7 +30,7 @@
         },
         "allowedChanges": {
           "type": "array",
-          "description": "Constraints on which changes the grant permits. Input defaults to an empty array; supplier changes require it to be empty, and move-in accepts at most one validFrom constraint with one ISO date or timestamp, today or in the past in Europe/Oslo. Responses also include server-generated type constraints (EndUser and/or EnergySupplier).",
+          "description": "Constraints on which changes the grant permits, for example the move-in `validFrom`.",
           "items": {
             "$ref": "authorization-scope-constraint.schema.json#/$defs/requestedScopeConstraint"
           }
