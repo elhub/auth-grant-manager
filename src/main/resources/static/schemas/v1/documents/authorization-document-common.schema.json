@@ -33,11 +33,11 @@
     },
     "requestedGrantValidFrom": {
       "$ref": "../elhub-common.schema.json#/$defs/dateTime",
-      "description": "Requested start of validity for the authorization grant created when the document is signed. Only accepted for EnergySupplierFrameworkAgreement; must be in the future and before requestedGrantValidTo when both are supplied. Omitted from responses when not set."
+      "description": "Requested start of validity for the authorization grant created when the document is signed. Only accepted for EnergySupplierFrameworkAgreement; must be in the future and before requestedGrantValidTo when both are supplied."
     },
     "requestedGrantValidTo": {
       "$ref": "../elhub-common.schema.json#/$defs/dateTime",
-      "description": "Requested end of validity for the authorization grant created when the document is signed. Only accepted for EnergySupplierFrameworkAgreement; must be in the future. Omitted from responses when not set."
+      "description": "Requested end of validity for the authorization grant created when the document is signed. Only accepted for EnergySupplierFrameworkAgreement; must be in the future."
     },
     "requestedPrincipal": {
       "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
