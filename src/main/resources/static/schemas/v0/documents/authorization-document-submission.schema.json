@@ -89,7 +89,6 @@
                   "$ref": "../authorization-common.schema.json#/$defs/language"
                 },
                 "moveInDate": {
-                  "description": "Accepted by the DTO but ignored for a change of supplier without move-in.",
                   "anyOf": [
                     {"$ref": "../authorization-common.schema.json#/$defs/moveInDate"},
                     {"type": "null"}
