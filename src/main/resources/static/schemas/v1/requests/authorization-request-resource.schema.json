@@ -64,8 +64,7 @@
           "required": ["requestType", "requestedScopes", "status", "textReference", "validFrom", "validTo", "createdAt", "updatedAt"]
         },
         "meta": {
-          "type": "object",
-          "description": "Business metadata, varying by request type. Supported keys include balanceSupplierName and organizationName; supplier change and move-in also include requestedMeteringPoints (objects with id and optional address and meterNumber). Address contains postalCode and optional streetName, houseNumber and city. Move-in may include moveInDate as an ISO date (YYYY-MM-DD). Additional metadata keys are allowed."
+          "type": "object"
         },
         "relationships": {
           "type": "object",
