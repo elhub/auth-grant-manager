@@ -37,8 +37,8 @@ import no.elhub.auth.v1.features.requests.UpdateRequestError
 import no.elhub.auth.v1.features.requests.UpdateRequestHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class UpdateRequestRouteTest : FunSpec({
     val handler = mockk<UpdateRequestHandler>()
@@ -159,7 +159,7 @@ class UpdateRequestRouteTest : FunSpec({
     }
 
     listOf(
-        "a body ID that does not match the path ID" to UUID.randomUUID().toString(),
+        "a body ID that does not match the path ID" to Uuid.random().toString(),
         "an invalid body ID" to "not-a-uuid",
     ).forEach { (description, dataId) ->
         test("PATCH returns 409 for $description without calling the handler") {

@@ -36,8 +36,8 @@ import no.elhub.auth.v1.features.requests.CreateRequestHandler
 import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.repositories.RequestRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class CreateRequestRouteTest : FunSpec({
@@ -69,7 +69,7 @@ class CreateRequestRouteTest : FunSpec({
     lateinit var agentService: AgentService
 
     fun savedRequest() = AuthorizationRequest(
-        id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+        id = Uuid.parse("123e4567-e89b-12d3-a456-426614174000"),
         requestType = AuthorizationRequestType.EnergySupplierFrameworkAgreement,
         status = AuthorizationRequestStatus.Pending,
         requestedScopes = emptyList(),

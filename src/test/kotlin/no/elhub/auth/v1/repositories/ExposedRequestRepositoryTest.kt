@@ -41,9 +41,9 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class ExposedRequestRepositoryTest : FunSpec({
     extension(PostgresTestContainerExtension())
@@ -67,7 +67,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         """{"name":"alberto","nestedStuff":{"values":[null,false,1.5]}}""",
     ).jsonObject
 
-    fun agent(type: AgentType = AgentType.Person) = AuthorizationAgent(id = UUID.randomUUID().toString(), type = type)
+    fun agent(type: AgentType = AgentType.Person) = AuthorizationAgent(id = Uuid.random().toString(), type = type)
 
     fun grant(request: AuthorizationRequest) = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
@@ -97,7 +97,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         validFrom: Instant = createdAt + 2.days,
         requestedGrantValidFrom: Instant? = null,
         requestedGrantValidTo: Instant? = null,
-    ): UUID = withTransaction {
+    ): Uuid = withTransaction {
         suspend fun agentId(agent: AuthorizationAgent) = agentRepository.findOrInsert(agent.type, agent.id).id
         val byId = agentId(requestedBy)
         val principalId = agentId(requestedPrincipal)
@@ -244,7 +244,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("find throws a modeled not found error for an unknown request ID") {
-        val requestId = UUID.randomUUID()
+        val requestId = Uuid.random()
 
         val error = shouldThrow<RepositoryReadError.NotFoundError> {
             repository.find(requestId)
@@ -574,7 +574,7 @@ class ExposedRequestRepositoryTest : FunSpec({
     }
 
     test("reject(id) throws notfound for nonexistent id") {
-        val randomUUID = UUID.randomUUID()
+        val randomUUID = Uuid.random()
         val error = shouldThrow<RepositoryWriteError.NotFoundError> {
             repository.reject(randomUUID, TextLanguage.NB)
         }
@@ -722,7 +722,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
             val grantNow = now()
             fun List<AuthorizationGrant>.withoutGeneratedFields() =
-                map { it.copy(id = UUID(0, 0), createdAt = grantNow, updatedAt = grantNow) }
+                map { it.copy(id = Uuid.NIL, createdAt = grantNow, updatedAt = grantNow) }
             stored.toGrants(requestedOf, grantNow).withoutGeneratedFields() shouldBe
                 created.toGrants(requestedOf, grantNow).withoutGeneratedFields()
         }

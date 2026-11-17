@@ -1,6 +1,5 @@
 package no.elhub.auth.v1.api.documents.routes
 
-import arrow.core.getOrElse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.contentType
@@ -16,7 +15,7 @@ import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.features.common.InputError
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toUnsupportedErrorResponse
-import no.elhub.auth.v0.features.common.validatePathId
+import no.elhub.auth.v1.api.common.validatePathId
 import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
@@ -35,11 +34,7 @@ fun Route.route(handler: ConfirmDocumentHandler) {
             return@put
         }
 
-        val id = validatePathId(call.parameters["id"]).getOrElse { error ->
-            val (status, body) = error.toApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
-            return@put
-        }
+        val id = validatePathId(call.parameters["id"])
 
         // Read one extra byte to detect oversized uploads without buffering the entire body.
         val signedDocument = call.receiveChannel().readBuffer(PDF_MAX_BYTES + 1).readByteArray()

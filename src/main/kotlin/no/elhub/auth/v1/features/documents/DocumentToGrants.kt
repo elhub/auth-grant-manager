@@ -17,8 +17,8 @@ import no.elhub.auth.v1.domain.MeteringPointContractType
 import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class InvalidDocumentScopes(detail: String) : IllegalStateException(detail)
 
@@ -54,7 +54,7 @@ fun AuthorizationDocument.toGrants(
                     now = now,
                     type = AuthorizationGrantType.Persistent,
                     sourceType = AuthorizationGrantSourceType.Document,
-                    sourceId = UUID.fromString(id),
+                    sourceId = Uuid.parse(id),
                     principal = requestedPrincipal,
                     grantedBy = requestedOf,
                     grantedTo = requestedBy,
@@ -175,7 +175,7 @@ private fun AuthorizationDocument.toConsumableGrant(
     now = now,
     type = AuthorizationGrantType.Consumable,
     sourceType = AuthorizationGrantSourceType.Document,
-    sourceId = UUID.fromString(id),
+    sourceId = Uuid.parse(id),
     principal = requestedPrincipal,
     grantedBy = requestedOf,
     grantedTo = requestedBy,

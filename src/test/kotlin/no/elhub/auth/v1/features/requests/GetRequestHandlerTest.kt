@@ -15,8 +15,8 @@ import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.AuthorizationRequestType
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RequestRepository
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GetRequestHandlerTest : FunSpec({
     val requestRepository = mockk<RequestRepository>()
@@ -24,7 +24,7 @@ class GetRequestHandlerTest : FunSpec({
     val requestedBy = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity)
     val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
-    val requestId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val requestId = Uuid.parse("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")
     val request = AuthorizationRequest(
         id = requestId,

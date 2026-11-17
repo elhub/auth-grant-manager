@@ -33,15 +33,15 @@ import no.elhub.auth.v1.features.grants.GetGrantError
 import no.elhub.auth.v1.features.grants.GetGrantHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GetGrantRouteTest : FunSpec({
     val handler = mockk<GetGrantHandler>()
     val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
     val principal = AuthorizationAgent("999888771", AgentType.OrganizationEntity)
     val grantedBy = AuthorizationAgent("person-1", AgentType.Person)
-    val sourceId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val sourceId = Uuid.parse("123e4567-e89b-12d3-a456-426614174000")
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,

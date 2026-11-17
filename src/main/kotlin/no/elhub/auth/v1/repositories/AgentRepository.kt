@@ -7,29 +7,31 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.util.UUID
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord as AuthorizationAgentRecord
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty as toAuthorizationAgent
 
 interface AgentRepository {
-    suspend fun find(id: UUID): AuthorizationAgentRecord
-    suspend fun findByIds(ids: List<UUID>): Map<UUID, AuthorizationAgentRecord>
+    suspend fun find(id: Uuid): AuthorizationAgentRecord
+    suspend fun findByIds(ids: List<Uuid>): Map<Uuid, AuthorizationAgentRecord>
     suspend fun findOrInsert(type: AgentType, agentId: String): AuthorizationAgentRecord
 }
 
 class ExposedAgentRepository : AgentRepository {
-    override suspend fun findByIds(ids: List<UUID>): Map<UUID, AuthorizationAgentRecord> {
+    override suspend fun findByIds(ids: List<Uuid>): Map<Uuid, AuthorizationAgentRecord> {
         if (ids.isEmpty()) return emptyMap()
 
         return withTransaction {
             AuthorizationAgentTable.selectAll()
-                .where { AuthorizationAgentTable.id inList ids }
-                .associate { it[AuthorizationAgentTable.id].value to it.toAuthorizationAgent() }
+                .where { AuthorizationAgentTable.id inList ids.map { it.toJavaUuid() } }
+                .associate { it[AuthorizationAgentTable.id].value.toKotlinUuid() to it.toAuthorizationAgent() }
         }
     }
 
-    override suspend fun find(id: UUID): AuthorizationAgentRecord =
+    override suspend fun find(id: Uuid): AuthorizationAgentRecord =
         findByIds(listOf(id)).values.singleOrNull()
             ?: throw RepositoryReadError.NotFoundError("Agent not found: $id")
 
