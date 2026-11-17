@@ -44,7 +44,7 @@ class EnergySupplierFrameworkAgreementTemplateTest : FunSpec({
     test("renders English text from the locale bundle") {
         val html = renderEnergySupplierFrameworkAgreement(exampleData, "en")
 
-        html shouldContain "Framework agreement confirmation"
+        html shouldContain "Framework Agreement Confirmation"
         html shouldContain "Organization number"
         html shouldContain "Valid from:</span>"
         html shouldContain "Valid to:</span> Ongoing agreement"
@@ -61,6 +61,7 @@ class EnergySupplierFrameworkAgreementTemplateTest : FunSpec({
         html shouldContain "Gyldig til:</span> Løpande avtale"
         html shouldContain "Løpande avtale"
         html shouldContain "organisasjonen har inngått rammeavtalen som det blir vist til over"
+        html shouldContain "kan nyttast ved fleire innflyttingar"
     }
 })
 
