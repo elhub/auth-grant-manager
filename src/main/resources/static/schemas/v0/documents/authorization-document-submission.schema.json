@@ -87,6 +87,13 @@
                 },
                 "language": {
                   "$ref": "../authorization-common.schema.json#/$defs/language"
+                },
+                "moveInDate": {
+                  "description": "Accepted by the DTO but ignored for a change of supplier without move-in.",
+                  "anyOf": [
+                    {"$ref": "../authorization-common.schema.json#/$defs/moveInDate"},
+                    {"type": "null"}
+                  ]
                 }
               }
             }
@@ -143,7 +150,10 @@
                   "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
                 },
                 "moveInDate": {
-                  "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
+                  "anyOf": [
+                    {"$ref": "../authorization-common.schema.json#/$defs/moveInDate"},
+                    {"type": "null"}
+                  ]
                 },
                 "language": {
                   "$ref": "../authorization-common.schema.json#/$defs/language"

@@ -50,6 +50,9 @@
             "requestedForMeteringPointId": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
             },
+            "requestedForMeterNumber": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeterNumber"
+            },
             "requestedForMeteringPointAddress": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
             },
@@ -58,6 +61,12 @@
             },
             "balanceSupplierContractName": {
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
+            },
+            "language": {
+              "$ref": "../authorization-common.schema.json#/$defs/language"
+            },
+            "moveInDate": {
+              "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
             }
           }
         },

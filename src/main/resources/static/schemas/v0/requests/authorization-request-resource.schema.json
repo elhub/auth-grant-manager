@@ -50,6 +50,9 @@
             "requestedForMeteringPointId": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
             },
+            "requestedForMeterNumber": {
+              "$ref": "../authorization-common.schema.json#/$defs/requestedForMeterNumber"
+            },
             "requestedForMeteringPointAddress": {
               "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
             },
@@ -75,7 +78,7 @@
         },
         "links": {
           "description": "Links related to the primary data.",
-          "$ref": "../../json-api-framework.schema.json#/$defs/topLevelLinks",
+          "$ref": "authorization-request-common.schema.json#/$defs/links",
           "examples": [
             {
               "self": "/access/v0/authorization-requests/123e4567-e89b-12d3-a456-426614174000"

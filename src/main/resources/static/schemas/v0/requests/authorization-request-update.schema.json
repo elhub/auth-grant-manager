@@ -19,7 +19,9 @@
           "description": "The attributes of the authorization request to update.",
           "properties": {
             "status": {
-              "$ref": "authorization-request-common.schema.json#/$defs/authorizationRequestStatus"
+              "type": "string",
+              "enum": ["Accepted", "Rejected"],
+              "description": "The supported decisions for the v0 request update endpoint."
             }
           },
           "required": ["status"]
