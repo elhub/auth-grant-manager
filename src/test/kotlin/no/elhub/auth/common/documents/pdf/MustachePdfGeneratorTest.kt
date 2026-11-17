@@ -262,13 +262,13 @@ class MustachePdfGeneratorTest : FunSpec({
         )
 
         val text = pdfText(pdf)
-        text shouldContain "Framework agreement confirmation"
+        text shouldContain "Framework Agreement Confirmation"
         text shouldContain "Navn AS"
         text shouldContain "100 010 001"
         text shouldContain "Elvekraft Framework Agreement ABC213"
         text shouldContain "Electricity supply agreement: Elvekraft Framework Agreement ABC213"
-        text shouldContain "01. January 2027"
-        text shouldContain "31. December 2029"
+        text shouldContain "01 January 2027"
+        text shouldContain "31 December 2029"
         pdfLanguage(pdf) shouldBe "en-US"
     }
 

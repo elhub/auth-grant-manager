@@ -227,8 +227,8 @@ class MustachePdfGenerator(
     ): String {
         val i18n =
             i18nTemplateFunction(content.language, MustacheConstants.I18N_ENERGY_SUPPLIER_FRAMEWORK_AGREEMENT)
-        val dateFormatter =
-            DateTimeFormatter.ofPattern("dd. MMMM yyyy", Locale.forLanguageTag(content.language.toPdfLanguage()))
+        val datePattern = if (content.language == PdfLanguage.EN) "dd MMMM yyyy" else "dd. MMMM yyyy"
+        val dateFormatter = DateTimeFormatter.ofPattern(datePattern, Locale.forLanguageTag(content.language.toPdfLanguage()))
         val startDate = content.startDate.toJavaLocalDate().format(dateFormatter)
         val endDate = content.endDate?.toJavaLocalDate()?.format(dateFormatter)
 
