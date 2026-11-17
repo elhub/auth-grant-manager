@@ -36,12 +36,14 @@
     "agentRelationship": {
       "type": "object",
       "description": "Reference to an agent.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "object",
+          "required": ["type", "id"],
           "properties": {
             "type": {
-              "description": "Type of agent. A Person is identified by NIN, an Organization identified by organization number, and a MarketEntity is identified by GLN.",
+              "description": "Type of agent. A Person is identified by their Elhub ID (UUID), an Organization by organization number, and a MarketEntity by GLN.",
               "enum": ["Person", "Organization", "MarketEntity"]
             },
             "id": {
@@ -56,9 +58,11 @@
     "approvedByRelationship": {
       "type": "object",
       "description": "Reference to the person who signed the document or approved the request.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "object",
+          "required": ["type", "id"],
           "properties": {
             "type": {
               "const": "Person"
@@ -66,7 +70,7 @@
             "id": {
               "type": "string",
               "minLength": 1,
-              "description": "Identifier of the person."
+              "description": "Elhub ID (UUID) of the person, not their national identity number."
             }
           }
         }
@@ -74,12 +78,14 @@
     },
     "authorizationGrantRelationship": {
       "type": "object",
-      "description": "References to the authorization grants created from this resource. Empty until the document is signed or the request is approved.",
+      "description": "References to the authorization grants created from this resource. The relationship may be omitted when grants have not been loaded or none exist; when present, data may be an empty array.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "array",
           "items": {
             "type": "object",
+            "required": ["type", "id"],
             "properties": {
               "type": {
                 "$ref": "grants/authorization-grant-common.schema.json#/$defs/type"
@@ -95,9 +101,11 @@
     "authorizationSourceRelationship": {
       "type": "object",
       "description": "Reference to the authorization document or request the grant was created from.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "object",
+          "required": ["type", "id"],
           "properties": {
             "type": {
               "description": "Type of the source resource.",
