@@ -3,9 +3,11 @@
   "title": "Authorization Request Resource",
   "description": "Schema for returning an authorization request.",
   "type": "object",
+  "required": ["data", "links", "meta"],
   "properties": {
     "data": {
       "type": "object",
+      "required": ["id", "type", "attributes", "meta", "relationships", "links"],
       "properties": {
         "id": {
           "$ref": "authorization-request-common.schema.json#/$defs/id"
@@ -20,7 +22,8 @@
               "$ref": "authorization-request-common.schema.json#/$defs/requestType"
             },
             "requestedScopes": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestedScopes"
+              "$ref": "authorization-request-common.schema.json#/$defs/requestedScopes",
+              "items": { "required": ["allowedChanges"] }
             },
             "externalReference": {
               "$ref": "authorization-request-common.schema.json#/$defs/externalReference"
@@ -58,14 +61,15 @@
               "$ref": "../elhub-common.schema.json#/$defs/updatedAt"
             }
           },
-          "required": ["textReference"]
+          "required": ["requestType", "requestedScopes", "status", "textReference", "validFrom", "validTo", "createdAt", "updatedAt"]
         },
         "meta": {
           "type": "object",
-          "properties": {}
+          "description": "Business metadata, varying by request type. Supported keys include balanceSupplierName and organizationName; supplier change and move-in also include requestedMeteringPoints (objects with id and optional address and meterNumber). Address contains postalCode and optional streetName, houseNumber and city. Move-in may include moveInDate as an ISO date (YYYY-MM-DD). Additional metadata keys are allowed."
         },
         "relationships": {
           "type": "object",
+          "required": ["requestedBy", "requestedPrincipal", "requestedOf"],
           "properties": {
             "requestedBy": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
@@ -90,6 +94,7 @@
         },
         "links": {
           "type": "object",
+          "required": ["self"],
           "properties": {
             "self": {
               "type": "string",
@@ -99,6 +104,13 @@
           }
         }
       }
+    },
+    "links": {
+      "$ref": "#/properties/data/properties/links"
+    },
+    "meta": {
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta",
+      "required": ["createdAt"]
     }
   }
 }

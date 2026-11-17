@@ -20,7 +20,7 @@
             "allowedChanges": [
               {
                 "attribute": "type",
-                "value": ["EnergySupplier", "EndUser"]
+                "value": ["EndUser", "EnergySupplier"]
               },
               {
                 "attribute": "validFrom",
@@ -55,7 +55,7 @@
         },
         "approvedBy": {
           "data": {
-            "id": "01019012345",
+            "id": "01997291-7e8b-7000-8000-000000000001",
             "type": "Person"
           }
         },
@@ -65,7 +65,14 @@
             "type": "AuthorizationDocument"
           }
         }
+      },
+      "links": {
+        "self": "/access/v1/authorization-grants/01997291-7e8b-7000-8000-000000000015"
       }
-    }
+    },
+    "links": {
+      "self": "/access/v1/authorization-grants/01997291-7e8b-7000-8000-000000000015"
+    },
+    "meta": { "createdAt": "2026-09-24T10:15:00+02:00" }
   }
 }
