@@ -727,6 +727,15 @@ class ExposedGrantRepositoryTest : FunSpec({
             audit[AuthorizationAuditLogTable.valueBefore] shouldBe "Active"
             audit[AuthorizationAuditLogTable.valueAfter] shouldBe status.name
             audit[AuthorizationAuditLogTable.message] shouldBe null
+
+            shouldThrow<RepositoryWriteError.ConflictError> {
+                repository.update(grant.id, status, changedBy)
+            }
+
+            assertGrant(repository.find(grant.id), result)
+            val unchangedAudit = auditRows(grant.id).single()
+            unchangedAudit[AuthorizationAuditLogTable.changedAt] shouldBe audit[AuthorizationAuditLogTable.changedAt]
+            unchangedAudit[AuthorizationAuditLogTable.valueAfter] shouldBe status.name
         }
         illegalTransitions.forEach { (type, status) ->
             val grant = insertGrant(type = type, scopes = listOf(constrained, unconstrained))
@@ -833,21 +842,6 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         repository.find(grant.id) shouldBe grant
         auditRows(grant.id) shouldBe emptyList()
-    }
-
-    test("a repeated update does not add another audit record") {
-        val grant = insertGrant()
-        repository.update(grant.id, AuthorizationGrantStatus.Revoked, grant.principal)
-        val before = auditRows(grant.id)
-        before.size shouldBe 1
-
-        shouldThrow<RepositoryWriteError.ConflictError> {
-            repository.update(grant.id, AuthorizationGrantStatus.Revoked, grant.principal)
-        }
-
-        val audit = auditRows(grant.id).single()
-        audit[AuthorizationAuditLogTable.changedAt] shouldBe before.single()[AuthorizationAuditLogTable.changedAt]
-        audit[AuthorizationAuditLogTable.valueAfter] shouldBe "Revoked"
     }
 
     test("concurrent updates produce one successful transition and one conflict") {
