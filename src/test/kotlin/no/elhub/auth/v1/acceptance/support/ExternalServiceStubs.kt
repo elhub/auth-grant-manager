@@ -25,59 +25,59 @@ import no.elhub.auth.common.auth.AUTHINFO_POLICY_ROUTE
  * Fakes for the HTTP services the application calls, backed by one WireMock container.
  *
  * Every test starts from [reset]: only the IDP token endpoint answers, and the PDP denies everything.
- * Tests then describe the outside world they need, e.g. [allowApprover] or [registerEdielRedirect].
+ * Tests then describe the outside world they need through service and endpoint-specific stubs.
  */
 class ExternalServiceStubs(private val baseUrl: String) {
     private val admin = HttpClient(Apache5)
 
-    val organizations = Organizations()
-    val pdp = Pdp()
-    val persons = Persons()
-    val ediel = Ediel()
+    val organizationsService = Organizations()
+    val pdpService = Pdp()
+    val authPersonsService = Persons()
+    val edielService = Ediel()
 
     inner class Organizations {
         /** The organisations service knows [supplier] (by GLN) as a balance supplier with its name. */
-        suspend fun balanceSupplier(supplier: EnergySupplier) =
+        suspend fun stubPartyByIdAndType(supplier: EnergySupplier) =
             registerSupplier(supplier.gln, requireNotNull(supplier.name) { "supplier needs a name" })
 
         /** The organisations service (Brreg) knows [organization] with its name. */
-        suspend fun organization(organization: Organization) =
+        suspend fun stubBrregOrganizationByNumber(organization: Organization) =
             registerOrganization(organization.number, requireNotNull(organization.name) { "organization needs a name" })
     }
 
     inner class Pdp {
         /** The PDP accepts [supplier]'s token with its sender GLN. */
-        suspend fun authenticate(supplier: EnergySupplier) = registerMarketEntity(supplier.caller())
+        suspend fun stubAuthInfo(supplier: EnergySupplier) = registerMarketEntity(supplier.caller())
 
         /** The PDP accepts [person]'s token, as the person or on behalf of [onBehalfOf]. */
-        suspend fun authenticate(person: Person, onBehalfOf: Organization? = null) =
+        suspend fun stubAuthInfo(person: Person, onBehalfOf: Organization? = null) =
             registerEndUser(person.caller(onBehalfOf))
 
         /** The PDP lets [approver] approve for [requestedOf] on behalf of [principal]. No other combination is allowed. */
-        suspend fun allowApprover(approver: Person, requestedOf: Organization, principal: Organization) =
+        suspend fun stubAgentApproverDecision(approver: Person, requestedOf: Organization, principal: Organization) =
             this@ExternalServiceStubs.allowApprover(approver.id, requestedOf.number, principal.number)
 
         /** The PDP lets [requestedOf] act on behalf of [principal]. No other combination is allowed. */
-        suspend fun allowRepresentative(requestedOf: Organization, principal: Organization) =
+        suspend fun stubAgentRepresentativeDecision(requestedOf: Organization, principal: Organization) =
             this@ExternalServiceStubs.allowRepresentative(requestedOf.number, principal.number)
     }
 
     inner class Persons {
         /** Auth-persons resolves [person]'s national identity number to their person ID. */
-        suspend fun person(person: Person) =
+        suspend fun stubPersonByNationalIdentityNumber(person: Person) =
             registerPerson(requireNotNull(person.nationalIdentityNumber) { "person needs a nationalIdentityNumber" }, person.id)
     }
 
     inner class Ediel {
         /** Ediel has [supplier]'s redirect URL registered for its GLN. */
-        suspend fun redirect(supplier: EnergySupplier) =
+        suspend fun stubPartyRedirectUrl(supplier: EnergySupplier) =
             registerEdielRedirect(supplier.gln, requireNotNull(supplier.redirectUrl) { "supplier needs a redirectUrl" })
 
         /** Ediel has no redirect URL for [supplier]'s GLN (404). */
-        suspend fun noRedirect(supplier: EnergySupplier) = registerEdielFailure(supplier.gln, status = 404)
+        suspend fun stubPartyRedirectUrlNotFound(supplier: EnergySupplier) = registerEdielFailure(supplier.gln, status = 404)
 
         /** Ediel fails when asked about [supplier]'s GLN (500). */
-        suspend fun unavailable(supplier: EnergySupplier) = registerEdielFailure(supplier.gln, status = 500)
+        suspend fun stubPartyRedirectUrlUnavailable(supplier: EnergySupplier) = registerEdielFailure(supplier.gln, status = 500)
     }
 
     suspend fun reset() {

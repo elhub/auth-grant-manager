@@ -50,7 +50,7 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019")
             val principal = Organization(number = "999888771")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
 
             documentApiClient.create(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -62,7 +62,7 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019")
             val principal = Organization(number = "999888771")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
 
             documentApiClient.create(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -77,10 +77,10 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
 
             documentApiClient.create(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -96,9 +96,9 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
             // No representative permission given.
 
             val before = documentApiClient.list(by = energySupplier.caller()).ids()
@@ -115,10 +115,10 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val otherPrincipal = Organization(number = "999888774")
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = otherPrincipal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = otherPrincipal)
 
             documentApiClient.create(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -132,10 +132,10 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -151,11 +151,11 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val principalRepresentative = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.pdp.authenticate(person = principalRepresentative, onBehalfOf = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = principalRepresentative, onBehalfOf = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -171,11 +171,11 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val otherEnergySupplier = EnergySupplier(organizationNumber = "999888772", gln = "0128000000599")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.pdp.authenticate(supplier = otherEnergySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = otherEnergySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -190,10 +190,10 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -208,11 +208,11 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val otherEnergySupplier = EnergySupplier(organizationNumber = "999888772", gln = "0128000000599")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.pdp.authenticate(supplier = otherEnergySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = otherEnergySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -230,12 +230,12 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
             val signer = Person(id = "d6784082-8344-e733-e053-02058d0a6752", nationalIdentityNumber = "02916297702")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.persons.person(person = signer)
-            externalServices.pdp.allowApprover(approver = signer, requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.authPersonsService.stubPersonByNationalIdentityNumber(person = signer)
+            externalServices.pdpService.stubAgentApproverDecision(approver = signer, requestedOf = requestedOf, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -267,11 +267,11 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
             val signer = Person(id = "d6784082-8344-e733-e053-02058d0a6752", nationalIdentityNumber = "02916297702")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.persons.person(person = signer)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.authPersonsService.stubPersonByNationalIdentityNumber(person = signer)
             // No approver permission given.
 
             val documentId = documentApiClient.createPending(
@@ -296,12 +296,12 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
             val signer = Person(id = "d6784082-8344-e733-e053-02058d0a6752", nationalIdentityNumber = "02916297702")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.persons.person(person = signer)
-            externalServices.pdp.allowApprover(approver = signer, requestedOf = requestedOf, principal = otherPrincipal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.authPersonsService.stubPersonByNationalIdentityNumber(person = signer)
+            externalServices.pdpService.stubAgentApproverDecision(approver = signer, requestedOf = requestedOf, principal = otherPrincipal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -324,12 +324,12 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val otherRequestedOf = Organization(number = "999888775")
             val signer = Person(id = "d6784082-8344-e733-e053-02058d0a6752", nationalIdentityNumber = "02916297702")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.persons.person(person = signer)
-            externalServices.pdp.allowApprover(approver = signer, requestedOf = otherRequestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.authPersonsService.stubPersonByNationalIdentityNumber(person = signer)
+            externalServices.pdpService.stubAgentApproverDecision(approver = signer, requestedOf = otherRequestedOf, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -351,11 +351,11 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val signer = Person(id = "d6784082-8344-e733-e053-02058d0a6752", nationalIdentityNumber = "02916297702")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.pdp.authenticate(supplier = otherEnergySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = otherEnergySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -375,10 +375,10 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -396,12 +396,12 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val signer = Person(id = "d6784082-8344-e733-e053-02058d0a6752", nationalIdentityNumber = "02916297702")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.persons.person(person = signer)
-            externalServices.pdp.allowApprover(approver = signer, requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.authPersonsService.stubPersonByNationalIdentityNumber(person = signer)
+            externalServices.pdpService.stubAgentApproverDecision(approver = signer, requestedOf = principal, principal = principal)
 
             val documentId = documentApiClient.createPending(
                 payload = frameworkAgreementDocumentPayload(requestedPrincipal = principal, requestedOf = principal),

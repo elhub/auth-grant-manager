@@ -47,7 +47,7 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019")
             val principal = Organization(number = "999888771")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -59,7 +59,7 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019")
             val principal = Organization(number = "999888771")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -73,11 +73,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val otherOrganization = Organization(number = "999888772")
             val approver = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.pdp.authenticate(person = approver, onBehalfOf = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = approver, onBehalfOf = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -92,7 +92,7 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
         test("LIST by an end user acting as a person, without an organization header, is allowed") {
             val person = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(person = person)
+            externalServices.pdpService.stubAuthInfo(person = person)
 
             requestApiClient.list(by = person.caller()).shouldHaveStatus(HttpStatusCode.OK)
         }
@@ -104,10 +104,10 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -123,7 +123,7 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771")
             val requestedOf = Organization(number = "999888773")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
             // No representative permission given.
 
             val before = requestApiClient.list(by = energySupplier.caller()).ids()
@@ -140,8 +140,8 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val otherPrincipal = Organization(number = "999888774")
             val requestedOf = Organization(number = "999888773")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = otherPrincipal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = otherPrincipal)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -155,10 +155,10 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
             // Ediel is not stubbed: an unexpected call fails the test.
 
             requestApiClient.create(
@@ -177,11 +177,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             )
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.ediel.redirect(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.edielService.stubPartyRedirectUrl(supplier = energySupplier)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(
@@ -203,11 +203,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             )
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.ediel.redirect(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.edielService.stubPartyRedirectUrl(supplier = energySupplier)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(
@@ -228,11 +228,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             )
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.ediel.redirect(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.edielService.stubPartyRedirectUrl(supplier = energySupplier)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(
@@ -250,7 +250,7 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019")
             val principal = Organization(number = "999888771")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
             // Rejected by input validation, before Ediel or any other lookup.
 
             requestApiClient.create(
@@ -267,11 +267,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.ediel.noRedirect(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.edielService.stubPartyRedirectUrlNotFound(supplier = energySupplier)
 
             requestApiClient.create(
                 payload = frameworkAgreementRequestPayload(
@@ -289,11 +289,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.ediel.unavailable(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.edielService.stubPartyRedirectUrlUnavailable(supplier = energySupplier)
 
             val before = requestApiClient.list(by = energySupplier.caller()).shouldHaveStatus(HttpStatusCode.OK).ids()
             requestApiClient.create(
@@ -315,10 +315,10 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -334,11 +334,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val principalRepresentative = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.pdp.authenticate(person = principalRepresentative, onBehalfOf = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = principalRepresentative, onBehalfOf = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -354,11 +354,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val otherEnergySupplier = EnergySupplier(organizationNumber = "999888772", gln = "0128000000599")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.pdp.authenticate(supplier = otherEnergySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = otherEnergySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -373,10 +373,10 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val energySupplier = EnergySupplier(organizationNumber = "999888770", gln = "3004300000019", name = "Example Energy Supplier")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -391,11 +391,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val otherEnergySupplier = EnergySupplier(organizationNumber = "999888772", gln = "0128000000599")
             val principal = Organization(number = "999888771", name = "Example Customer AS")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.pdp.authenticate(supplier = otherEnergySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.pdpService.stubAuthInfo(supplier = otherEnergySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -413,12 +413,12 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
             val approver = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.pdp.authenticate(person = approver, onBehalfOf = requestedOf)
-            externalServices.pdp.allowApprover(approver = approver, requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = approver, onBehalfOf = requestedOf)
+            externalServices.pdpService.stubAgentApproverDecision(approver = approver, requestedOf = requestedOf, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -444,11 +444,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
             val person = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.pdp.authenticate(person = person, onBehalfOf = requestedOf)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = person, onBehalfOf = requestedOf)
             // No approver permission given.
 
             val requestId = requestApiClient.createPending(
@@ -469,12 +469,12 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val requestedOf = Organization(number = "999888773", name = "Example Accounting AS")
             val approver = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.pdp.authenticate(person = approver, onBehalfOf = requestedOf)
-            externalServices.pdp.allowApprover(approver = approver, requestedOf = requestedOf, principal = otherPrincipal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = approver, onBehalfOf = requestedOf)
+            externalServices.pdpService.stubAgentApproverDecision(approver = approver, requestedOf = requestedOf, principal = otherPrincipal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -493,12 +493,12 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val otherRequestedOf = Organization(number = "999888775")
             val approver = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = requestedOf, principal = principal)
-            externalServices.pdp.authenticate(person = approver, onBehalfOf = requestedOf)
-            externalServices.pdp.allowApprover(approver = approver, requestedOf = otherRequestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = requestedOf, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = approver, onBehalfOf = requestedOf)
+            externalServices.pdpService.stubAgentApproverDecision(approver = approver, requestedOf = otherRequestedOf, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = requestedOf),
@@ -515,12 +515,12 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val approver = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.pdp.authenticate(person = approver, onBehalfOf = principal)
-            externalServices.pdp.allowApprover(approver = approver, requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = approver, onBehalfOf = principal)
+            externalServices.pdpService.stubAgentApproverDecision(approver = approver, requestedOf = principal, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -540,12 +540,12 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val approver = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.pdp.authenticate(person = approver, onBehalfOf = principal)
-            externalServices.pdp.allowApprover(approver = approver, requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = approver, onBehalfOf = principal)
+            externalServices.pdpService.stubAgentApproverDecision(approver = approver, requestedOf = principal, principal = principal)
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(requestedPrincipal = principal, requestedOf = principal),
@@ -562,11 +562,11 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
             val principal = Organization(number = "999888771", name = "Example Customer AS")
             val person = Person(id = "d6784082-8344-e733-e053-02058d0a6752")
 
-            externalServices.pdp.authenticate(supplier = energySupplier)
-            externalServices.organizations.balanceSupplier(supplier = energySupplier)
-            externalServices.organizations.organization(organization = principal)
-            externalServices.pdp.allowRepresentative(requestedOf = principal, principal = principal)
-            externalServices.pdp.authenticate(person = person, onBehalfOf = principal)
+            externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
+            externalServices.organizationsService.stubPartyByIdAndType(supplier = energySupplier)
+            externalServices.organizationsService.stubBrregOrganizationByNumber(organization = principal)
+            externalServices.pdpService.stubAgentRepresentativeDecision(requestedOf = principal, principal = principal)
+            externalServices.pdpService.stubAuthInfo(person = person, onBehalfOf = principal)
             // No approver permission given.
 
             val requestId = requestApiClient.createPending(
