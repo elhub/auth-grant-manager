@@ -13,6 +13,7 @@ import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.v0.features.common.party.PartyService
 import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.features.requests.CreateRequestHandler
 import no.elhub.auth.v1.features.requests.creation.RedirectUriValidationError
 import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
@@ -46,12 +47,15 @@ class CreateRequestRedirectUriRouteTest : FunSpec({
         val partyService = mockk<PartyService>()
         coEvery { partyService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
         val repository = mockk<RequestRepository>(relaxed = true)
+        val authorizationRulesService = mockk<AuthorizationRulesService>()
+        coEvery { authorizationRulesService.canActOnBehalfOf(any(), any()) } returns true
         val handler = CreateRequestHandler(
             changeOfEnergySupplierHandler = mockk(),
             moveInAndChangeOfEnergySupplierHandler = mockk(),
             energySupplierFrameworkAgreementHandler = mockk(),
             redirectUriValidator = validator,
             requestRepository = repository,
+            authorizationRulesService = authorizationRulesService,
         )
         var result: Pair<HttpStatusCode, JsonApiErrorCollection>? = null
 

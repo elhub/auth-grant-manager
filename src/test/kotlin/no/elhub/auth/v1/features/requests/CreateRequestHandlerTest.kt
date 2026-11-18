@@ -12,6 +12,8 @@ import io.mockk.slot
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
@@ -43,6 +45,7 @@ class CreateRequestHandlerTest : FunSpec({
     lateinit var frameworkAgreementHandler: EnergySupplierFrameworkAgreementRequestHandler
     lateinit var redirectUriValidator: RedirectUriValidator
     lateinit var repository: RequestRepository
+    lateinit var authorizationRulesService: AuthorizationRulesService
     lateinit var inserted: CapturingSlot<AuthorizationRequest>
 
     beforeTest {
@@ -51,12 +54,14 @@ class CreateRequestHandlerTest : FunSpec({
         frameworkAgreementHandler = mockk()
         redirectUriValidator = mockk(relaxed = true)
         repository = mockk()
+        authorizationRulesService = mockk()
+        coEvery { authorizationRulesService.canActOnBehalfOf(any(), any()) } returns true
         inserted = slot()
         coEvery { repository.insert(capture(inserted)) } answers { inserted.captured }
     }
 
     suspend fun create(details: AuthorizationRequestTypeDetails) =
-        CreateRequestHandler(supplierChangeHandler, moveInHandler, frameworkAgreementHandler, redirectUriValidator, repository)(
+        CreateRequestHandler(supplierChangeHandler, moveInHandler, frameworkAgreementHandler, redirectUriValidator, repository, authorizationRulesService)(
             specification = AuthorizationRequestSpecification("ref-1", "https://example.com/callback", details),
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
@@ -88,6 +93,7 @@ class CreateRequestHandlerTest : FunSpec({
                             frameworkAgreementHandler,
                             redirectUriValidator,
                             repository,
+                            authorizationRulesService,
                         )(
                             specification = AuthorizationRequestSpecification(null, null, details),
                             requestedBy = agents.getValue("requestedBy"),
@@ -105,6 +111,7 @@ class CreateRequestHandlerTest : FunSpec({
                     error.actualAgentType shouldBe invalidType
                     error.expectedAgentType shouldBe validAgent.type
                     coVerify(exactly = 0) {
+                        authorizationRulesService.canActOnBehalfOf(any(), any())
                         redirectUriValidator.validate(any(), any())
                         supplierChangeHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
                         moveInHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
@@ -113,6 +120,23 @@ class CreateRequestHandlerTest : FunSpec({
                     }
                 }
             }
+        }
+    }
+
+    test("rejects unauthorized requestedOf before preparation or persistence") {
+        coEvery { authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal) } returns false
+
+        shouldThrow<InputError.RequestedOfRequestedPrincipalMismatch> {
+            create(AuthorizationRequestTypeDetails.EnergySupplierFrameworkAgreement(null, null))
+        }
+
+        coVerify(exactly = 1) { authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal) }
+        coVerify(exactly = 0) {
+            redirectUriValidator.validate(any(), any())
+            supplierChangeHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+            moveInHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+            frameworkAgreementHandler.validateAndGetRequestTypeSpecificDetails(any(), any(), any(), any())
+            repository.insert(any())
         }
     }
 
@@ -154,6 +178,7 @@ class CreateRequestHandlerTest : FunSpec({
             updatedAt = captured.updatedAt,
         )
         coVerify(exactly = 1) { repository.insert(any()) }
+        coVerify(exactly = 1) { authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal) }
         coVerify(exactly = 1) { redirectUriValidator.validate("https://example.com/callback", requestedBy) }
     }
 

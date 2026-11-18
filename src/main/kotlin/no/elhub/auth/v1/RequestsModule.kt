@@ -41,7 +41,7 @@ fun Application.requestsModule() {
                 edielRedirectClient = resolve<EdielRedirectClient>(),
             )
         }
-        provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve(), resolve()) }
+        provide<CreateRequestHandler> { CreateRequestHandler(resolve(), resolve(), resolve(), resolve(), resolve(), resolve()) }
         provide<GetRequestHandler> { GetRequestHandler(resolve()) }
         provide<ListRequestsHandler> { ListRequestsHandler(resolve()) }
         provide<UpdateRequestHandler> { UpdateRequestHandler(resolve(), resolve()) }
