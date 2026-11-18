@@ -55,7 +55,7 @@ class OrganizationAuthorizationTemplateTest : FunSpec({
         html shouldContain "strømavtalen som det vises til over"
         html shouldContain "Innflyttingsdato:</span> 1. mai 2026"
         html shouldContain (
-            "Reguleringsmyndigheten for Energi (RME) har pålagt Elhub å kontrollere at det foreligger " +
+            "Reguleringsmyndigheten for energi (RME) har pålagt Elhub å kontrollere at det foreligger " +
                 "gyldig strømavtale før innflytting og skifte av strømleverandør (leverandørskifte)."
             )
         html shouldContain "Ved å signere dette dokumentet bekrefter du på vegne av organisasjonen"
@@ -83,7 +83,7 @@ class OrganizationAuthorizationTemplateTest : FunSpec({
 
         changeOfSupplier shouldContain "on behalf of the organization"
         changeOfSupplier shouldContain "Agreement reference:</span> ABC123"
-        moveIn shouldContain "Confirmation of electricity supply agreement - Move-in and change of supplier"
+        moveIn shouldContain "Confirmation of Electricity Supply Agreement – Move-in and Change of Supplier"
         moveIn shouldContain "Agreement reference:</span> ABC123"
         moveIn shouldContain "request must be confirmed within four weeks."
         moveIn shouldContain "electricity customer on Elhub My Page."
@@ -111,6 +111,9 @@ class OrganizationAuthorizationTemplateTest : FunSpec({
         moveIn shouldContain "Avtalereferanse:</span> ABC123"
         moveIn shouldContain "førespurnaden stadfestast innan 4 veker."
         moveIn shouldContain "straumkunden på Elhub Mi Side."
+        moveIn shouldContain "Reguleringsmyndigheita for energi (RME) har pålagd Elhub"
+        moveIn shouldContain "kan ikkje stadfestinga brukast fleire gonger av straumleverandøren."
+        moveIn shouldContain "Målepunkt-ID: 707057500047917289"
     }
 
     test("omits the move-in date when it is absent") {
