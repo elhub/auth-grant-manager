@@ -51,6 +51,9 @@ If you prefer to invoke the infrastructure or migrations manually, the `services
 | `./gradlew buildFatJar`       | Build an executable JAR of the server with all dependencies included |
 | `./gradlew buildImage`        | Build the docker image to use with the fat JAR                       |
 
+The [V1 acceptance test guide](src/test/kotlin/no/elhub/auth/v1/acceptance/README.md)
+explains their purpose, local dependencies, and how to run them.
+
 #### Preview PDFs
 
 Generate sample documents using the application's PDF generator, without starting the application:
