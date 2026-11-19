@@ -16,7 +16,8 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.util.UUID
+import kotlin.uuid.Uuid
+import kotlin.uuid.toKotlinUuid
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
 
 class ExposedAgentRepositoryTest : FunSpec({
@@ -40,7 +41,7 @@ class ExposedAgentRepositoryTest : FunSpec({
             }[AuthorizationAgentTable.id].value
         }
 
-        val found = repository.find(id)
+        val found = repository.find(id.toKotlinUuid())
         found.id shouldBe id
         found.type shouldBe AgentType.Person
         found.resourceId shouldBe "EXISTING_V0_AGENT"
@@ -48,7 +49,7 @@ class ExposedAgentRepositoryTest : FunSpec({
     }
 
     test("find missing UUID throws a typed exception") {
-        val id = UUID.randomUUID()
+        val id = Uuid.random()
         val exception = shouldThrow<RepositoryReadError.NotFoundError> { repository.find(id) }
         exception.message shouldBe "Agent not found: $id"
     }
@@ -58,13 +59,13 @@ class ExposedAgentRepositoryTest : FunSpec({
         val second = repository.findOrInsert(AgentType.Organization, "BATCH_ORGANIZATION")
         repository.findOrInsert(AgentType.Person, "BATCH_UNRELATED")
 
-        repository.findByIds(listOf(first.id, second.id, first.id, UUID.randomUUID())) shouldBe
-            mapOf(first.id to first, second.id to second)
+        repository.findByIds(listOf(first.id.toKotlinUuid(), second.id.toKotlinUuid(), first.id.toKotlinUuid(), Uuid.random())) shouldBe
+            mapOf(first.id.toKotlinUuid() to first, second.id.toKotlinUuid() to second)
     }
 
     test("findByIds returns an empty map for empty input or missing IDs") {
         repository.findByIds(emptyList()) shouldBe emptyMap()
-        repository.findByIds(listOf(UUID.randomUUID())) shouldBe emptyMap()
+        repository.findByIds(listOf(Uuid.random())) shouldBe emptyMap()
     }
 
     test("findOrInsert persists a new agent and returns the same record on repeated calls") {
@@ -72,7 +73,7 @@ class ExposedAgentRepositoryTest : FunSpec({
 
         first.type shouldBe AgentType.Person
         first.resourceId shouldBe "NEW_AGENT"
-        repository.find(first.id) shouldBe first
+        repository.find(first.id.toKotlinUuid()) shouldBe first
         repository.findOrInsert(AgentType.Person, "NEW_AGENT") shouldBe first
 
         withTransaction {
@@ -105,7 +106,7 @@ class ExposedAgentRepositoryTest : FunSpec({
         }
 
         agents.forEach { it shouldBe agents.first() }
-        repository.find(agents.first().id) shouldBe agents.first()
+        repository.find(agents.first().id.toKotlinUuid()) shouldBe agents.first()
         withTransaction {
             AuthorizationAgentTable.selectAll()
                 .where {

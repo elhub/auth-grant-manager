@@ -19,19 +19,19 @@ import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class ListGrantsHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
     val handler = ListGrantsHandler(grantRepository)
     val authorizedAgent = AuthorizationAgent("7070575000001", AgentType.OrganizationEntity)
-    val grantedBy = AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)
+    val grantedBy = AuthorizationAgent(Uuid.random().toString(), AgentType.Person)
     val principal = AuthorizationAgent("999888771", AgentType.Organization)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
-        sourceId = UUID.randomUUID(),
+        sourceId = Uuid.random(),
         principal = principal,
         grantedBy = grantedBy,
         grantedTo = authorizedAgent,
@@ -48,7 +48,7 @@ class ListGrantsHandlerTest : FunSpec({
         val statuses = listOf(AuthorizationGrantStatus.Pending, AuthorizationGrantStatus.Revoked)
         val types = listOf(AuthorizationGrantType.Persistent)
         val agentFilters = GrantAgentFilters(
-            grantedBy = listOf(grantedBy, AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)),
+            grantedBy = listOf(grantedBy, AuthorizationAgent(Uuid.random().toString(), AgentType.Person)),
             principal = listOf(principal),
             approvedBy = listOf(grantedBy),
             grantedTo = listOf(authorizedAgent),

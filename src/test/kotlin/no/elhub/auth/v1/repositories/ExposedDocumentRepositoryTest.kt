@@ -40,10 +40,10 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class ExposedDocumentRepositoryTest : FunSpec({
     extension(PostgresTestContainerExtension())
@@ -65,7 +65,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
     val createdAt = Instant.parse("2025-01-01T00:00:00Z")
     val future = Instant.parse("2100-01-01T00:00:00Z")
 
-    fun agent(type: AgentType = AgentType.Person) = AuthorizationAgent(UUID.randomUUID().toString(), type)
+    fun agent(type: AgentType = AgentType.Person) = AuthorizationAgent(Uuid.random().toString(), type)
 
     fun document() = AuthorizationDocument.new(
         documentType = AuthorizationDocumentType.MoveInAndChangeOfEnergySupplierForOrganization,
@@ -82,7 +82,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
     fun grant(document: AuthorizationDocument, signatory: AuthorizationAgent) = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
-        sourceId = UUID.fromString(document.id),
+        sourceId = Uuid.parse(document.id),
         principal = document.requestedPrincipal,
         grantedBy = document.requestedOf,
         grantedTo = document.requestedBy,
@@ -92,13 +92,13 @@ class ExposedDocumentRepositoryTest : FunSpec({
         scopes = emptyList(),
     )
 
-    suspend fun seed(document: AuthorizationDocument): UUID = withTransaction {
+    suspend fun seed(document: AuthorizationDocument): Uuid = withTransaction {
         suspend fun agentId(agent: AuthorizationAgent) = agentRepository.findOrInsert(agent.type, agent.id).id
         val requestedBy = agentId(document.requestedBy)
         val requestedPrincipal = agentId(document.requestedPrincipal)
         val requestedOf = agentId(document.requestedOf)
         val approvedBy = document.approvedBy?.let { agentId(it) }
-        val documentId = UUID.fromString(document.id)
+        val documentId = Uuid.parse(document.id)
         AuthorizationDocumentTable.insert {
             it[id] = documentId
             it[documentType] = document.documentType
@@ -204,7 +204,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
     }
 
     test("find throws a modeled not found error for an unknown document ID") {
-        val id = UUID.randomUUID()
+        val id = Uuid.random()
 
         val error = shouldThrow<RepositoryReadError.NotFoundError> { repository.find(id) }
 
@@ -368,7 +368,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         )
 
         val inserted = repository.insert(expected)
-        val found = repository.find(UUID.fromString(expected.id))
+        val found = repository.find(Uuid.parse(expected.id))
         val page = repository.findAndSortByCreatedAt(expected.requestedBy, Pagination(), emptyList())
 
         page.totalItems shouldBe 1L
@@ -395,7 +395,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         )
 
         val inserted = repository.insert(expected)
-        val found = repository.find(UUID.fromString(expected.id))
+        val found = repository.find(Uuid.parse(expected.id))
 
         listOf(inserted, found).forEach { actual ->
             actual.copy(pdfBytes = expected.pdfBytes) shouldBe expected
@@ -414,7 +414,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
         cases.forEach { (document, status) ->
             val inserted = repository.insert(document)
-            val found = repository.find(UUID.fromString(document.id))
+            val found = repository.find(Uuid.parse(document.id))
             listOf(inserted, found).forEach { actual ->
                 actual.copy(pdfBytes = document.pdfBytes) shouldBe document.copy(status = status)
                 actual.pdfBytes.toList() shouldBe document.pdfBytes.toList()
@@ -511,7 +511,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
     test("confirm rejects unknown documents without inserting a grant") {
         val original = document()
-        val id = UUID.fromString(original.id)
+        val id = Uuid.parse(original.id)
         val signatory = agent()
 
         val error = shouldThrow<RepositoryWriteError.NotFoundError> {

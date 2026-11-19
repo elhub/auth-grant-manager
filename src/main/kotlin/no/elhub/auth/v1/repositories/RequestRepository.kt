@@ -26,7 +26,7 @@ import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
@@ -42,15 +42,16 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
-import java.util.UUID
 import kotlin.time.Instant
-import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord as AuthorizationAgentRecord
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty as toAuthorizationAgent
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty as toAuthorizationAgent
 
 interface RequestRepository {
-    suspend fun find(requestId: UUID): AuthorizationRequest
+    suspend fun find(requestId: Uuid): AuthorizationRequest
     suspend fun findAndSortByCreatedAt(
         agent: AuthorizationAgent,
         pagination: Pagination,
@@ -58,26 +59,26 @@ interface RequestRepository {
     ): Page<AuthorizationRequest>
 
     suspend fun insert(request: AuthorizationRequest): AuthorizationRequest
-    suspend fun reject(requestId: UUID, textLanguage: TextLanguage): AuthorizationRequest
-    suspend fun accept(requestId: UUID, grants: List<AuthorizationGrant>, textLanguage: TextLanguage): AuthorizationRequest
+    suspend fun reject(requestId: Uuid, textLanguage: TextLanguage): AuthorizationRequest
+    suspend fun accept(requestId: Uuid, grants: List<AuthorizationGrant>, textLanguage: TextLanguage): AuthorizationRequest
 }
 
 class ExposedRequestRepository(
     val agentRepository: AgentRepository,
     val grantRepository: GrantRepository,
 ) : RequestRepository {
-    override suspend fun find(requestId: UUID): AuthorizationRequest = withTransaction {
+    override suspend fun find(requestId: Uuid): AuthorizationRequest = withTransaction {
         val row = AuthorizationRequestTable.selectAll()
             .where { AuthorizationRequestTable.id eq requestId }
             .singleOrNull()
             ?: throw RepositoryReadError.NotFoundError("Request not found: $requestId")
 
         row.toAuthorizationRequest(
-            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
-            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { agentRepository.find(it).toAuthorizationAgent() },
+            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { agentRepository.find(it.toKotlinUuid()).toAuthorizationAgent() },
             now = now(),
             grants = grantRepository.findBySourceIds(AuthorizationGrantSourceType.Request, listOf(requestId))[requestId],
         )
@@ -90,7 +91,7 @@ class ExposedRequestRepository(
     ): Page<AuthorizationRequest> = withTransaction {
         val agentId = agentRepository.findOrInsert(type = agent.type, agentId = agent.id).id
         val now = now()
-        val whereClause = generateFilterByCondition(agentId, statuses, now)
+        val whereClause = generateFilterByCondition(agentId.toKotlinUuid(), statuses, now)
 
         val totalItems = AuthorizationRequestTable
             .selectAll()
@@ -119,7 +120,7 @@ class ExposedRequestRepository(
                 it[AuthorizationRequestTable.approvedBy],
             )
         }.distinct()
-        val agentMap: Map<UUID, AuthorizationAgentRecord> = AuthorizationAgentTable
+        val agentMap = AuthorizationAgentTable
             .selectAll()
             .where { AuthorizationAgentTable.id inList allAgentIds }
             .associate { it[AuthorizationAgentTable.id].value to it.toAuthorizationAgent() }
@@ -212,7 +213,7 @@ class ExposedRequestRepository(
         )
     }
 
-    override suspend fun reject(requestId: UUID, textLanguage: TextLanguage): AuthorizationRequest = withTransaction {
+    override suspend fun reject(requestId: Uuid, textLanguage: TextLanguage): AuthorizationRequest = withTransaction {
         // Lock the row using SELECT ... FOR NO KEY UPDATE for atomicity
         val row = AuthorizationRequestTable.selectAll()
             .where { AuthorizationRequestTable.id eq requestId }
@@ -239,16 +240,16 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
-            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             now = now,
         )
     }
 
     override suspend fun accept(
-        requestId: UUID,
+        requestId: Uuid,
         grants: List<AuthorizationGrant>,
         textLanguage: TextLanguage,
     ): AuthorizationRequest = withTransaction {
@@ -281,9 +282,9 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
-            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             approvedBy = approvedBy,
             now = now,
@@ -292,12 +293,12 @@ class ExposedRequestRepository(
     }
 
     private fun generateFilterByCondition(
-        agentId: UUID,
+        agentId: Uuid,
         statuses: List<AuthorizationRequestStatus>,
         now: Instant,
     ): Op<Boolean> {
-        val agentCondition = (AuthorizationRequestTable.requestedPrincipal eq agentId) or
-            (AuthorizationRequestTable.requestedBy eq agentId)
+        val agentCondition = (AuthorizationRequestTable.requestedPrincipal eq agentId.toJavaUuid()) or
+            (AuthorizationRequestTable.requestedBy eq agentId.toJavaUuid())
         if (statuses.isEmpty()) {
             return agentCondition
         }
@@ -325,8 +326,8 @@ class ExposedRequestRepository(
     }
 
     private fun getScopesByRequestId(
-        requestIds: List<UUID>,
-    ): Map<UUID, List<RequestedAuthorizationScope>> {
+        requestIds: List<Uuid>,
+    ): Map<Uuid, List<RequestedAuthorizationScope>> {
         if (requestIds.isEmpty()) {
             return emptyMap()
         }
@@ -353,7 +354,7 @@ class ExposedRequestRepository(
     }
 }
 
-object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
+object AuthorizationRequestTable : UuidTable("auth_v1.authorization_request") {
     val requestType =
         customEnumeration(
             name = "request_type",
@@ -438,8 +439,8 @@ enum class DatabaseRequestStatus {
     Rejected,
 }
 
-object AuthorizationRequestScopeTable : UUIDTable("auth_v1.authorization_request_scope") {
-    val requestId = javaUUID("request_id")
+object AuthorizationRequestScopeTable : UuidTable("auth_v1.authorization_request_scope") {
+    val requestId = uuid("request_id")
         .references(AuthorizationRequestTable.id)
     val resourceType = customEnumeration(
         name = "resource_type",
@@ -449,8 +450,8 @@ object AuthorizationRequestScopeTable : UUIDTable("auth_v1.authorization_request
     )
 }
 
-object AuthorizationRequestScopeConstraintTable : UUIDTable("auth_v1.authorization_request_scope_constraint") {
-    val scopeId = javaUUID("scope_id").references(AuthorizationRequestScopeTable.id)
+object AuthorizationRequestScopeConstraintTable : UuidTable("auth_v1.authorization_request_scope_constraint") {
+    val scopeId = uuid("scope_id").references(AuthorizationRequestScopeTable.id)
     val kind = customEnumeration(
         name = "kind",
         sql = "auth_v1.authorization_constraint_kind",

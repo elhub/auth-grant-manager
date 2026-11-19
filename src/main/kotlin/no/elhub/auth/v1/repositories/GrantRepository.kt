@@ -26,7 +26,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.compoundAnd
 import org.jetbrains.exposed.v1.core.compoundOr
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
@@ -42,17 +42,18 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.postgresql.util.PGobject
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
+import kotlin.uuid.toKotlinUuid
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty as toAuthorizationAgent
 
 interface GrantRepository {
-    suspend fun find(grantId: UUID): AuthorizationGrant
+    suspend fun find(grantId: Uuid): AuthorizationGrant
     suspend fun findBySourceIds(
         sourceType: AuthorizationGrantSourceType,
-        sourceIds: List<UUID>
-    ): Map<UUID, List<AuthorizationGrant>>
+        sourceIds: List<Uuid>
+    ): Map<Uuid, List<AuthorizationGrant>>
 
     suspend fun findAll(
         agent: AuthorizationAgent,
@@ -63,23 +64,23 @@ interface GrantRepository {
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
-    suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus): AuthorizationGrant
+    suspend fun update(grantId: Uuid, newStatus: AuthorizationGrantStatus): AuthorizationGrant
 }
 
 class ExposedGrantRepository(
     val agentRepository: AgentRepository,
 ) : GrantRepository {
-    override suspend fun find(grantId: UUID): AuthorizationGrant = withTransaction {
+    override suspend fun find(grantId: Uuid): AuthorizationGrant = withTransaction {
         val row = AuthorizationGrantTable.selectAll()
             .where { AuthorizationGrantTable.id eq grantId }
             .singleOrNull()
             ?: throw RepositoryReadError.NotFoundError("Grant not found: $grantId")
 
         row.toAuthorizationGrant(
-            principal = agentRepository.find(row[AuthorizationGrantTable.principal]).toAuthorizationAgent(),
-            grantedBy = agentRepository.find(row[AuthorizationGrantTable.grantedBy]).toAuthorizationAgent(),
-            grantedTo = agentRepository.find(row[AuthorizationGrantTable.grantedTo]).toAuthorizationAgent(),
-            approvedBy = agentRepository.find(row[AuthorizationGrantTable.approvedBy]).toAuthorizationAgent(),
+            principal = agentRepository.find(row[AuthorizationGrantTable.principal].toKotlinUuid()).toAuthorizationAgent(),
+            grantedBy = agentRepository.find(row[AuthorizationGrantTable.grantedBy].toKotlinUuid()).toAuthorizationAgent(),
+            grantedTo = agentRepository.find(row[AuthorizationGrantTable.grantedTo].toKotlinUuid()).toAuthorizationAgent(),
+            approvedBy = agentRepository.find(row[AuthorizationGrantTable.approvedBy].toKotlinUuid()).toAuthorizationAgent(),
             scopes = getScopesByGrantId(listOf(grantId))[grantId].orEmpty(),
             now = now(),
         )
@@ -87,8 +88,8 @@ class ExposedGrantRepository(
 
     override suspend fun findBySourceIds(
         sourceType: AuthorizationGrantSourceType,
-        sourceIds: List<UUID>,
-    ): Map<UUID, List<AuthorizationGrant>> {
+        sourceIds: List<Uuid>,
+    ): Map<Uuid, List<AuthorizationGrant>> {
         if (sourceIds.isEmpty()) return emptyMap()
 
         return withTransaction {
@@ -108,17 +109,17 @@ class ExposedGrantRepository(
                     it[AuthorizationGrantTable.approvedBy],
                 )
             }.distinct()
-            val agents = agentRepository.findByIds(agentIds)
+            val agents = agentRepository.findByIds(agentIds.map { it.toKotlinUuid() })
                 .mapValues { (_, agent) -> agent.toAuthorizationAgent() }
             val scopes = getScopesByGrantId(rows.map { it[AuthorizationGrantTable.id].value })
             val now = now()
 
             rows.map { row ->
                 row.toAuthorizationGrant(
-                    principal = agents.getValue(row[AuthorizationGrantTable.principal]),
-                    grantedBy = agents.getValue(row[AuthorizationGrantTable.grantedBy]),
-                    grantedTo = agents.getValue(row[AuthorizationGrantTable.grantedTo]),
-                    approvedBy = agents.getValue(row[AuthorizationGrantTable.approvedBy]),
+                    principal = agents.getValue(row[AuthorizationGrantTable.principal].toKotlinUuid()),
+                    grantedBy = agents.getValue(row[AuthorizationGrantTable.grantedBy].toKotlinUuid()),
+                    grantedTo = agents.getValue(row[AuthorizationGrantTable.grantedTo].toKotlinUuid()),
+                    approvedBy = agents.getValue(row[AuthorizationGrantTable.approvedBy].toKotlinUuid()),
                     scopes = scopes[row[AuthorizationGrantTable.id].value].orEmpty(),
                     now = now,
                 )
@@ -202,16 +203,16 @@ class ExposedGrantRepository(
                 it[AuthorizationGrantTable.approvedBy],
             )
         }.distinct()
-        val agents = agentRepository.findByIds(agentIds)
+        val agents = agentRepository.findByIds(agentIds.map { it.toKotlinUuid() })
             .mapValues { (_, agent) -> agent.toAuthorizationAgent() }
         val scopes = getScopesByGrantId(rows.map { it[AuthorizationGrantTable.id].value })
 
         val items = rows.map { row ->
             row.toAuthorizationGrant(
-                principal = agents.getValue(row[AuthorizationGrantTable.principal]),
-                grantedBy = agents.getValue(row[AuthorizationGrantTable.grantedBy]),
-                grantedTo = agents.getValue(row[AuthorizationGrantTable.grantedTo]),
-                approvedBy = agents.getValue(row[AuthorizationGrantTable.approvedBy]),
+                principal = agents.getValue(row[AuthorizationGrantTable.principal].toKotlinUuid()),
+                grantedBy = agents.getValue(row[AuthorizationGrantTable.grantedBy].toKotlinUuid()),
+                grantedTo = agents.getValue(row[AuthorizationGrantTable.grantedTo].toKotlinUuid()),
+                approvedBy = agents.getValue(row[AuthorizationGrantTable.approvedBy].toKotlinUuid()),
                 scopes = scopes[row[AuthorizationGrantTable.id].value].orEmpty(),
                 now = now,
             )
@@ -276,7 +277,7 @@ class ExposedGrantRepository(
         )
     }
 
-    override suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus): AuthorizationGrant = withTransaction {
+    override suspend fun update(grantId: Uuid, newStatus: AuthorizationGrantStatus): AuthorizationGrant = withTransaction {
         val row = AuthorizationGrantTable.selectAll()
             .where { AuthorizationGrantTable.id eq grantId }
             .forUpdate(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
@@ -304,16 +305,16 @@ class ExposedGrantRepository(
             it[AuthorizationGrantTable.status] = target
             it[updatedAt] = now
         }.single().toAuthorizationGrant(
-            principal = agentRepository.find(row[AuthorizationGrantTable.principal]).toAuthorizationAgent(),
-            grantedBy = agentRepository.find(row[AuthorizationGrantTable.grantedBy]).toAuthorizationAgent(),
-            grantedTo = agentRepository.find(row[AuthorizationGrantTable.grantedTo]).toAuthorizationAgent(),
-            approvedBy = agentRepository.find(row[AuthorizationGrantTable.approvedBy]).toAuthorizationAgent(),
+            principal = agentRepository.find(row[AuthorizationGrantTable.principal].toKotlinUuid()).toAuthorizationAgent(),
+            grantedBy = agentRepository.find(row[AuthorizationGrantTable.grantedBy].toKotlinUuid()).toAuthorizationAgent(),
+            grantedTo = agentRepository.find(row[AuthorizationGrantTable.grantedTo].toKotlinUuid()).toAuthorizationAgent(),
+            approvedBy = agentRepository.find(row[AuthorizationGrantTable.approvedBy].toKotlinUuid()).toAuthorizationAgent(),
             scopes = getScopesByGrantId(listOf(grantId))[grantId].orEmpty(),
             now = now,
         )
     }
 
-    private fun getScopesByGrantId(grantIds: List<UUID>): Map<UUID, List<GrantedAuthorizationScope>> =
+    private fun getScopesByGrantId(grantIds: List<Uuid>): Map<Uuid, List<GrantedAuthorizationScope>> =
         (AuthorizationGrantScopeTable leftJoin AuthorizationGrantScopeConstraintTable)
             .selectAll()
             .where { AuthorizationGrantScopeTable.grantId inList grantIds }
@@ -393,7 +394,7 @@ fun ResultRow.toGrantScopeConstraint(): AuthorizationScopeConstraint {
     )
 }
 
-object AuthorizationGrantTable : UUIDTable("auth_v1.authorization_grant") {
+object AuthorizationGrantTable : UuidTable("auth_v1.authorization_grant") {
     val type = customEnumeration(
         name = "type",
         sql = "auth_v1.authorization_grant_type",
@@ -406,7 +407,7 @@ object AuthorizationGrantTable : UUIDTable("auth_v1.authorization_grant") {
         fromDb = { value -> AuthorizationGrantSourceType.valueOf(value as String) },
         toDb = { PGEnum("auth_v1.authorization_grant_source_type", it) },
     )
-    val sourceId = javaUUID("source_id")
+    val sourceId = uuid("source_id")
     val principal = javaUUID("principal").references(AuthorizationAgentTable.id)
     val grantedBy = javaUUID("granted_by").references(AuthorizationAgentTable.id)
     val grantedTo = javaUUID("granted_to").references(AuthorizationAgentTable.id)
@@ -429,8 +430,8 @@ enum class DatabaseGrantStatus {
     Exhausted,
 }
 
-object AuthorizationGrantScopeTable : UUIDTable("auth_v1.authorization_grant_scope") {
-    val grantId = javaUUID("grant_id").references(AuthorizationGrantTable.id)
+object AuthorizationGrantScopeTable : UuidTable("auth_v1.authorization_grant_scope") {
+    val grantId = uuid("grant_id").references(AuthorizationGrantTable.id)
     val capability = customEnumeration(
         name = "capability",
         sql = "auth_v1.authorization_capability",
@@ -445,8 +446,8 @@ object AuthorizationGrantScopeTable : UUIDTable("auth_v1.authorization_grant_sco
     )
 }
 
-object AuthorizationGrantScopeConstraintTable : UUIDTable("auth_v1.authorization_grant_scope_constraint") {
-    val scopeId = javaUUID("scope_id").references(AuthorizationGrantScopeTable.id)
+object AuthorizationGrantScopeConstraintTable : UuidTable("auth_v1.authorization_grant_scope_constraint") {
+    val scopeId = uuid("scope_id").references(AuthorizationGrantScopeTable.id)
     val kind = customEnumeration(
         name = "kind",
         sql = "auth_v1.authorization_constraint_kind",

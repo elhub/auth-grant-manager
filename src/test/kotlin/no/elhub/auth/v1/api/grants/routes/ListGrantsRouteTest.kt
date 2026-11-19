@@ -35,8 +35,8 @@ import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class ListGrantsRouteTest : FunSpec({
     val handler = mockk<ListGrantsHandler>()
@@ -47,7 +47,7 @@ class ListGrantsRouteTest : FunSpec({
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
-        sourceId = UUID.randomUUID(),
+        sourceId = Uuid.random(),
         principal = organization,
         grantedBy = grantedBy,
         grantedTo = authorizedAgent,

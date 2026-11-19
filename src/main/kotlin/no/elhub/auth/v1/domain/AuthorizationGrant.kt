@@ -2,14 +2,14 @@ package no.elhub.auth.v1.domain
 
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.now
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 data class AuthorizationGrant(
-    val id: UUID,
+    val id: Uuid,
     val type: AuthorizationGrantType,
     val sourceType: AuthorizationGrantSourceType,
-    val sourceId: UUID,
+    val sourceId: Uuid,
     val principal: AuthorizationAgent,
     val grantedBy: AuthorizationAgent,
     val grantedTo: AuthorizationAgent,
@@ -25,7 +25,7 @@ data class AuthorizationGrant(
         fun new(
             type: AuthorizationGrantType,
             sourceType: AuthorizationGrantSourceType,
-            sourceId: UUID,
+            sourceId: Uuid,
             principal: AuthorizationAgent,
             grantedBy: AuthorizationAgent,
             grantedTo: AuthorizationAgent,
@@ -35,7 +35,7 @@ data class AuthorizationGrant(
             scopes: List<GrantedAuthorizationScope>,
             now: Instant = now(),
         ): AuthorizationGrant = AuthorizationGrant(
-            id = UUID.randomUUID(),
+            id = Uuid.random(),
             type = type,
             sourceType = sourceType,
             sourceId = sourceId,

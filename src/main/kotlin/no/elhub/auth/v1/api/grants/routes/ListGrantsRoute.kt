@@ -20,7 +20,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 internal const val TYPE_FILTER_PARAM = "filter[type]"
 internal const val GRANTED_BY_FILTER_PARAM = "filter[grantedBy]"
@@ -80,7 +80,7 @@ private fun parseAgentIds(param: String?, paramName: String): List<Authorization
             id.matches(Regex("[0-9]{13}")) -> AuthorizationAgent(id, AgentType.OrganizationEntity)
 
             else -> try {
-                AuthorizationAgent(UUID.fromString(id).toString(), AgentType.Person)
+                AuthorizationAgent(Uuid.parse(id).toString(), AgentType.Person)
             } catch (_: IllegalArgumentException) {
                 throw InputError.InvalidQueryParameterError(
                     "Invalid $paramName value '$param'. Expected comma-separated Person UUIDs, 9-digit organization numbers or 13-digit GLNs."

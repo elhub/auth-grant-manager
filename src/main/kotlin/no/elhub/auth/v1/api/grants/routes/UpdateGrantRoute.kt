@@ -16,7 +16,7 @@ import no.elhub.auth.v1.api.grants.response.toGetResponse
 import no.elhub.auth.v1.common.auth.authorizedAgent
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.features.grants.UpdateGrantHandler
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalSerializationApi::class)
 fun Route.route(handler: UpdateGrantHandler) {
@@ -26,7 +26,7 @@ fun Route.route(handler: UpdateGrantHandler) {
         val pathId = call.parameters["id"]?.takeIf { it.isNotBlank() }
             ?: throw InputError.MissingInputError("Missing authorization grant ID")
         val id = try {
-            UUID.fromString(pathId)
+            Uuid.parse(pathId)
         } catch (_: IllegalArgumentException) {
             throw InputError.MalformedInputError("Authorization grant ID must be a UUID")
         }
@@ -45,7 +45,7 @@ fun Route.route(handler: UpdateGrantHandler) {
             throw InputError.MissingInputError("Missing data.id")
         }
         val dataId = try {
-            UUID.fromString(request.data.id)
+            Uuid.parse(request.data.id)
         } catch (_: IllegalArgumentException) {
             throw InputError.IdMismatchError("data.id must be a UUID matching the path ID")
         }
