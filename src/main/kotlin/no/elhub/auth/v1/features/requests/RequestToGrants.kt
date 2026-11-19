@@ -36,7 +36,7 @@ fun AuthorizationRequest.toGrants(
 
 /**
  * One Consumable grant per metering point, each allowing requestedBy to change the energy supplier contract on that
- * metering point. Valid from today through the calendar date two years ahead in Oslo.
+ * metering point. Valid from approval through the calendar date two years ahead in Oslo.
  */
 private fun AuthorizationRequest.changeOfEnergySupplierGrants(
     approvedBy: AuthorizationAgent,
@@ -74,7 +74,7 @@ private fun AuthorizationRequest.changeOfEnergySupplierGrants(
 
 /**
  * One Consumable grant per metering point, each allowing requestedBy to change the end user and energy supplier
- * contracts on that metering point, optionally restricted by the move-in date. Valid from today through the calendar date two years ahead in Oslo.
+ * contracts on that metering point, optionally restricted by the move-in date. Valid from approval through the calendar date two years ahead in Oslo.
  */
 private fun AuthorizationRequest.moveInAndChangeOfEnergySupplierGrants(
     approvedBy: AuthorizationAgent,
@@ -148,7 +148,7 @@ private fun AuthorizationRequest.energySupplierFrameworkAgreementGrants(
 }
 
 /**
- * - validFrom: the requested start, moved forward to the start of today if it is missing or in the past.
+ * - validFrom: the requested start, moved forward to approval if it is missing or in the past.
  * - validTo: the exclusive requested end, or no end date if none was requested.
  * - Fails if the requested end is at or before now or validFrom.
  */
