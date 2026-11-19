@@ -9,18 +9,20 @@ internal fun frameworkAgreementDocumentPayload(
     requestedOf: Organization,
     language: String = "nb",
     externalReference: String? = null,
-    validFrom: String = osloStartOfDay(daysFromNow = 30),
-    validTo: String = osloStartOfDay(daysFromNow = 395),
+    validFrom: String? = osloStartOfDay(daysFromNow = 30),
+    validTo: String? = osloStartOfDay(daysFromNow = 395),
 ): String {
     val reference = externalReference?.let { ",\n\"externalReference\": \"$it\"" }.orEmpty()
+    val validity = listOfNotNull(
+        validFrom?.let { "\"requestedGrantValidFrom\": \"$it\"" },
+        validTo?.let { "\"requestedGrantValidTo\": \"$it\"" },
+    ).joinToString("") { ",\n$it" }
     return """
         {
           "data": {
             "type": "AuthorizationDocument",
             "attributes": {
-              "documentType": "EnergySupplierFrameworkAgreement",
-              "requestedGrantValidFrom": "$validFrom",
-              "requestedGrantValidTo": "$validTo"$reference
+              "documentType": "EnergySupplierFrameworkAgreement"$validity$reference
             },
             "meta": {
               "requestedPrincipal": "${requestedPrincipal.number}",
