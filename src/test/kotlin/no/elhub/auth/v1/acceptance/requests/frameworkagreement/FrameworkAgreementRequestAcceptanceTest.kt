@@ -3,17 +3,17 @@ package no.elhub.auth.v1.acceptance.requests.frameworkagreement
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import no.elhub.auth.v1.acceptance.support.atApprovalTime
 import no.elhub.auth.v1.acceptance.support.ExternalServiceStubs
-import no.elhub.auth.v1.acceptance.support.acceptanceLifecycle
 import no.elhub.auth.v1.acceptance.support.RequestClient
+import no.elhub.auth.v1.acceptance.support.acceptanceLifecycle
+import no.elhub.auth.v1.acceptance.support.atApprovalTime
 import no.elhub.auth.v1.acceptance.support.caller
+import no.elhub.auth.v1.acceptance.support.customerOrganization
+import no.elhub.auth.v1.acceptance.support.exampleApprover
+import no.elhub.auth.v1.acceptance.support.exampleSupplier
 import no.elhub.auth.v1.acceptance.support.instant
 import no.elhub.auth.v1.acceptance.support.osloStartOfDay
 import no.elhub.auth.v1.acceptance.support.shouldBeWithin
-import no.elhub.auth.v1.acceptance.support.exampleSupplier
-import no.elhub.auth.v1.acceptance.support.customerOrganization
-import no.elhub.auth.v1.acceptance.support.exampleApprover
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
@@ -185,8 +185,10 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(
-                    requestedPrincipal = principal, requestedOf = principal,
-                    validFrom = null, validTo = null,
+                    requestedPrincipal = principal,
+                    requestedOf = principal,
+                    validFrom = null,
+                    validTo = null,
                 ),
                 by = energySupplier.caller(),
             )
@@ -195,10 +197,14 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             }.shouldHaveStatus(HttpStatusCode.OK)
 
             val request = requestApiClient.get(id = requestId, by = energySupplier.caller())
-            val grant = requestApiClient.getGrant(
-                id = request.singleRelatedId("authorizationGrants"), by = energySupplier.caller(),
-            ).shouldHaveStatus(HttpStatusCode.OK)
+            val grant = atApprovalTime(approvalTime) {
+                requestApiClient.getGrant(
+                    id = request.singleRelatedId("authorizationGrants"),
+                    by = energySupplier.caller(),
+                )
+            }.shouldHaveStatus(HttpStatusCode.OK)
                 .shouldHaveField("data.type", "PersistentGrant")
+                .shouldHaveField("data.attributes.status", "Active")
                 .shouldHaveField("data.attributes.validTo", null)
             grant.instant("data.attributes.validFrom") shouldBe approvalTime
         }
@@ -217,8 +223,10 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(
-                    requestedPrincipal = principal, requestedOf = principal,
-                    validFrom = osloStartOfDay(1), validTo = null,
+                    requestedPrincipal = principal,
+                    requestedOf = principal,
+                    validFrom = osloStartOfDay(1),
+                    validTo = null,
                 ),
                 by = energySupplier.caller(),
             )
@@ -227,10 +235,14 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             }.shouldHaveStatus(HttpStatusCode.OK)
 
             val request = requestApiClient.get(id = requestId, by = energySupplier.caller())
-            val grant = requestApiClient.getGrant(
-                id = request.singleRelatedId("authorizationGrants"), by = energySupplier.caller(),
-            ).shouldHaveStatus(HttpStatusCode.OK)
+            val grant = atApprovalTime(approvalTime) {
+                requestApiClient.getGrant(
+                    id = request.singleRelatedId("authorizationGrants"),
+                    by = energySupplier.caller(),
+                )
+            }.shouldHaveStatus(HttpStatusCode.OK)
                 .shouldHaveField("data.type", "PersistentGrant")
+                .shouldHaveField("data.attributes.status", "Active")
                 .shouldHaveField("data.attributes.validTo", null)
             grant.instant("data.attributes.validFrom") shouldBe approvalTime
         }
@@ -249,8 +261,10 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
 
             val requestId = requestApiClient.createPending(
                 payload = frameworkAgreementRequestPayload(
-                    requestedPrincipal = principal, requestedOf = principal,
-                    validFrom = null, validTo = osloStartOfDay(1),
+                    requestedPrincipal = principal,
+                    requestedOf = principal,
+                    validFrom = null,
+                    validTo = osloStartOfDay(1),
                 ),
                 by = energySupplier.caller(),
             )
