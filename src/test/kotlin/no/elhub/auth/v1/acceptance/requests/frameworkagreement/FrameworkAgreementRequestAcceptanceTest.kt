@@ -30,7 +30,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
     }
 
     context("Requests / EnergySupplierFrameworkAgreement / create") {
-        test("A valid request is created as Pending with the type's fixed scope") {
+        test("Creating a framework agreement request returns Pending with EndUser and EnergySupplier contract changes") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
 
@@ -65,7 +65,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
                 )
         }
 
-        test("The requested grant validity is stored as sent") {
+        test("Creating a framework agreement request preserves the requested grant validity period") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val validFrom = grantValidFrom
@@ -85,7 +85,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             response.instant("data.attributes.requestedGrantValidTo") shouldBe instant(validTo)
         }
 
-        test("The request expires 28 days after it is created") {
+        test("A framework agreement request expires 28 days after creation") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
 
@@ -103,7 +103,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             validity.shouldBeWithin(28.days, 1.minutes)
         }
 
-        test("requestedScopes cannot be sent; the scope is fixed by the type") {
+        test("Creating a framework agreement request rejects supplied scopes") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
 
@@ -131,7 +131,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             ).shouldBeError(HttpStatusCode.UnprocessableEntity, "requestedScopes is not supported")
         }
 
-        test("requestedGrantValidFrom must be in the future") {
+        test("Creating a framework agreement request rejects requested grant validity starting in the past") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
 
@@ -150,7 +150,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             ).shouldBeError(HttpStatusCode.UnprocessableEntity, "requestedGrantValidFrom must be in the future")
         }
 
-        test("requestedGrantValidFrom must be before requestedGrantValidTo") {
+        test("Creating a framework agreement request rejects requested grant validity starting after it ends") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
 
@@ -171,7 +171,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
     }
 
     context("Requests / EnergySupplierFrameworkAgreement / approve") {
-        test("Approval without requested dates creates a grant from the approval instant with no expiry") {
+        test("Without requested grant validity, approval creates a grant starting at approval with no expiry") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val approver = exampleApprover
@@ -209,7 +209,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             grant.instant("data.attributes.validFrom") shouldBe approvalTime
         }
 
-        test("Approval after the requested start moves the grant start to the approval instant") {
+        test("Approving after requested grant validity starts makes the grant start at approval") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val approver = exampleApprover
@@ -247,7 +247,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
             grant.instant("data.attributes.validFrom") shouldBe approvalTime
         }
 
-        test("Approval after the requested end is rejected and leaves the request Pending without grants") {
+        test("Approval after requested grant validity ends is rejected; the request stays Pending with no grants") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val approver = exampleApprover
@@ -277,7 +277,7 @@ class FrameworkAgreementRequestAcceptanceTest : FunSpec({
                 .shouldHaveJson("data.relationships.authorizationGrants", "null")
         }
 
-        test("Approval creates one persistent grant with the type's fixed scope for the requested period") {
+        test("Approval creates one persistent grant for EndUser and EnergySupplier changes during requested grant validity") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val approver = exampleApprover

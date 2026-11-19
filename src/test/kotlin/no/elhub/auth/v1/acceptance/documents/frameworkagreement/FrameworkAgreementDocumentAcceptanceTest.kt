@@ -30,7 +30,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
     }
 
     context("Documents / EnergySupplierFrameworkAgreement / create") {
-        test("Creation rejects a past start") {
+        test("Creating a framework agreement document rejects requested grant validity starting in the past") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
@@ -49,7 +49,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
             ).shouldBeError(HttpStatusCode.UnprocessableEntity, "requestedGrantValidFrom must be in the future")
         }
 
-        test("Creation rejects a past end") {
+        test("Creating a framework agreement document rejects requested grant validity ending in the past") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
@@ -68,7 +68,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
             ).shouldBeError(HttpStatusCode.UnprocessableEntity, "requestedGrantValidTo must be in the future")
         }
 
-        test("Creation rejects equal start and end") {
+        test("Creating a framework agreement document rejects requested grant validity with equal start and end") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
@@ -87,7 +87,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
             ).shouldBeError(HttpStatusCode.UnprocessableEntity, "requestedGrantValidFrom must be before requestedGrantValidTo")
         }
 
-        test("Creation rejects an end before the start") {
+        test("Creating a framework agreement document rejects requested grant validity ending before it starts") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             externalServices.pdpService.stubAuthInfo(supplier = energySupplier)
@@ -106,7 +106,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
             ).shouldBeError(HttpStatusCode.UnprocessableEntity, "requestedGrantValidFrom must be before requestedGrantValidTo")
         }
 
-        test("A valid document is created as Pending with the type's fixed scope") {
+        test("Creating a framework agreement document returns Pending with EndUser and EnergySupplier contract changes") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
 
@@ -140,7 +140,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
                 )
         }
 
-        test("The document must be signed within 28 days") {
+        test("A framework agreement document expires 28 days after creation") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
 
@@ -160,7 +160,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
     }
 
     context("Documents / EnergySupplierFrameworkAgreement / sign") {
-        test("Signing without requested dates creates a grant from the signing instant with no expiry") {
+        test("Without requested grant validity, signing creates a grant starting at signing with no expiry") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val signer = exampleApprover.copy(nationalIdentityNumber = "02916297702")
@@ -197,7 +197,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
             grant.instant("data.attributes.validFrom") shouldBe approvalTime
         }
 
-        test("Signing after the requested start moves the grant start to the signing instant") {
+        test("Signing after requested grant validity starts makes the grant start at signing") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val signer = exampleApprover.copy(nationalIdentityNumber = "02916297702")
@@ -239,7 +239,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
             grant.instant("data.attributes.validFrom") shouldBe approvalTime
         }
 
-        test("Signing after the requested end is rejected and leaves the document Pending without grants") {
+        test("Signing after requested grant validity ends is rejected; the document stays Pending with no grants") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val signer = exampleApprover.copy(nationalIdentityNumber = "02916297702")
@@ -273,7 +273,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
                 .shouldHaveJson("data.relationships.authorizationGrants.data", "[]")
         }
 
-        test("Signing creates one persistent grant with the type's fixed scope for the requested period") {
+        test("Signing creates one persistent grant for EndUser and EnergySupplier changes during requested grant validity") {
             val energySupplier = exampleSupplier
             val principal = customerOrganization
             val signer = exampleApprover.copy(nationalIdentityNumber = "02916297702")
