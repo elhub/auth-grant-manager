@@ -38,15 +38,7 @@
         },
         "meta": {
           "type": "object",
-          "required": ["requestedPrincipal", "requestedOf"],
-          "properties": {
-            "requestedPrincipal": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestedPrincipal"
-            },
-            "requestedOf": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestedOf"
-            }
-          }
+          "additionalProperties": true
         }
       }
     }

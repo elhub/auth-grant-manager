@@ -54,14 +54,6 @@
       "type": "string",
       "format": "uri",
       "description": "Absolute HTTPS URI the user is redirected to after approving or rejecting the request. The host must match, or be a subdomain of, the redirect URL registered in Ediel for the requestedBy agent."
-    },
-    "requestedPrincipal": {
-      "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
-      "description": "Identifier of the agent the authorization concerns, for example the owner of the metering point. The resolved agent becomes requestedPrincipal on the request."
-    },
-    "requestedOf": {
-      "$ref": "../elhub-common.schema.json#/$defs/agentIdentifier",
-      "description": "Identifier of the agent asked to approve the request. The resolved agent becomes requestedOf on the request."
     }
   }
 }
