@@ -93,7 +93,7 @@ class EnergySupplierFrameworkAgreementDocumentHandlerTest : FunSpec({
         (details.validTo >= before + 28.days) shouldBe true
         (details.validTo <= after + 28.days) shouldBe true
         details.meta shouldBe buildJsonObject {
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
     }
