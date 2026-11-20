@@ -46,7 +46,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandler(
             throw e.clientError.toRequestPreparationError()
         }
 
-        val balanceSupplierName = organisationsService.getPartyByIdAndPartyType(partyId = requestedBy.id, partyType = PartyType.BalanceSupplier)
+        val energySupplierName = organisationsService.getPartyByIdAndPartyType(partyId = requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
                 ifLeft = { throw RequestPreparationError.RequestedByLookupFailure(it) },
                 ifRight = { response ->
@@ -64,7 +64,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandler(
         val metadata = MoveInAndChangeOfEnergySupplierRequestMetadata(
             requestedMeteringPoints = meteringPoints.toRequestedMeteringPointMetadata(),
             moveInDate = details.moveInDate,
-            balanceSupplierName = balanceSupplierName,
+            energySupplierName = energySupplierName,
             organizationName = organisationName,
         )
         return RequestTypeSpecificDetails(
