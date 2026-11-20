@@ -40,7 +40,12 @@
     "authorizationScope": {
       "type": "object",
       "description": "A scope of an authorization grant, describing what the grantedTo agent is authorized to do.",
-      "required": ["capability", "resourceType", "appliesTo", "allowedChanges"],
+      "required": [
+        "capability",
+        "resourceType",
+        "appliesTo",
+        "allowedChanges"
+      ],
       "properties": {
         "capability": {
           "description": "What the grant permits on the resource.",

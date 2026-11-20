@@ -90,8 +90,10 @@
                 },
                 "moveInDate": {
                   "anyOf": [
-                    {"$ref": "../authorization-common.schema.json#/$defs/moveInDate"},
-                    {"type": "null"}
+                    {
+                      "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
+                    },
+                    { "type": "null" }
                   ]
                 }
               }
@@ -150,8 +152,10 @@
                 },
                 "moveInDate": {
                   "anyOf": [
-                    {"$ref": "../authorization-common.schema.json#/$defs/moveInDate"},
-                    {"type": "null"}
+                    {
+                      "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
+                    },
+                    { "type": "null" }
                   ]
                 },
                 "language": {

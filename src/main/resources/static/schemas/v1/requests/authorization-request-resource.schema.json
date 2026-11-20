@@ -7,7 +7,14 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": ["id", "type", "attributes", "meta", "relationships", "links"],
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "meta",
+        "relationships",
+        "links"
+      ],
       "properties": {
         "id": {
           "$ref": "authorization-request-common.schema.json#/$defs/id"
@@ -61,14 +68,27 @@
               "$ref": "../elhub-common.schema.json#/$defs/updatedAt"
             }
           },
-          "required": ["requestType", "requestedScopes", "status", "textReference", "validFrom", "validTo", "createdAt", "updatedAt"]
+          "required": [
+            "requestType",
+            "requestedScopes",
+            "status",
+            "textReference",
+            "validFrom",
+            "validTo",
+            "createdAt",
+            "updatedAt"
+          ]
         },
         "meta": {
           "type": "object"
         },
         "relationships": {
           "type": "object",
-          "required": ["requestedBy", "requestedPrincipal", "requestedOf"],
+          "required": [
+            "requestedBy",
+            "requestedPrincipal",
+            "requestedOf"
+          ],
           "properties": {
             "requestedBy": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
