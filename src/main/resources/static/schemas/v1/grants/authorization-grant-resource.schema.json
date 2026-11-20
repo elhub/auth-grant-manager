@@ -7,7 +7,13 @@
   "properties": {
     "data": {
       "type": "object",
-      "required": ["id", "type", "attributes", "relationships", "links"],
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships",
+        "links"
+      ],
       "properties": {
         "id": {
           "$ref": "authorization-grant-common.schema.json#/$defs/id"
@@ -17,7 +23,13 @@
         },
         "attributes": {
           "type": "object",
-          "required": ["status", "scopes", "validFrom", "createdAt", "updatedAt"],
+          "required": [
+            "status",
+            "scopes",
+            "validFrom",
+            "createdAt",
+            "updatedAt"
+          ],
           "properties": {
             "status": {
               "$ref": "authorization-grant-common.schema.json#/$defs/status"
@@ -43,7 +55,13 @@
         },
         "relationships": {
           "type": "object",
-          "required": ["principal", "grantedBy", "grantedTo", "approvedBy", "source"],
+          "required": [
+            "principal",
+            "grantedBy",
+            "grantedTo",
+            "approvedBy",
+            "source"
+          ],
           "properties": {
             "principal": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",

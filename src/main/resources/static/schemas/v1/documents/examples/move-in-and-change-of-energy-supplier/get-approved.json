@@ -37,7 +37,9 @@
       "meta": {
         "energySupplierName": "Example Energy AS",
         "organizationName": "Example Customer AS",
-        "requestedMeteringPoints": [{ "id": "707000000000000001" }],
+        "requestedMeteringPoints": [
+          { "id": "707000000000000001" }
+        ],
         "validFrom": "2026-10-01"
       },
       "relationships": {
