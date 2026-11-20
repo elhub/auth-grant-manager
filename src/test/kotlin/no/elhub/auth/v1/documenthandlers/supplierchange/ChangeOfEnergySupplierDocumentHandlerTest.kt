@@ -102,7 +102,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     )
                 }
             )
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
         val pdfContent = details.pdfContent
@@ -188,7 +188,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     )
                 }
             )
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
 

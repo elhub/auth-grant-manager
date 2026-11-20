@@ -5,10 +5,10 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 data class EnergySupplierFrameworkAgreementRequestMetadata(
-    val balanceSupplierName: String,
+    val energySupplierName: String,
     val organizationName: String,
 )
 fun EnergySupplierFrameworkAgreementRequestMetadata.toJsonObject(): JsonObject = buildJsonObject {
-    put("balanceSupplierName", balanceSupplierName)
+    put("energySupplierName", energySupplierName)
     put("organizationName", organizationName)
 }

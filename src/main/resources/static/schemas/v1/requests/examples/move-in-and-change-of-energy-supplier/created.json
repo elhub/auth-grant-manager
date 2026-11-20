@@ -37,7 +37,7 @@
         "updatedAt": "2026-09-24T10:00:00+02:00"
       },
       "meta": {
-        "balanceSupplierName": "Example Energy AS",
+        "energySupplierName": "Example Energy AS",
         "organizationName": "Example Customer AS",
         "requestedMeteringPoints": [{ "id": "707000000000000001" }],
         "moveInDate": "2026-10-01"
