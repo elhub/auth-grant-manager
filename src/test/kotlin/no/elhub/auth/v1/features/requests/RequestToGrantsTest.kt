@@ -35,9 +35,8 @@ class RequestToGrantsTest : FunSpec({
     val firstMeteringPoint = MeteringPointId.create("707057500000000001")
     val secondMeteringPoint = MeteringPointId.create("707057500000000002")
 
-    // 11:00 in Oslo (CET, UTC+1). Start of today in Oslo is 2026-10-25T23:00:00Z.
+    // 11:00 in Oslo (CET, UTC+1). Consumable grants end at Oslo midnight two years and a day later.
     val now = Instant.parse("2026-10-26T10:00:00Z")
-    val startOfToday = Instant.parse("2026-10-25T23:00:00Z")
     // Oslo midnight after 2028-10-26 is still summer time (UTC+2).
     val exclusiveEndInTwoYears = Instant.parse("2028-10-26T22:00:00Z")
 
@@ -91,13 +90,13 @@ class RequestToGrantsTest : FunSpec({
             ),
         )
 
-        test("creates one consumable EnergySupplier grant per metering point, valid through the date in two years") {
+        test("creates one consumable EnergySupplier grant per metering point, valid from approval through the date in two years") {
             val grants = request.toGrants(approvedBy, now)
 
             grants.forEach { grant ->
                 grant.shouldBeIssuedFrom(request)
                 grant.type shouldBe AuthorizationGrantType.Consumable
-                grant.validFrom shouldBe startOfToday
+                grant.validFrom shouldBe now
                 grant.validTo shouldBe exclusiveEndInTwoYears
             }
             grants.map { it.scopes } shouldContainExactlyInAnyOrder listOf(
@@ -145,7 +144,7 @@ class RequestToGrantsTest : FunSpec({
             grants.forEach { grant ->
                 grant.shouldBeIssuedFrom(request)
                 grant.type shouldBe AuthorizationGrantType.Consumable
-                grant.validFrom shouldBe startOfToday
+                grant.validFrom shouldBe now
                 grant.validTo shouldBe exclusiveEndInTwoYears
             }
             grants.map { it.scopes } shouldContainExactlyInAnyOrder listOf(
@@ -187,19 +186,18 @@ class RequestToGrantsTest : FunSpec({
         val laterFuture = Instant.parse("2027-12-01T00:00:00Z")
 
         listOf(
-            Triple(null, null, startOfToday to null),
-            Triple(null, future, startOfToday to future),
-            Triple(past, null, startOfToday to null),
-            Triple(past, future, startOfToday to future),
-            Triple(startOfToday, null, startOfToday to null),
-            Triple(earlierToday, null, earlierToday to null),
+            Triple(null, null, now to null),
+            Triple(null, future, now to future),
+            Triple(past, null, now to null),
+            Triple(past, future, now to future),
+            Triple(earlierToday, null, now to null),
             Triple(now, null, now to null),
             Triple(now + 1.nanoseconds, null, (now + 1.nanoseconds) to null),
             Triple(laterToday, null, laterToday to null),
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
             Triple(future, future + 1.nanoseconds, future to (future + 1.nanoseconds)),
-            Triple(null, laterToday, startOfToday to laterToday),
+            Triple(null, laterToday, now to laterToday),
         ).forEach { (requestedFrom, requestedTo, expected) ->
             test("requested $requestedFrom..$requestedTo gives grant ${expected.first}..${expected.second}") {
                 val grant = frameworkRequest(requestedFrom, requestedTo).toGrants(approvedBy, now).single()
