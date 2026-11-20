@@ -20,7 +20,7 @@ class EnergySupplierFrameworkAgreementRequestHandler(private val organisationsSe
         requestedPrincipal: AuthorizationAgent,
         requestedOf: AuthorizationAgent,
     ): RequestTypeSpecificDetails {
-        val balanceSupplierName = organisationsService.getPartyByIdAndPartyType(partyId = requestedBy.id, partyType = PartyType.BalanceSupplier)
+        val energySupplierName = organisationsService.getPartyByIdAndPartyType(partyId = requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
                 ifLeft = { throw RequestPreparationError.RequestedByLookupFailure(it) },
                 ifRight = { response ->
@@ -35,7 +35,7 @@ class EnergySupplierFrameworkAgreementRequestHandler(private val organisationsSe
             }
         )
 
-        val metadata = EnergySupplierFrameworkAgreementRequestMetadata(balanceSupplierName = balanceSupplierName, organizationName = organisationName)
+        val metadata = EnergySupplierFrameworkAgreementRequestMetadata(energySupplierName = energySupplierName, organizationName = organisationName)
         return RequestTypeSpecificDetails(
             validTo = Clock.System.now() + REQUEST_VALID_DAYS.days,
             meta = metadata.toJsonObject(),
