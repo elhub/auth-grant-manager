@@ -31,6 +31,11 @@
           "createdAt": "2026-09-24T10:00:00+02:00",
           "updatedAt": "2026-09-24T10:15:00+02:00"
         },
+        "meta": {
+          "balanceSupplierName": "Example Energy AS",
+          "organizationName": "Example Customer AS",
+          "requestedMeteringPoints": [{ "id": "707057500000000001" }]
+        },
         "relationships": {
           "requestedBy": {
             "data": {
@@ -53,7 +58,7 @@
           "approvedBy": {
             "data": {
               "type": "Person",
-              "id": "01019012345"
+              "id": "01997291-7e8b-7000-8000-000000000001"
             }
           },
           "authorizationGrants": {
@@ -87,7 +92,7 @@
               "allowedChanges": [
                 {
                   "attribute": "type",
-                  "value": ["EnergySupplier", "EndUser"]
+                  "value": ["EndUser", "EnergySupplier"]
                 },
                 {
                   "attribute": "validFrom",
@@ -102,6 +107,12 @@
           "validTo": "2026-10-24T10:00:00+02:00",
           "createdAt": "2026-09-23T10:00:00+02:00",
           "updatedAt": "2026-09-23T10:15:00+02:00"
+        },
+        "meta": {
+          "balanceSupplierName": "Example Energy AS",
+          "organizationName": "Example Customer AS",
+          "requestedMeteringPoints": [{ "id": "707000000000000001" }],
+          "validFrom": "2026-10-01"
         },
         "relationships": {
           "requestedBy": {
@@ -125,7 +136,7 @@
           "approvedBy": {
             "data": {
               "type": "Person",
-              "id": "01019012345"
+              "id": "01997291-7e8b-7000-8000-000000000001"
             }
           },
           "authorizationGrants": {
@@ -150,6 +161,7 @@
           "requestedScopes": [
             {
               "resourceType": "MeteringPointContract",
+              "appliesTo": [],
               "allowedChanges": [
                 {
                   "attribute": "type",
@@ -166,6 +178,10 @@
           "validTo": "2026-11-21T10:00:00+01:00",
           "createdAt": "2026-10-22T10:00:00+02:00",
           "updatedAt": "2026-10-22T10:15:00+02:00"
+        },
+        "meta": {
+          "balanceSupplierName": "Example Energy AS",
+          "organizationName": "Example Customer AS"
         },
         "relationships": {
           "requestedBy": {
@@ -189,7 +205,7 @@
           "approvedBy": {
             "data": {
               "type": "Person",
-              "id": "01019012345"
+              "id": "01997291-7e8b-7000-8000-000000000001"
             }
           },
           "authorizationGrants": {
@@ -213,7 +229,7 @@
       "last": "/access/v1/authorization-documents?page[number]=0&page[size]=100"
     },
     "meta": {
-      "createdAt": "2026-09-24T10:15:00+02:00",
+      "createdAt": "2026-10-22T10:15:00+02:00",
       "totalItems": 3,
       "totalPages": 1,
       "page": 0,

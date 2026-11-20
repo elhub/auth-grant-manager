@@ -30,6 +30,11 @@
         "createdAt": "2026-09-24T10:00:00+02:00",
         "updatedAt": "2026-09-24T10:00:00+02:00"
       },
+      "meta": {
+        "balanceSupplierName": "Example Energy AS",
+        "organizationName": "Example Customer AS",
+        "requestedMeteringPoints": [{ "id": "707057500000000001" }]
+      },
       "relationships": {
         "requestedBy": {
           "data": {
@@ -49,7 +54,15 @@
             "id": "999888771"
           }
         }
+      },
+      "links": {
+        "self": "/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000011",
+        "file": "/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000011.pdf"
       }
-    }
+    },
+    "links": {
+      "self": "/access/v1/authorization-documents/01997291-7e8b-7000-8000-000000000011"
+    },
+    "meta": { "createdAt": "2026-09-24T10:00:00+02:00" }
   }
 }
