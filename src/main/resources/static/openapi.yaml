@@ -51,6 +51,15 @@ paths:
         - $ref: '#/components/parameters/AuthorizationMaskinporten'
         - $ref: '#/components/parameters/SenderGlnRequired'
         - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
+        - name: filter[status]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: './schemas/v0/documents/authorization-document-common.schema.json#/$defs/authorizationDocumentStatus'
         - name: page[number]
           in: query
           required: false
@@ -75,6 +84,8 @@ paths:
             application/vnd.api+json:
               schema:
                 $ref: './schemas/v0/documents/authorization-document-collection.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '500':
@@ -152,6 +163,8 @@ paths:
           $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
         '500':
@@ -185,12 +198,16 @@ paths:
               schema:
                 type: string
                 format: binary
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
           $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '422':
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
@@ -305,7 +322,7 @@ paths:
         Retrieve a specific authorization grant by its identifier.
       parameters:
         - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUserOptional'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
         - $ref: '#/components/parameters/SenderGlnOptional'
         - $ref: '#/components/parameters/OnBehalfOfGlnOptional'
         - name: id
@@ -436,9 +453,6 @@ paths:
         - name: filter[status]
           in: query
           required: false
-          description: >
-            Filter results by one or more statuses. When omitted, requests of all statuses are returned.
-            Multiple statuses can be specified as a comma-separated list (e.g. `filter[status]=Pending,Expired`).
           style: form
           explode: false
           schema:
@@ -469,6 +483,8 @@ paths:
             application/vnd.api+json:
               schema:
                 $ref: './schemas/v0/requests/authorization-request-collection.schema.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
@@ -609,8 +625,12 @@ paths:
           $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
           $ref: '#/components/responses/500InternalServerError'
 
@@ -634,6 +654,15 @@ paths:
         - $ref: '#/components/parameters/V1SenderGlnLegacy'
         - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
         - $ref: '#/components/parameters/V1OnBehalfOfGlnLegacy'
+        - name: filter[status]
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: './schemas/v1/documents/authorization-document-common.schema.json#/$defs/status'
         - name: page[number]
           in: query
           required: false
@@ -661,6 +690,8 @@ paths:
               examples:
                 authorizationDocuments:
                   $ref: './schemas/v1/documents/examples/list.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
@@ -714,6 +745,18 @@ paths:
                   $ref: './schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/created.json'
                 energySupplierFrameworkAgreement:
                   $ref: './schemas/v1/documents/examples/energy-supplier-framework-agreement/created.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '422':
+          $ref: '#/components/responses/422UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
   '/access/v1/authorization-documents/{id}':
     get:
@@ -756,6 +799,16 @@ paths:
                   $ref: './schemas/v1/documents/examples/move-in-and-change-of-energy-supplier/get-approved.json'
                 energySupplierFrameworkAgreement:
                   $ref: './schemas/v1/documents/examples/energy-supplier-framework-agreement/get-approved.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
   '/access/v1/authorization-documents/{id}.pdf':
     get:
@@ -793,12 +846,16 @@ paths:
               schema:
                 type: string
                 format: binary
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
           $ref: '#/components/responses/403ForbiddenError'
         '404':
           $ref: '#/components/responses/404NotFoundError'
+        '406':
+          $ref: '#/components/responses/406NotAcceptableError'
         '422':
           $ref: '#/components/responses/422UnprocessableEntityError'
         '500':
@@ -852,6 +909,10 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '406':
           $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
+        '410':
+          $ref: '#/components/responses/410GoneError'
         '413':
           $ref: '#/components/responses/413ContentTooLargeError'
         '415':
@@ -887,9 +948,6 @@ paths:
         - name: filter[status]
           in: query
           required: false
-          description: >
-            Filter results by one or more statuses. When omitted, grants of all statuses are returned.
-            Multiple statuses can be specified as a comma-separated list (e.g. `filter[status]=Active,Expired`).
           style: form
           explode: false
           schema:
@@ -990,13 +1048,13 @@ paths:
       description: >
         Retrieve a specific authorization grant, including its scopes and the source document or request
         it was created from. The grant is available to the principal, the grantedTo, and
-        internal Elhub systems. validTo may be null, meaning the grant has no end date.
+        internal Elhub systems. validTo is omitted when the grant has no end date.
       operationId: getV1AuthorizationGrant
       x-status: Work in progress
       x-availability: Not deployed to Production or MT1
       parameters:
         - $ref: '#/components/parameters/UserAgent'
-        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUserOptional'
+        - $ref: '#/components/parameters/AuthorizationMaskinportenOrEndUser'
         - $ref: '#/components/parameters/V1SenderGlnPreferred'
         - $ref: '#/components/parameters/V1SenderGlnLegacy'
         - $ref: '#/components/parameters/V1OnBehalfOfGlnPreferred'
@@ -1022,6 +1080,16 @@ paths:
                   $ref: './schemas/v1/grants/examples/move-in-and-change-of-energy-supplier/get.json'
                 energySupplierFrameworkAgreement:
                   $ref: './schemas/v1/grants/examples/energy-supplier-framework-agreement/get.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
+        '401':
+          $ref: '#/components/responses/401UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/403ForbiddenError'
+        '404':
+          $ref: '#/components/responses/404NotFoundError'
+        '500':
+          $ref: '#/components/responses/500InternalServerError'
 
     patch:
       tags:
@@ -1142,6 +1210,8 @@ paths:
               examples:
                 authorizationRequests:
                   $ref: './schemas/v1/requests/examples/list.json'
+        '400':
+          $ref: '#/components/responses/400BadRequestError'
         '401':
           $ref: '#/components/responses/401UnauthorizedError'
         '403':
@@ -1183,12 +1253,6 @@ paths:
       responses:
         '201':
           description: A Pending authorization request.
-          headers:
-            Location:
-              description: URI of the created authorization request, also returned as links.self.
-              schema:
-                type: string
-                format: uri-reference
           content:
             application/vnd.api+json:
               schema:
@@ -1278,7 +1342,8 @@ paths:
       description: >
         Approve or reject a pending, unexpired authorization request. This endpoint is intended
         for internal MinSide usage with an end-user token and is not available to external integrators.
-        Only the requestedOf agent may decide the request. Approving creates the authorization grant;
+        The caller must be authorized to act on behalf of the requestedOf or the requestedPrincipal.
+        Approving creates the authorization grant;
         rejecting does not create a grant. The request body ID must match the path ID.
         textLanguage must be provided when approving or rejecting the request. textReference is set by
         the server and cannot be updated through this endpoint.
@@ -1331,6 +1396,8 @@ paths:
           $ref: '#/components/responses/404NotFoundError'
         '406':
           $ref: '#/components/responses/406NotAcceptableError'
+        '409':
+          $ref: '#/components/responses/409ConflictError'
         '415':
           $ref: '#/components/responses/415UnsupportedMediaTypeError'
         '422':
@@ -1467,8 +1534,8 @@ components:
                   - status: '400'
                     title: 'Bad Request'
                     detail: 'A required field is missing or invalid.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
 
     401UnauthorizedError:
       description: >
@@ -1485,8 +1552,8 @@ components:
                   - status: '401'
                     title: 'Unauthorized'
                     detail: 'Authentication credentials are missing or invalid.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
 
     403ForbiddenError:
       description: >
@@ -1503,8 +1570,8 @@ components:
                   - status: '403'
                     title: 'Forbidden'
                     detail: 'A detailed description for getting forbidden'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
 
     404NotFoundError:
       description: >
@@ -1521,8 +1588,8 @@ components:
                   - status: '404'
                     title: 'Not Found'
                     detail: 'The requested resource could not be found.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
     406NotAcceptableError:
       description: >
         Not Acceptable. The server cannot produce a response matching the list of acceptable
@@ -1539,8 +1606,8 @@ components:
                   - status: '406'
                     title: 'Not Acceptable'
                     detail: 'The requested media type is not supported.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
     413ContentTooLargeError:
       description: >
         Content Too Large. The request body exceeds the maximum allowed size.
@@ -1556,8 +1623,8 @@ components:
                   - status: '413'
                     title: 'Content Too Large'
                     detail: 'Signed PDF upload size is limited to 1 MB.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
     409ConflictError:
       description: >
         Conflict. The request could not be completed due to a conflict with the current state
@@ -1574,8 +1641,25 @@ components:
                   - status: '409'
                     title: 'Conflict'
                     detail: 'An authorization document already exists for the specified parties and validity period.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
+    410GoneError:
+      description: >
+        Gone. The authorization document has expired and can no longer be submitted.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: './schemas/json-api-error.schema.json'
+          examples:
+            gone:
+              summary: Gone error example
+              value:
+                errors:
+                  - status: '410'
+                    title: 'Gone'
+                    detail: 'The authorization document has expired.'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
     422UnprocessableEntityError:
       description: >
         Unprocessable Entity. The request was well-formed but could not be followed due to semantic errors.
@@ -1626,8 +1710,8 @@ components:
                   - status: '415'
                     title: 'Unsupported Media Type'
                     detail: 'The submitted content type is not supported.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
     500InternalServerError:
       description: >
         Internal server error. An unexpected error occurred while processing the request.
@@ -1643,8 +1727,8 @@ components:
                   - status: '500'
                     title: 'Internal Server Error'
                     detail: 'An unexpected error occurred.'
-                    meta:
-                      createdAt: '2025-12-17T12:51:57+01:00'
+                meta:
+                  createdAt: '2025-12-17T12:51:57+01:00'
 
   securitySchemes:
     bearerAuth:

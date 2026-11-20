@@ -109,6 +109,9 @@
         "requestedForMeteringPointId": {
           "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointId"
         },
+        "requestedForMeterNumber": {
+          "$ref": "../authorization-common.schema.json#/$defs/requestedForMeterNumber"
+        },
         "requestedForMeteringPointAddress": {
           "$ref": "../authorization-common.schema.json#/$defs/requestedForMeteringPointAddress"
         },
@@ -147,7 +150,7 @@
       "properties": {
         "self": {
           "type": "string",
-          "format": "uri",
+          "format": "uri-reference",
           "description": "The canonical URI for retrieving this specific authorization document.",
           "examples": [
             "/access/v0/authorization-documents/123e4567-e89b-12d3-a456-426614174000"
@@ -155,7 +158,7 @@
         },
         "file": {
           "type": "string",
-          "format": "uri",
+          "format": "uri-reference",
           "description": "Direct link to download the PDF representation of the authorization document.",
           "examples": [
             "/access/v0/authorization-documents/123e4567-e89b-12d3-a456-426614174000.pdf"
