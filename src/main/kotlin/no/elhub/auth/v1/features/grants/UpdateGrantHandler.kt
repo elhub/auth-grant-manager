@@ -44,7 +44,7 @@ class UpdateGrantHandler(
         }
 
         return try {
-            grantRepository.update(id, status)
+            grantRepository.update(id, status, authorizedAgent)
         } catch (error: RepositoryWriteError.ConflictError) {
             throw UpdateGrantError.InvalidTransition()
         } catch (error: RepositoryWriteError.ExpiredError) {

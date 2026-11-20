@@ -133,7 +133,7 @@ class UpdateGrantRouteTest : FunSpec({
             status = AuthorizationGrantStatus.Pending,
             validFrom = Instant.parse("2099-01-01T00:00:00Z"),
         )
-        coEvery { repository.update(id, AuthorizationGrantStatus.Exhausted) } throws
+        coEvery { repository.update(id, AuthorizationGrantStatus.Exhausted, system) } throws
             RepositoryWriteError.ConflictError("Cannot exhaust a pending grant")
 
         testApplication {
@@ -149,7 +149,7 @@ class UpdateGrantRouteTest : FunSpec({
             error.title shouldBe "Invalid status transition"
             error.detail shouldBe
                 "Only pending or active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted."
-            coVerify(exactly = 1) { repository.update(id, AuthorizationGrantStatus.Exhausted) }
+            coVerify(exactly = 1) { repository.update(id, AuthorizationGrantStatus.Exhausted, system) }
         }
     }
 
