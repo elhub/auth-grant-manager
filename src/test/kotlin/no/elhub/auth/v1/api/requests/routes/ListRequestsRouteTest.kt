@@ -20,6 +20,7 @@ import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_REQUESTS_PATH
+import no.elhub.auth.v1.api.common.assertInvalidPagination
 import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiListAuthorizationRequestsResponse
 import no.elhub.auth.v1.common.auth.AgentType
@@ -128,7 +129,7 @@ class ListRequestsRouteTest : FunSpec({
         "" to emptyList(),
     ).forEach { (filter, statuses) ->
         test("GET passes status filter '$filter' to the handler") {
-            val pagination = Pagination(page = 1, size = 2)
+            val pagination = Pagination(page = 1, size = 100)
             coEvery { handler(authorizedAgent, pagination, statuses) } returns
                 Page(listOf(request), 5, pagination)
 
@@ -141,7 +142,7 @@ class ListRequestsRouteTest : FunSpec({
                     accept(jsonApiContentType)
                     url {
                         parameters.append("page[number]", "1")
-                        parameters.append("page[size]", "2")
+                        parameters.append("page[size]", "100")
                         parameters.append("filter[status]", filter)
                     }
                 }
@@ -172,32 +173,18 @@ class ListRequestsRouteTest : FunSpec({
         }
     }
 
-    listOf(
-        Triple("-1", "101", Pagination(page = 0, size = 100)),
-        Triple("invalid", "invalid", Pagination()),
-        Triple("2", "0", Pagination(page = 2, size = 1)),
-    ).forEach { (page, size, pagination) ->
-        test("GET normalizes page '$page' and size '$size'") {
-            coEvery { handler(authorizedAgent, pagination, emptyList()) } returns
-                Page(emptyList(), 0, pagination)
+    test("GET rejects invalid pagination parameters without calling the handler") {
+        coEvery { handler(authorizedAgent, any(), emptyList()) } answers {
+            Page(emptyList(), 0, secondArg())
+        }
 
-            testApplication {
-                setupAppWith(authorizedAgent) {
-                    route(V1_REQUESTS_PATH) { route(handler) }
-                }
-
-                val response = client.get(V1_REQUESTS_PATH) {
-                    accept(jsonApiContentType)
-                    url {
-                        parameters.append("page[number]", page)
-                        parameters.append("page[size]", size)
-                    }
-                }
-
-                response.status shouldBe HttpStatusCode.OK
-                response.body<JsonApiListAuthorizationRequestsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedAgent, pagination, emptyList()) }
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_REQUESTS_PATH) { route(handler) }
             }
+
+            assertInvalidPagination(client, V1_REQUESTS_PATH)
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
         }
     }
 
