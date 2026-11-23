@@ -87,14 +87,6 @@
                 },
                 "language": {
                   "$ref": "../authorization-common.schema.json#/$defs/language"
-                },
-                "moveInDate": {
-                  "anyOf": [
-                    {
-                      "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
-                    },
-                    { "type": "null" }
-                  ]
                 }
               }
             }
@@ -151,12 +143,7 @@
                   "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
                 },
                 "moveInDate": {
-                  "anyOf": [
-                    {
-                      "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
-                    },
-                    { "type": "null" }
-                  ]
+                  "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
                 },
                 "language": {
                   "$ref": "../authorization-common.schema.json#/$defs/language"
