@@ -69,8 +69,7 @@
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
             },
             "redirectURI": {
-                "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
-              ]
+              "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
           }
         }
@@ -111,12 +110,7 @@
               "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
             },
             "redirectURI": {
-              "anyOf": [
-                {
-                  "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
-                },
-                { "type": "null" }
-              ]
+                "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
           }
         }
