@@ -1,8 +1,10 @@
 package no.elhub.auth.v1.api.common
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.ktor.client.HttpClient
 import io.ktor.client.request.accept
+import io.ktor.client.request.get
 import io.ktor.client.request.request
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -31,5 +33,27 @@ suspend fun assertUnsupportedQueryParameters(
         val error = Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText()).errors.single()
         error.status shouldBe "400"
         error.detail shouldBe "Unsupported query parameter '$parameter'."
+    }
+}
+
+suspend fun assertInvalidPagination(client: HttpClient, path: String) {
+    val invalidPagination = mapOf(
+        "page[size]" to listOf("101", "1000", "0", "invalid", "2147483648"),
+        "page[number]" to listOf("-1", "", "invalid", "1.5", "2147483648"),
+    )
+    for ((parameter, values) in invalidPagination) {
+        for (value in values) {
+            val response = client.get(path) {
+                accept(jsonApiContentType)
+                url { parameters.append(parameter, value) }
+            }
+
+            withClue("GET $path with $parameter='$value'") {
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.contentType()?.withoutParameters() shouldBe jsonApiContentType
+                val error = Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText()).errors.single()
+                error.status shouldBe "400"
+            }
+        }
     }
 }

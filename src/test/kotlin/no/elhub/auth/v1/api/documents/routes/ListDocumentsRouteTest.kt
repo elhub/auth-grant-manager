@@ -19,6 +19,7 @@ import no.elhub.auth.v0.features.common.Page
 import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_DOCUMENTS_PATH
+import no.elhub.auth.v1.api.common.assertInvalidPagination
 import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.documents.response.JsonApiListAuthorizationDocumentsResponse
 import no.elhub.auth.v1.api.documents.response.ResponseAuthorizationDocumentStatus
@@ -135,22 +136,17 @@ class ListDocumentsRouteTest : FunSpec({
         }
     }
 
-    test("GET rejects page sizes above 100 without calling the handler") {
-        coEvery { handler(authorizedAgent, Pagination(), emptyList()) } returns
-            Page(emptyList(), 0, Pagination())
+    test("GET rejects invalid pagination parameters without calling the handler") {
+        coEvery { handler(authorizedAgent, any(), emptyList()) } answers {
+            Page(emptyList(), 0, secondArg())
+        }
 
         testApplication {
             setupAppWith(authorizedAgent) {
                 route(V1_DOCUMENTS_PATH) { route(handler) }
             }
 
-            val response = client.get(V1_DOCUMENTS_PATH) {
-                accept(jsonApiContentType)
-                url { parameters.append("page[size]", "101") }
-            }
-
-            response.status shouldBe HttpStatusCode.BadRequest
-            response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
+            assertInvalidPagination(client, V1_DOCUMENTS_PATH)
             coVerify(exactly = 0) { handler(any(), any(), any()) }
         }
     }

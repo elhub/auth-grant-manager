@@ -17,6 +17,9 @@ internal fun ApplicationCall.parsePagination(): Pagination {
         value.toIntOrNull()?.takeIf { it in 1..MAX_PAGE_SIZE }
             ?: throw InputError.InvalidQueryParameterError("$PAGE_SIZE_PARAM must be an integer between 1 and $MAX_PAGE_SIZE.")
     } ?: DEFAULT_PAGE_SIZE
-    val page = request.queryParameters[PAGE_NUMBER_PARAM]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+    val page = request.queryParameters[PAGE_NUMBER_PARAM]?.let { value ->
+        value.toIntOrNull()?.takeIf { it >= 0 }
+            ?: throw InputError.InvalidQueryParameterError("$PAGE_NUMBER_PARAM must be a non-negative integer.")
+    } ?: 0
     return Pagination(page = page, size = size)
 }
