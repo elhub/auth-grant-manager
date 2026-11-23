@@ -69,11 +69,7 @@
               "$ref": "../authorization-common.schema.json#/$defs/balanceSupplierContractName"
             },
             "redirectURI": {
-              "anyOf": [
-                {
-                  "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
-                },
-                { "type": "null" }
+                "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
               ]
             }
           }
