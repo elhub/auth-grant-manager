@@ -9,10 +9,12 @@ internal fun frameworkAgreementRequestPayload(
     requestedOf: Organization,
     redirectUri: String? = null,
     externalReference: String? = null,
-    validFrom: String = osloStartOfDay(daysFromNow = 30),
-    validTo: String = osloStartOfDay(daysFromNow = 395),
+    validFrom: String? = osloStartOfDay(daysFromNow = 30),
+    validTo: String? = osloStartOfDay(daysFromNow = 395),
 ): String {
     val optional = listOfNotNull(
+        validFrom?.let { "\"requestedGrantValidFrom\": \"$it\"" },
+        validTo?.let { "\"requestedGrantValidTo\": \"$it\"" },
         redirectUri?.let { "\"redirectUri\": \"$it\"" },
         externalReference?.let { "\"externalReference\": \"$it\"" },
     ).joinToString("") { ",\n$it" }
@@ -21,9 +23,7 @@ internal fun frameworkAgreementRequestPayload(
           "data": {
             "type": "AuthorizationRequest",
             "attributes": {
-              "requestType": "EnergySupplierFrameworkAgreement",
-              "requestedGrantValidFrom": "$validFrom",
-              "requestedGrantValidTo": "$validTo"$optional
+              "requestType": "EnergySupplierFrameworkAgreement"$optional
             },
             "meta": {
               "requestedPrincipal": "${requestedPrincipal.number}",
