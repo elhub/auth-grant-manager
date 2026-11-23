@@ -2,6 +2,7 @@ package no.elhub.auth.v1.features.requests
 
 import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
+import no.elhub.auth.v1.common.logging.errorName
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.AuthorizationRequestStatus
 import no.elhub.auth.v1.domain.TextLanguage
@@ -22,10 +23,45 @@ class UpdateRequestHandler(
         status: AuthorizationRequestStatus,
         textLanguage: TextLanguage,
     ): AuthorizationRequest {
+        val updatedRequest = try {
+            update(id, authorizedAgent, status, textLanguage)
+        } catch (error: UpdateRequestError) {
+            logger.warn(
+                "event=authorization_request_update_failed requestId={} targetStatus={} reason={}",
+                id,
+                status,
+                error.errorName,
+            )
+            throw error
+        }
+        logger.info(
+            "event=authorization_request_updated requestId={} type={} status={} approverType={}",
+            updatedRequest.id,
+            updatedRequest.requestType,
+            updatedRequest.status,
+            authorizedAgent.type,
+        )
+        updatedRequest.authorizationGrants.orEmpty().forEach { grant ->
+            logger.info(
+                "event=authorization_grant_created grantId={} grantType={} sourceType={} sourceId={}",
+                grant.id,
+                grant.type,
+                grant.sourceType,
+                grant.sourceId,
+            )
+        }
+        return updatedRequest
+    }
+
+    private suspend fun update(
+        id: Uuid,
+        authorizedAgent: AuthorizationAgent,
+        status: AuthorizationRequestStatus,
+        textLanguage: TextLanguage,
+    ): AuthorizationRequest {
         val request = requestRepository.find(id)
 
         if (!authorizationRulesService.isApproverAllowed(authorizedAgent, request.requestedOf, request.requestedPrincipal)) {
-            logger.warn("Approver not allowed for AuthorizationRequest {} (approver type: {})", id, authorizedAgent.type)
             throw UpdateRequestError.NotAuthorized()
         }
 

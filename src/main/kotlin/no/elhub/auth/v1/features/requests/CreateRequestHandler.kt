@@ -1,8 +1,10 @@
 package no.elhub.auth.v1.features.requests
 
+import no.elhub.auth.v1.Errors
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
+import no.elhub.auth.v1.common.logging.errorName
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
@@ -12,6 +14,7 @@ import no.elhub.auth.v1.features.requests.creation.MoveInAndChangeOfEnergySuppli
 import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.features.requests.creation.validateRequestCreationAgents
 import no.elhub.auth.v1.repositories.RequestRepository
+import org.slf4j.LoggerFactory
 
 class CreateRequestHandler(
     private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierRequestHandler,
@@ -21,7 +24,34 @@ class CreateRequestHandler(
     private val requestRepository: RequestRepository,
     private val authorizationRulesService: AuthorizationRulesService,
 ) {
+    private val logger = LoggerFactory.getLogger(CreateRequestHandler::class.java)
+
     suspend operator fun invoke(
+        specification: AuthorizationRequestSpecification,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
+    ): AuthorizationRequest {
+        val createdRequest = try {
+            create(specification, requestedBy, requestedPrincipal, requestedOf)
+        } catch (error: Errors) {
+            logger.warn(
+                "event=authorization_request_creation_failed type={} reason={}",
+                specification.requestType,
+                error.errorName,
+            )
+            throw error
+        }
+        logger.info(
+            "event=authorization_request_created requestId={} type={} status={}",
+            createdRequest.id,
+            createdRequest.requestType,
+            createdRequest.status,
+        )
+        return createdRequest
+    }
+
+    private suspend fun create(
         specification: AuthorizationRequestSpecification,
         requestedBy: AuthorizationAgent,
         requestedPrincipal: AuthorizationAgent,

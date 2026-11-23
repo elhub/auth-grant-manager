@@ -2,9 +2,11 @@ package no.elhub.auth.v1.features.documents
 
 import no.elhub.auth.common.documents.pdf.PdfGenerator
 import no.elhub.auth.common.documents.pdf.PdfSigner
+import no.elhub.auth.v1.Errors
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
+import no.elhub.auth.v1.common.logging.errorName
 import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.DocumentLanguage
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
@@ -14,6 +16,7 @@ import no.elhub.auth.v1.features.documents.creation.EnergySupplierFrameworkAgree
 import no.elhub.auth.v1.features.documents.creation.MoveInAndChangeOfEnergySupplierDocumentHandler
 import no.elhub.auth.v1.features.documents.creation.validateDocumentCreationAgents
 import no.elhub.auth.v1.repositories.DocumentRepository
+import org.slf4j.LoggerFactory
 
 class CreateDocumentHandler(
     private val changeOfEnergySupplierHandler: ChangeOfEnergySupplierDocumentHandler,
@@ -24,7 +27,36 @@ class CreateDocumentHandler(
     private val documentRepository: DocumentRepository,
     private val authorizationRulesService: AuthorizationRulesService,
 ) {
+    private val logger = LoggerFactory.getLogger(CreateDocumentHandler::class.java)
+
     suspend fun createAuthorizationDocument(
+        specification: DocumentSpecification,
+        externalReference: String?,
+        requestedBy: AuthorizationAgent,
+        requestedPrincipal: AuthorizationAgent,
+        requestedOf: AuthorizationAgent,
+        language: DocumentLanguage,
+    ): AuthorizationDocument {
+        val createdDocument = try {
+            create(specification, externalReference, requestedBy, requestedPrincipal, requestedOf, language)
+        } catch (error: Errors) {
+            logger.warn(
+                "event=authorization_document_creation_failed type={} reason={}",
+                specification.documentType,
+                error.errorName,
+            )
+            throw error
+        }
+        logger.info(
+            "event=authorization_document_created documentId={} type={} status={}",
+            createdDocument.id,
+            createdDocument.documentType,
+            createdDocument.status,
+        )
+        return createdDocument
+    }
+
+    private suspend fun create(
         specification: DocumentSpecification,
         externalReference: String?,
         requestedBy: AuthorizationAgent,

@@ -2,17 +2,47 @@ package no.elhub.auth.v1.features.grants
 
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
+import no.elhub.auth.v1.common.logging.errorName
 import no.elhub.auth.v1.domain.AuthorizationGrant
 import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryWriteError
+import org.slf4j.LoggerFactory
 import kotlin.uuid.Uuid
 
 class UpdateGrantHandler(
     private val grantRepository: GrantRepository,
 ) {
+    private val logger = LoggerFactory.getLogger(UpdateGrantHandler::class.java)
+
     suspend operator fun invoke(
+        id: Uuid,
+        authorizedAgent: AuthorizationAgent,
+        status: AuthorizationGrantStatus,
+        type: AuthorizationGrantType,
+    ): AuthorizationGrant {
+        val updatedGrant = try {
+            update(id, authorizedAgent, status, type)
+        } catch (error: UpdateGrantError) {
+            logger.warn(
+                "event=authorization_grant_update_failed grantId={} targetStatus={} reason={}",
+                id,
+                status,
+                error.errorName,
+            )
+            throw error
+        }
+        logger.info(
+            "event=authorization_grant_updated grantId={} grantType={} status={}",
+            updatedGrant.id,
+            updatedGrant.type,
+            updatedGrant.status,
+        )
+        return updatedGrant
+    }
+
+    private suspend fun update(
         id: Uuid,
         authorizedAgent: AuthorizationAgent,
         status: AuthorizationGrantStatus,
