@@ -110,7 +110,7 @@
               "$ref": "../authorization-common.schema.json#/$defs/moveInDate"
             },
             "redirectURI": {
-              "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
+                "$ref": "../authorization-common.schema.json#/$defs/redirectURI"
             }
           }
         }

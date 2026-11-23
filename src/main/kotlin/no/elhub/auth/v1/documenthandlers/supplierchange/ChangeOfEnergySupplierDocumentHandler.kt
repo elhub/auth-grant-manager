@@ -47,7 +47,7 @@ class ChangeOfEnergySupplierDocumentHandler(
             throw e.clientError.toDocumentPreparationError()
         }
 
-        val balanceSupplierName = organisationsService
+        val energySupplierName = organisationsService
             .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
                 ifLeft = { throw DocumentPreparationError.RequestedByLookupFailure(it) },
@@ -64,7 +64,7 @@ class ChangeOfEnergySupplierDocumentHandler(
 
         val metadata = ChangeOfEnergySupplierDocumentMetadata(
             requestedMeteringPoints = meteringPoints.toRequestedMeteringPointMetadata(),
-            balanceSupplierName = balanceSupplierName,
+            energySupplierName = energySupplierName,
             organizationName = organisationName,
         )
 
@@ -74,7 +74,7 @@ class ChangeOfEnergySupplierDocumentHandler(
                 organizationName = organisationName,
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
-                balanceSupplierName = balanceSupplierName,
+                balanceSupplierName = energySupplierName,
                 agreementReference = context.externalReference,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,

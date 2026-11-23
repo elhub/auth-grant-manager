@@ -33,6 +33,13 @@
         "createdAt": "2026-09-24T10:00:00+02:00",
         "updatedAt": "2026-09-24T10:15:00+02:00"
       },
+      "meta": {
+        "energySupplierName": "Example Energy AS",
+        "organizationName": "Example Customer AS",
+        "requestedMeteringPoints": [
+          { "id": "707057500000000001" }
+        ]
+      },
       "relationships": {
         "requestedBy": {
           "data": {
@@ -52,6 +59,12 @@
             "id": "999888771"
           }
         },
+        "approvedBy": {
+          "data": {
+            "type": "Person",
+            "id": "01997291-7e8b-7000-8000-000000000001"
+          }
+        },
         "authorizationGrants": {
           "data": [
             {
@@ -60,7 +73,14 @@
             }
           ]
         }
+      },
+      "links": {
+        "self": "/access/v1/authorization-requests/01997291-7e8b-7000-8000-000000000012"
       }
-    }
+    },
+    "links": {
+      "self": "/access/v1/authorization-requests/01997291-7e8b-7000-8000-000000000012"
+    },
+    "meta": { "createdAt": "2026-09-24T10:00:00+02:00" }
   }
 }

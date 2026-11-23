@@ -4,7 +4,7 @@
     "requestedScope": {
       "type": "object",
       "description": "A scope requested for the authorization grant that is created when the document is signed or the request is approved.",
-      "required": ["resourceType"],
+      "required": ["resourceType", "appliesTo"],
       "properties": {
         "resourceType": {
           "description": "Kind of resource the scope covers.",
@@ -40,6 +40,12 @@
     "authorizationScope": {
       "type": "object",
       "description": "A scope of an authorization grant, describing what the grantedTo agent is authorized to do.",
+      "required": [
+        "capability",
+        "resourceType",
+        "appliesTo",
+        "allowedChanges"
+      ],
       "properties": {
         "capability": {
           "description": "What the grant permits on the resource.",
@@ -47,7 +53,7 @@
         },
         "resourceType": {
           "type": "string",
-          "minLength": 1,
+          "enum": ["MeteringPointContract"],
           "description": "Kind of resource the scope covers, for example `MeteringPointContract`."
         },
         "appliesTo": {

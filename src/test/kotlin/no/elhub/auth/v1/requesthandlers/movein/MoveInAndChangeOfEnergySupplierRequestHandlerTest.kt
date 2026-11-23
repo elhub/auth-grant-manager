@@ -98,7 +98,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
                 },
             )
             put("moveInDate", moveInDate.toString())
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
         (result.validTo > Clock.System.now()) shouldBe true

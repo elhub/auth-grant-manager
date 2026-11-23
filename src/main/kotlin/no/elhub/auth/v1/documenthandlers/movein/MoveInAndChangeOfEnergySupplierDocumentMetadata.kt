@@ -10,13 +10,13 @@ import no.elhub.auth.v1.common.meteringpoints.toJsonArray
 data class MoveInAndChangeOfEnergySupplierDocumentMetadata(
     val requestedMeteringPoints: List<RequestedMeteringPointMetadata>,
     val validFrom: LocalDate?,
-    val balanceSupplierName: String,
+    val energySupplierName: String,
     val organizationName: String
 )
 
 fun MoveInAndChangeOfEnergySupplierDocumentMetadata.toJsonObject(): JsonObject = buildJsonObject {
     put("requestedMeteringPoints", requestedMeteringPoints.toJsonArray())
     validFrom?.let { put("validFrom", it.toString()) }
-    put("balanceSupplierName", balanceSupplierName)
+    put("energySupplierName", energySupplierName)
     put("organizationName", organizationName)
 }

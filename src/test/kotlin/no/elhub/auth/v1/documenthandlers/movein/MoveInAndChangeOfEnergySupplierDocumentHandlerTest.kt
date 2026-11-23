@@ -106,7 +106,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                 }
             )
             put("validFrom", validFrom.toString())
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
         val pdfContent = details.pdfContent
