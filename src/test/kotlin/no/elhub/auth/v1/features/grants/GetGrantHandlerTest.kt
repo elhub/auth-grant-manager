@@ -14,8 +14,8 @@ import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GetGrantHandlerTest : FunSpec({
     val grantRepository = mockk<GrantRepository>()
@@ -27,7 +27,7 @@ class GetGrantHandlerTest : FunSpec({
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
-        sourceId = UUID.randomUUID(),
+        sourceId = Uuid.random(),
         principal = principal,
         grantedBy = grantedBy,
         grantedTo = grantedTo,

@@ -43,8 +43,8 @@ import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class ConfirmDocumentHandlerTest : FunSpec({
@@ -88,7 +88,7 @@ class ConfirmDocumentHandlerTest : FunSpec({
         requestedOf = requestedOf,
         pdfBytes = originalFile,
     )
-    val id = UUID.fromString(document.id)
+    val id = Uuid.parse(document.id)
     val frameworkDocument = document.copy(
         documentType = AuthorizationDocumentType.EnergySupplierFrameworkAgreement,
         requestedScopes = listOf(

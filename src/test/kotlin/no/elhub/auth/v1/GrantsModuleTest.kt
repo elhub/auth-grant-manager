@@ -38,10 +38,10 @@ import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.GrantRepository
 import java.net.InetSocketAddress
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GrantsModuleTest : FunSpec({
     val delegatedAuthInfo =
@@ -247,7 +247,7 @@ private class GrantPatchFixture(
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Request,
-        sourceId = UUID.randomUUID(),
+        sourceId = Uuid.random(),
         principal = principal,
         grantedBy = AuthorizationAgent("grantedBy-person", AgentType.Person),
         grantedTo = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity),
@@ -337,7 +337,7 @@ private class GrantPatchFixture(
 }
 
 private data class GrantPatchResponse(val status: HttpStatusCode, val body: JsonObject) {
-    fun assertGrant(id: UUID, status: AuthorizationGrantStatus) {
+    fun assertGrant(id: Uuid, status: AuthorizationGrantStatus) {
         val data = body.getValue("data").jsonObject
         data.getValue("id").jsonPrimitive.content shouldBe id.toString()
         data.getValue("attributes").jsonObject.getValue("status").jsonPrimitive.content shouldBe status.name

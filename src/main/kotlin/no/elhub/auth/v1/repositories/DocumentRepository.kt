@@ -24,7 +24,7 @@ import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
@@ -40,14 +40,16 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty as toAuthorizationAgent
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty as toAuthorizationAgent
 
 interface DocumentRepository {
-    suspend fun find(id: UUID): AuthorizationDocument
+    suspend fun find(id: Uuid): AuthorizationDocument
     suspend fun findAndSortByCreatedAt(
         requestedBy: AuthorizationAgent,
         pagination: Pagination,
@@ -56,7 +58,7 @@ interface DocumentRepository {
 
     suspend fun insert(document: AuthorizationDocument): AuthorizationDocument
     suspend fun confirm(
-        documentId: UUID,
+        documentId: Uuid,
         signedFile: ByteArray,
         signatory: AuthorizationAgent,
         grants: List<AuthorizationGrant>,
@@ -67,18 +69,18 @@ class ExposedDocumentRepository(
     private val agentRepository: AgentRepository,
     private val grantRepository: GrantRepository,
 ) : DocumentRepository {
-    override suspend fun find(id: UUID): AuthorizationDocument = withTransaction {
+    override suspend fun find(id: Uuid): AuthorizationDocument = withTransaction {
         val row = AuthorizationDocumentTable.selectAll()
             .where { AuthorizationDocumentTable.id eq id }
             .singleOrNull()
             ?: throw RepositoryReadError.NotFoundError("Document not found: $id")
 
         row.toAuthorizationDocument(
-            requestedBy = agentRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationDocumentTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByDocumentId(listOf(id))[id].orEmpty(),
-            approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agentRepository.find(it).toAuthorizationAgent() },
+            approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agentRepository.find(it.toKotlinUuid()).toAuthorizationAgent() },
             now = now(),
         )
     }
@@ -90,7 +92,7 @@ class ExposedDocumentRepository(
     ): Page<AuthorizationDocument> = withTransaction {
         val agentId = agentRepository.findOrInsert(requestedBy.type, requestedBy.id).id
         val now = now()
-        val whereClause = generateFilterByCondition(agentId, statuses, now)
+        val whereClause = generateFilterByCondition(agentId.toKotlinUuid(), statuses, now)
         val totalItems = AuthorizationDocumentTable.selectAll().where(whereClause).count()
         val documentRows = AuthorizationDocumentTable.selectAll()
             .where(whereClause)
@@ -113,19 +115,19 @@ class ExposedDocumentRepository(
         }.distinct()
         val agents = AuthorizationAgentTable.selectAll()
             .where { AuthorizationAgentTable.id inList agentIds }
-            .associate { it[AuthorizationAgentTable.id].value to it.toAuthorizationAgent().toAuthorizationAgent() }
+            .associate { it[AuthorizationAgentTable.id].value.toKotlinUuid() to it.toAuthorizationAgent().toAuthorizationAgent() }
         val scopes = getScopesByDocumentId(documentRows.map { it[AuthorizationDocumentTable.id].value })
 
-        fun agent(id: UUID): AuthorizationAgent = agents[id]
+        fun agent(id: Uuid): AuthorizationAgent = agents[id]
             ?: throw RepositoryReadError.UnexpectedError("Agent not found for document: $id")
 
         val items = documentRows.map { row ->
             row.toAuthorizationDocument(
-                requestedBy = agent(row[AuthorizationDocumentTable.requestedBy]),
-                requestedPrincipal = agent(row[AuthorizationDocumentTable.requestedPrincipal]),
-                requestedOf = agent(row[AuthorizationDocumentTable.requestedOf]),
+                requestedBy = agent(row[AuthorizationDocumentTable.requestedBy].toKotlinUuid()),
+                requestedPrincipal = agent(row[AuthorizationDocumentTable.requestedPrincipal].toKotlinUuid()),
+                requestedOf = agent(row[AuthorizationDocumentTable.requestedOf].toKotlinUuid()),
                 requestedScopes = scopes[row[AuthorizationDocumentTable.id].value].orEmpty(),
-                approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agent(it) },
+                approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agent(it.toKotlinUuid()) },
                 now = now,
             )
         }
@@ -133,7 +135,7 @@ class ExposedDocumentRepository(
     }
 
     override suspend fun insert(document: AuthorizationDocument): AuthorizationDocument = withTransaction {
-        val documentId = UUID.fromString(document.id)
+        val documentId = Uuid.parse(document.id)
         val requestedBy = agentRepository.findOrInsert(document.requestedBy.type, document.requestedBy.id)
         val requestedPrincipal = agentRepository.findOrInsert(document.requestedPrincipal.type, document.requestedPrincipal.id)
         val requestedOf = agentRepository.findOrInsert(document.requestedOf.type, document.requestedOf.id)
@@ -187,7 +189,7 @@ class ExposedDocumentRepository(
     }
 
     override suspend fun confirm(
-        documentId: UUID,
+        documentId: Uuid,
         signedFile: ByteArray,
         signatory: AuthorizationAgent,
         grants: List<AuthorizationGrant>,
@@ -226,9 +228,9 @@ class ExposedDocumentRepository(
         val insertedGrants = grants.map { grantRepository.insert(it) }
 
         updated.toAuthorizationDocument(
-            requestedBy = agentRepository.find(row[AuthorizationDocumentTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationDocumentTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByDocumentId(listOf(documentId))[documentId].orEmpty(),
             approvedBy = approvedBy.toAuthorizationAgent(),
             now = now,
@@ -236,12 +238,12 @@ class ExposedDocumentRepository(
     }
 
     private fun generateFilterByCondition(
-        agentId: UUID,
+        agentId: Uuid,
         statuses: List<AuthorizationDocumentStatus>,
         now: Instant,
     ): Op<Boolean> {
-        val agentCondition = (AuthorizationDocumentTable.requestedBy eq agentId) or
-            (AuthorizationDocumentTable.requestedPrincipal eq agentId)
+        val agentCondition = (AuthorizationDocumentTable.requestedBy eq agentId.toJavaUuid()) or
+            (AuthorizationDocumentTable.requestedPrincipal eq agentId.toJavaUuid())
         if (statuses.isEmpty()) {
             return agentCondition
         }
@@ -259,7 +261,7 @@ class ExposedDocumentRepository(
         return agentCondition and statusCondition
     }
 
-    private fun getScopesByDocumentId(documentIds: List<UUID>): Map<UUID, List<RequestedAuthorizationScope>> {
+    private fun getScopesByDocumentId(documentIds: List<Uuid>): Map<Uuid, List<RequestedAuthorizationScope>> {
         if (documentIds.isEmpty()) {
             return emptyMap()
         }
@@ -279,7 +281,7 @@ class ExposedDocumentRepository(
     }
 }
 
-object AuthorizationDocumentTable : UUIDTable("auth_v1.authorization_document") {
+object AuthorizationDocumentTable : UuidTable("auth_v1.authorization_document") {
     val documentType = customEnumeration(
         name = "document_type",
         sql = "auth_v1.authorization_document_type",
@@ -336,8 +338,8 @@ fun ResultRow.toAuthorizationDocument(
     pdfBytes = this[AuthorizationDocumentTable.file],
 )
 
-object AuthorizationDocumentScopeTable : UUIDTable("auth_v1.authorization_document_scope") {
-    val documentId = javaUUID("document_id").references(AuthorizationDocumentTable.id)
+object AuthorizationDocumentScopeTable : UuidTable("auth_v1.authorization_document_scope") {
+    val documentId = uuid("document_id").references(AuthorizationDocumentTable.id)
     val resourceType = customEnumeration(
         name = "resource_type",
         sql = "auth_v1.authorization_resource_type",
@@ -353,8 +355,8 @@ fun ResultRow.toRequestedAuthorizationScope(
     constraints = constraints,
 )
 
-object AuthorizationDocumentScopeConstraintTable : UUIDTable("auth_v1.authorization_document_scope_constraint") {
-    val scopeId = javaUUID("scope_id").references(AuthorizationDocumentScopeTable.id)
+object AuthorizationDocumentScopeConstraintTable : UuidTable("auth_v1.authorization_document_scope_constraint") {
+    val scopeId = uuid("scope_id").references(AuthorizationDocumentScopeTable.id)
     val kind = customEnumeration(
         name = "kind",
         sql = "auth_v1.authorization_constraint_kind",

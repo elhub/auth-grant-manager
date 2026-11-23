@@ -36,13 +36,13 @@ import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.features.requests.GetRequestHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GetRequestRouteTest : FunSpec({
     val handler = mockk<GetRequestHandler>()
     val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
-    val requestId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val requestId = Uuid.parse("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")
     val request = AuthorizationRequest(
         id = requestId,

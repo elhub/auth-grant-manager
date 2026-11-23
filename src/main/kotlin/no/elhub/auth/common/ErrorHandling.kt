@@ -380,6 +380,24 @@ private fun Errors.toApiErrorResponse() =
             )
         }
 
+        is InputError.MissingIdError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Missing input",
+            detail = detail,
+        )
+
+        is InputError.MalformedIdError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Malformed input",
+            detail = detail,
+        )
+
+        is InputError.DataIdMismatchError -> buildApiErrorResponse(
+            status = HttpStatusCode.Conflict,
+            title = "ID mismatch",
+            detail = detail,
+        )
+
         is InputError.IdMismatchError -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,

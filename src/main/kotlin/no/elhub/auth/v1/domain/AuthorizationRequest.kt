@@ -4,12 +4,12 @@ import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.common.startOfDayOslo
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestTypeDetails
-import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 data class AuthorizationRequest(
-    val id: UUID,
+    val id: Uuid,
     val requestType: AuthorizationRequestType,
     val status: AuthorizationRequestStatus,
     val requestedScopes: List<RequestedAuthorizationScope>,
@@ -149,7 +149,7 @@ data class AuthorizationRequest(
         ): AuthorizationRequest {
             val now = Clock.System.now()
             return AuthorizationRequest(
-                id = UUID.randomUUID(),
+                id = Uuid.random(),
                 requestType = requestType,
                 status = AuthorizationRequestStatus.Pending,
                 requestedScopes = requestedScopes,

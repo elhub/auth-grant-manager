@@ -23,8 +23,8 @@ import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class ListDocumentsHandlerTest : FunSpec({
     val documentRepository = mockk<DocumentRepository>()
@@ -43,7 +43,7 @@ class ListDocumentsHandlerTest : FunSpec({
         requestedOf = requestedOf,
         pdfBytes = byteArrayOf(),
     )
-    val documentId = UUID.fromString(document.id)
+    val documentId = Uuid.parse(document.id)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
@@ -76,10 +76,10 @@ class ListDocumentsHandlerTest : FunSpec({
     }
 
     test("batch loads all grants and preserves document ordering and pagination") {
-        val secondId = UUID.randomUUID()
+        val secondId = Uuid.random()
         val second = document.copy(id = secondId.toString())
-        val revokedGrant = grant.copy(id = UUID.randomUUID(), status = AuthorizationGrantStatus.Revoked)
-        val secondGrant = grant.copy(id = UUID.randomUUID(), sourceId = secondId)
+        val revokedGrant = grant.copy(id = Uuid.random(), status = AuthorizationGrantStatus.Revoked)
+        val secondGrant = grant.copy(id = Uuid.random(), sourceId = secondId)
         val page = Page(listOf(document, second), 5, pagination)
         coEvery { documentRepository.findAndSortByCreatedAt(requestedBy, pagination, statuses) } returns page
         coEvery {

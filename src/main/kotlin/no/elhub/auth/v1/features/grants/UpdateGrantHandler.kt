@@ -7,13 +7,13 @@ import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryWriteError
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 class UpdateGrantHandler(
     private val grantRepository: GrantRepository,
 ) {
     suspend operator fun invoke(
-        id: UUID,
+        id: Uuid,
         authorizedAgent: AuthorizationAgent,
         status: AuthorizationGrantStatus,
         type: AuthorizationGrantType,

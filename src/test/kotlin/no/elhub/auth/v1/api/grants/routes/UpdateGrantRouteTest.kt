@@ -34,8 +34,8 @@ import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class UpdateGrantRouteTest : FunSpec({
     val handler = mockk<UpdateGrantHandler>()
@@ -44,7 +44,7 @@ class UpdateGrantRouteTest : FunSpec({
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Request,
-        sourceId = UUID.randomUUID(),
+        sourceId = Uuid.random(),
         principal = principal,
         grantedBy = principal,
         grantedTo = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity),
@@ -160,7 +160,7 @@ class UpdateGrantRouteTest : FunSpec({
         "missing status" to (path to """{"data":{"id":"$id","type":"ConsumableGrant","attributes":{}}}"""),
         "unknown status" to (path to body(status = "Unknown")),
         "malformed JSON" to (path to "{"),
-        "a mismatched body ID" to (path to body(dataId = UUID.randomUUID().toString())),
+        "a mismatched body ID" to (path to body(dataId = Uuid.random().toString())),
         "an invalid body ID" to (path to body(dataId = "not-a-uuid")),
     ).forEach { (description, input) ->
         test("PATCH returns 422 for $description without calling the handler") {

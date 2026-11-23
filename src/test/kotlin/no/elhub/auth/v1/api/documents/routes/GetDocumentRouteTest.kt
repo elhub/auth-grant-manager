@@ -39,13 +39,13 @@ import no.elhub.auth.v1.features.documents.GetDocumentError
 import no.elhub.auth.v1.features.documents.GetDocumentHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GetDocumentRouteTest : FunSpec({
     val handler = mockk<GetDocumentHandler>()
     val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
-    val documentId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val documentId = Uuid.parse("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")
     val document = AuthorizationDocument(
         id = documentId.toString(),
@@ -100,7 +100,7 @@ class GetDocumentRouteTest : FunSpec({
     )
 
     test("GET /{id} serializes the corresponding grant identifiers") {
-        val persistentGrant = grant.copy(id = UUID.randomUUID(), type = AuthorizationGrantType.Persistent)
+        val persistentGrant = grant.copy(id = Uuid.random(), type = AuthorizationGrantType.Persistent)
         coEvery { handler(documentId, authorizedAgent) } returns document.copy(
             status = AuthorizationDocumentStatus.Approved,
             approvedBy = document.requestedOf,

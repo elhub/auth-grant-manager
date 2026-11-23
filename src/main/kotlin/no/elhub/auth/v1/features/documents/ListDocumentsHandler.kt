@@ -8,7 +8,7 @@ import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantSourceType
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.auth.v1.repositories.GrantRepository
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 class ListDocumentsHandler(
     private val documentRepository: DocumentRepository,
@@ -24,12 +24,12 @@ class ListDocumentsHandler(
 
         val grants = grantRepository.findBySourceIds(
             AuthorizationGrantSourceType.Document,
-            page.items.map { UUID.fromString(it.id) },
+            page.items.map { Uuid.parse(it.id) },
         )
 
         return page.copy(
             items = page.items.map { document ->
-                document.copy(authorizationGrants = grants[UUID.fromString(document.id)].orEmpty())
+                document.copy(authorizationGrants = grants[Uuid.parse(document.id)].orEmpty())
             },
         )
     }
