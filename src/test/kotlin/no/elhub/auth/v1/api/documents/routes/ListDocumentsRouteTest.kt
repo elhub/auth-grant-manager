@@ -135,32 +135,23 @@ class ListDocumentsRouteTest : FunSpec({
         }
     }
 
-    listOf(
-        Triple("-1", "101", Pagination(page = 0, size = 100)),
-        Triple("invalid", "invalid", Pagination()),
-        Triple("2", "0", Pagination(page = 2, size = 1)),
-    ).forEach { (page, size, pagination) ->
-        test("GET normalizes page '$page' and size '$size' like v0") {
-            coEvery { handler(authorizedAgent, pagination, emptyList()) } returns
-                Page(emptyList(), 0, pagination)
+    test("GET rejects page sizes above 100 without calling the handler") {
+        coEvery { handler(authorizedAgent, Pagination(), emptyList()) } returns
+            Page(emptyList(), 0, Pagination())
 
-            testApplication {
-                setupAppWith(authorizedAgent) {
-                    route(V1_DOCUMENTS_PATH) { route(handler) }
-                }
-
-                val response = client.get(V1_DOCUMENTS_PATH) {
-                    accept(jsonApiContentType)
-                    url {
-                        parameters.append("page[number]", page)
-                        parameters.append("page[size]", size)
-                    }
-                }
-
-                response.status shouldBe HttpStatusCode.OK
-                response.body<JsonApiListAuthorizationDocumentsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedAgent, pagination, emptyList()) }
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_DOCUMENTS_PATH) { route(handler) }
             }
+
+            val response = client.get(V1_DOCUMENTS_PATH) {
+                accept(jsonApiContentType)
+                url { parameters.append("page[size]", "101") }
+            }
+
+            response.status shouldBe HttpStatusCode.BadRequest
+            response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
         }
     }
 

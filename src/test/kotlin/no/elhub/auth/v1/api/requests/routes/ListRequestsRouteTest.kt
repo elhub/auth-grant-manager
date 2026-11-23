@@ -128,7 +128,7 @@ class ListRequestsRouteTest : FunSpec({
         "" to emptyList(),
     ).forEach { (filter, statuses) ->
         test("GET passes status filter '$filter' to the handler") {
-            val pagination = Pagination(page = 1, size = 2)
+            val pagination = Pagination(page = 1, size = 100)
             coEvery { handler(authorizedAgent, pagination, statuses) } returns
                 Page(listOf(request), 5, pagination)
 
@@ -141,7 +141,7 @@ class ListRequestsRouteTest : FunSpec({
                     accept(jsonApiContentType)
                     url {
                         parameters.append("page[number]", "1")
-                        parameters.append("page[size]", "2")
+                        parameters.append("page[size]", "100")
                         parameters.append("filter[status]", filter)
                     }
                 }
@@ -172,32 +172,26 @@ class ListRequestsRouteTest : FunSpec({
         }
     }
 
-    listOf(
-        Triple("-1", "101", Pagination(page = 0, size = 100)),
-        Triple("invalid", "invalid", Pagination()),
-        Triple("2", "0", Pagination(page = 2, size = 1)),
-    ).forEach { (page, size, pagination) ->
-        test("GET normalizes page '$page' and size '$size'") {
-            coEvery { handler(authorizedAgent, pagination, emptyList()) } returns
-                Page(emptyList(), 0, pagination)
+    test("GET rejects invalid page sizes without calling the handler") {
+        coEvery { handler(authorizedAgent, any(), emptyList()) } answers {
+            Page(emptyList(), 0, secondArg())
+        }
 
-            testApplication {
-                setupAppWith(authorizedAgent) {
-                    route(V1_REQUESTS_PATH) { route(handler) }
-                }
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_REQUESTS_PATH) { route(handler) }
+            }
 
+            for (size in listOf("101", "1000", "0", "invalid", "2147483648")) {
                 val response = client.get(V1_REQUESTS_PATH) {
                     accept(jsonApiContentType)
-                    url {
-                        parameters.append("page[number]", page)
-                        parameters.append("page[size]", size)
-                    }
+                    url { parameters.append("page[size]", size) }
                 }
 
-                response.status shouldBe HttpStatusCode.OK
-                response.body<JsonApiListAuthorizationRequestsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedAgent, pagination, emptyList()) }
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.body<JsonApiErrorCollection>().errors.single().status shouldBe "400"
             }
+            coVerify(exactly = 0) { handler(any(), any(), any()) }
         }
     }
 
