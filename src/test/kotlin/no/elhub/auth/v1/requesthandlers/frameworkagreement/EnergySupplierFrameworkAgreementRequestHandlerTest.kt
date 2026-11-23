@@ -53,7 +53,7 @@ class EnergySupplierFrameworkAgreementRequestHandlerTest : FunSpec({
         )
 
         result.meta shouldBe buildJsonObject {
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
     }

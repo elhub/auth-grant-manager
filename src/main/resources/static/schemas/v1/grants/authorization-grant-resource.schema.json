@@ -3,9 +3,17 @@
   "title": "Authorization Grant Resource",
   "description": "Schema for returning consumable and persistent authorization grants.",
   "type": "object",
+  "required": ["data", "links", "meta"],
   "properties": {
     "data": {
       "type": "object",
+      "required": [
+        "id",
+        "type",
+        "attributes",
+        "relationships",
+        "links"
+      ],
       "properties": {
         "id": {
           "$ref": "authorization-grant-common.schema.json#/$defs/id"
@@ -15,6 +23,13 @@
         },
         "attributes": {
           "type": "object",
+          "required": [
+            "status",
+            "scopes",
+            "validFrom",
+            "createdAt",
+            "updatedAt"
+          ],
           "properties": {
             "status": {
               "$ref": "authorization-grant-common.schema.json#/$defs/status"
@@ -28,7 +43,7 @@
             },
             "validTo": {
               "$ref": "../elhub-common.schema.json#/$defs/validTo",
-              "description": "End of the period in which the grant is valid. May be null, meaning the grant has no end date."
+              "description": "End of the period in which the grant is valid. Omitted when the grant has no end date."
             },
             "createdAt": {
               "$ref": "../elhub-common.schema.json#/$defs/createdAt"
@@ -40,6 +55,13 @@
         },
         "relationships": {
           "type": "object",
+          "required": [
+            "principal",
+            "grantedBy",
+            "grantedTo",
+            "approvedBy",
+            "source"
+          ],
           "properties": {
             "principal": {
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
@@ -65,6 +87,7 @@
         },
         "links": {
           "type": "object",
+          "required": ["self"],
           "properties": {
             "self": {
               "type": "string",
@@ -74,6 +97,13 @@
           }
         }
       }
+    },
+    "links": {
+      "$ref": "#/properties/data/properties/links"
+    },
+    "meta": {
+      "$ref": "../../json-api-framework.schema.json#/$defs/topLevelMeta",
+      "required": ["createdAt"]
     }
   }
 }

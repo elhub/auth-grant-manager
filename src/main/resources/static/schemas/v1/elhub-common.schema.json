@@ -31,18 +31,28 @@
     "agentIdentifier": {
       "type": "string",
       "description": "External identifier used to resolve an agent. The type of agent is determined by the length: 9 digits for an organization number, 11 digits for a national identity number, and 13 digits for a GLN.",
-      "examples": ["999888771", "01017012345", "7080000000000"]
+      "examples": [
+        "999888771",
+        "01017012345",
+        "7080000000000"
+      ]
     },
     "agentRelationship": {
       "type": "object",
       "description": "Reference to an agent.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "object",
+          "required": ["type", "id"],
           "properties": {
             "type": {
-              "description": "Type of agent. A Person is identified by NIN, an Organization identified by organization number, and a MarketEntity is identified by GLN.",
-              "enum": ["Person", "Organization", "MarketEntity"]
+              "description": "Type of agent. A Person is identified by their Elhub ID (UUID), an Organization by organization number, and a MarketEntity by GLN.",
+              "enum": [
+                "Person",
+                "Organization",
+                "MarketEntity"
+              ]
             },
             "id": {
               "type": "string",
@@ -56,9 +66,11 @@
     "approvedByRelationship": {
       "type": "object",
       "description": "Reference to the person who signed the document or approved the request.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "object",
+          "required": ["type", "id"],
           "properties": {
             "type": {
               "const": "Person"
@@ -66,7 +78,7 @@
             "id": {
               "type": "string",
               "minLength": 1,
-              "description": "Identifier of the person."
+              "description": "Elhub ID (UUID) of the person."
             }
           }
         }
@@ -75,11 +87,13 @@
     "authorizationGrantRelationship": {
       "type": "object",
       "description": "References to the authorization grants created from this resource. Empty until the document is signed or the request is approved.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "array",
           "items": {
             "type": "object",
+            "required": ["type", "id"],
             "properties": {
               "type": {
                 "$ref": "grants/authorization-grant-common.schema.json#/$defs/type"
@@ -95,13 +109,18 @@
     "authorizationSourceRelationship": {
       "type": "object",
       "description": "Reference to the authorization document or request the grant was created from.",
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "object",
+          "required": ["type", "id"],
           "properties": {
             "type": {
               "description": "Type of the source resource.",
-              "enum": ["AuthorizationDocument", "AuthorizationRequest"]
+              "enum": [
+                "AuthorizationDocument",
+                "AuthorizationRequest"
+              ]
             },
             "id": {
               "$ref": "#/$defs/resourceUuid"

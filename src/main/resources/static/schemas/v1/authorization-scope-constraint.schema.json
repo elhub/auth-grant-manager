@@ -4,6 +4,7 @@
     "requestedScopeConstraint": {
       "type": "object",
       "description": "A constraint on a requested scope.",
+      "required": ["attribute", "value"],
       "properties": {
         "attribute": {
           "type": "string",
@@ -13,14 +14,15 @@
         "value": {
           "type": "array",
           "minItems": 1,
-          "description": "Allowed values for the attribute.",
-          "items": {}
+          "description": "Allowed string values for the attribute. Move-in validFrom input accepts an ISO date or timestamp; responses use a timestamp with the Europe/Oslo offset.",
+          "items": { "type": "string" }
         }
       }
     },
     "authorizationScopeConstraint": {
       "type": "object",
       "description": "A constraint on a granted scope.",
+      "required": ["attribute", "value"],
       "properties": {
         "attribute": {
           "type": "string",
@@ -30,8 +32,8 @@
         "value": {
           "type": "array",
           "minItems": 1,
-          "description": "Allowed values for the attribute.",
-          "items": {}
+          "description": "Allowed string values: metering-point IDs, contract types (EndUser or EnergySupplier), or validFrom timestamps with the Europe/Oslo offset.",
+          "items": { "type": "string" }
         }
       }
     }

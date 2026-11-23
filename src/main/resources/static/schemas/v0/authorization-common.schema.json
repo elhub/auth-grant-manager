@@ -14,6 +14,10 @@
       "description": "The unique identifier of the metering point this authorization applies to.",
       "examples": ["1234567890123"]
     },
+    "requestedForMeterNumber": {
+      "type": "string",
+      "description": "The meter number retrieved for the requested metering point. Empty when no meter number is available."
+    },
     "requestedForMeteringPointAddress": {
       "type": "string",
       "description": "The physical address associated with the metering point.",

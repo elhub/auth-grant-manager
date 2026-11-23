@@ -23,6 +23,7 @@ import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
@@ -119,7 +120,14 @@ class CreateRequestRouteTest : FunSpec({
                 agents.getValue("requestedOf").right(),
             )
             val repository = mockk<RequestRepository>()
-            val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), mockk<RedirectUriValidator>(relaxed = true), repository)
+            val creationHandler = CreateRequestHandler(
+                mockk(),
+                mockk(),
+                mockk(),
+                mockk<RedirectUriValidator>(relaxed = true),
+                repository,
+                mockk<AuthorizationRulesService>(),
+            )
 
             testApplication {
                 setupAppWith(agents.getValue("requestedBy")) {

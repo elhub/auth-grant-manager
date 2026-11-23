@@ -49,10 +49,11 @@ try {
   await page.locator('form#consent-confirm').getByRole('button', { name: 'Sign' }).click()
 
   // Step 7: Wait for completion
-  step = 'waiting for signing result'
-  // Wait for navigation and explicit success, not the absence of a loading spinner.
-  await page.waitForURL('**/oppsummering', { timeout: 60_000 })
-  await page.getByRole('alert').filter({ hasText: 'Du har signert 1 dokument med BankID' }).waitFor({ state: 'visible', timeout: 60_000 })
+  step = 'waiting for signing summary'
+  await page.waitForURL(url => url.pathname.endsWith('/oppsummering'))
+  step = 'waiting for signed documents alert'
+  // The signing API result is checked separately for exactly one signed PDF.
+  await page.getByRole('alert').filter({ hasText: /\bdokumenter(?: er)? signert\b/i }).waitFor({ state: 'visible' })
 } catch {
   // Playwright errors can include credentials from fill calls. Log only the step.
   console.error(`BankID signing failed while ${step}; browser call logs suppressed`)

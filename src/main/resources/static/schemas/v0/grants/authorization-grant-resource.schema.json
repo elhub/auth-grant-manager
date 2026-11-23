@@ -24,6 +24,7 @@
           "$ref": "authorization-grant-common.schema.json#/$defs/attributes",
           "required": [
             "status",
+            "grantedAt",
             "createdAt",
             "updatedAt",
             "validFrom",
@@ -34,6 +35,7 @@
           "$ref": "authorization-grant-common.schema.json#/$defs/relationships",
           "required": [
             "grantedFor",
+            "grantedBy",
             "grantedTo",
             "source",
             "scopes"
