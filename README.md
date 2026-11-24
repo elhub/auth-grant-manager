@@ -19,14 +19,16 @@ The main objectives are to:
 
 ### Functional
 
-| Section                                | What it covers                                                                  |
-|----------------------------------------|---------------------------------------------------------------------------------|
-| [Concepts](concepts/index.md)          | Authorization actors, scopes, and validity.                                     |
-| [Processes](processes/index.md)        | Collect authorization through an electronic request or a signed document. |
-| [Resources](resources/index.md)        | Business records, relationships, status transitions, and access rules.          |
-| [Quality attributes](quality/index.md) | Cross-functional quality attributes and requirements.                           |
+| Section                                | What it covers                                                             |
+|----------------------------------------|----------------------------------------------------------------------------|
+| [Concepts](concepts/index.md)          | Authorization actors, scopes, and validity.                                |
+| [Processes](processes/index.md)        | Collect authorization through an authorization request or signed document. |
+| [Resources](resources/index.md)        | Business resources, relationships, status transitions, and access rules.   |
+| [Quality attributes](quality/index.md) | Cross-functional quality attributes and requirements.                      |
 
-Concepts, Processes, and Resources describe the current **v1 implementation**.
+> [!WARNING]
+> The functional documentation describes the new V1 implementation. For older documentation, check out an earlier version
+> of the repository.
 
 ### Technical
 

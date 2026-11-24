@@ -2,75 +2,54 @@
 
 ## Purpose
 
-Collect authorization through a signed PDF instead of an electronic request
-decision. The requester arranges signature collection outside this service.
+Collect approval through a signed PDF. The market entity arranges signing outside Elhub and returns the signed
+document for verification.
 
 ## Preconditions
 
-The requester identifies the authorization type, the principal, the party
-asked to authorize, and the document language. The service validates the
-inputs for that type and checks that the party asked to authorize can
-represent the principal.
+* The requester (`requestedBy`) is a market entity with a valid Elhub role that allows it to request the authorization type.
+* The party asked to authorize (`requestedOf`) can represent the principal (`requestedPrincipal`).
+* The person signing the document has authority to approve the authorization.
 
 ## Sequence
 
 ```mermaid
 sequenceDiagram
-    participant M as Requester
-    participant A as Auth Grant Manager
-    participant S as Person / signing provider
-    participant PDP as Policy Decision Point
-    M->>A: Create authorization document
-    A->>PDP: Check authority to represent the principal
-    PDP-->>A: Authorization decision
-    A->>A: Generate and sign PDF
-    A-->>M: Pending document record
-    M->>A: Retrieve PDF
-    A-->>M: Elhub-signed PDF
-    M->>S: Collect person's signature
-    S-->>M: Signed PDF
-    M->>A: Return signed PDF for original document
-    A->>A: Validate signatures and resolve signatory
-    A->>PDP: Check signatory's approval authority
-    PDP-->>A: Authorization decision
-    A->>A: Atomically confirm document and create grants
-    A-->>M: Confirmation completed
+    participant EU as End User
+    participant ME as Market Entity
+    participant AGM as auth-grant-manager
+    participant EMIF as EMIF
+    participant SP as Signing Service
+    EU ->> ME: Initiates transaction
+    ME ->> AGM: POST /authorization-documents
+    Note right of AGM: Generate and sign the PDF with Elhub's certificate.
+    AGM ->> ME: 201 Created (documentId)
+    ME ->> AGM: GET /authorization-documents/{documentId}.pdf
+    AGM ->> ME: 200 OK (document.pdf)
+    ME ->> SP: Send PDF for signing
+    Note right of SP: Market Entity gets the document<br>signed using an approved certificate<br>auhtority and signing service.
+    EU ->> SP: Signs the document
+    SP ->> ME: Return signed PDF
+    ME ->> AGM: PUT /authorization-documents/{documentId}.pdf
+    Note right of AGM: Verify the signatures and the signer's authority.
+    AGM ->> ME: 204 No Content
+    ME ->> AGM: GET /authorization-documents/{documentId}
+    AGM ->> ME: 200 OK (document status and grants)
+    ME ->> EMIF: Send BRS with authorizationGrantId
 ```
 
-Only the original requester (`requestedBy`) can submit the signed PDF.
-The signatory, not the uploader, is recorded as `approvedBy`.
-
-## Verification and exceptions
-
-The current signature implementation checks the Elhub signature and original
-document correspondence, disallowed revisions between signatures, and a
-BankID signature with trusted certificate roots, timestamp, and long-term
-validation material. It extracts the signer's Norwegian national identity
-number and resolves the person before checking approval authority.
-
-These are implementation checks, not a blanket claim of legal compliance or
-support for every electronic-signature provider. The existing usage page
-describes signing requirements separately.
-
-The upload must be a nonempty PDF of at most 1 MiB (1,048,576 bytes).
-Wrong uploader, unsupported content, failed signature verification,
-unresolvable or unauthorized signatory, expired proposal, invalid grant
-validity, and an already confirmed document prevent successful confirmation.
-No grants are committed for a failed confirmation.
+The market entity creates an authorization document in Elhub and uses its ID to retrieve the Elhub-signed PDF.
+The end user signs it through a signing provider. Only the original requester can return the signed PDF.
+Elhub checks that it matches the original document, verifies the signatures, and confirms that the signer
+has authority to approve. The market entity can then retrieve the document status and the resulting grant IDs
+for use in Elhub.
 
 ## Outcome
 
-The confirmed document becomes `Approved`; the signed PDF and approver are
-stored together with the resulting grants in one transaction. Retrieving the
-PDF afterwards returns the stored signed file.
+On successful confirmation, the system stores the signed PDF, records the signer as `approvedBy`, and creates the
+grants defined by the authorization type in the same transaction. A failed confirmation creates no grants. The
+document has no rejection operation and expires if it is not confirmed by its deadline.
 
-There is no document rejection operation in v1. A document that is never
-successfully confirmed becomes `Expired` at its deadline. A failed upload is
-not a recorded rejection.
+## Related Resources
 
-## Implementation references
-
-* [Creation](../../src/main/kotlin/no/elhub/auth/v1/features/documents/CreateDocumentHandler.kt)
-* [Confirmation](../../src/main/kotlin/no/elhub/auth/v1/features/documents/ConfirmDocumentHandler.kt)
-* [Signature verification](../../src/main/kotlin/no/elhub/auth/common/documents/pdf/ITextPdfSignatureService.kt)
-* [Atomic confirmation persistence](../../src/main/kotlin/no/elhub/auth/v1/repositories/DocumentRepository.kt)
+* [AuthorizationDocument](../resources/authorization-document.md)

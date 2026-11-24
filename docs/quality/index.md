@@ -1,17 +1,5 @@
-# Quality attributes
+# Quality Attributes
 
-## Component Overview
-
-**Component Name:** Authorization Grant Manager
-
-**Purpose:** Centralized service for managing, tracking, and verifying user authorizations and consents for Elhub
-services and market processes.
-
-**Owner:** squad-auth
-
-**Related System(s):** MyPage, Market Processes
-
----
 
 The following requirements are targets, not confirmation that each acceptance
 criterion is implemented or verified in the current repository or deployment.
@@ -34,8 +22,6 @@ All API endpoints require authentication and authorization to ensure only author
 - Unauthorized requests are rejected with HTTP 403.
 - Sensitive data is encrypted in transit using TLS.
 
----
-
 ## CFR-2: Reliability
 
 The service must be highly available to ensure market parties can access the system when needed.
@@ -47,8 +33,6 @@ The service must be highly available to ensure market parties can access the sys
 - Service maintains 99.9% uptime.
 - Health check endpoints are available for monitoring the service.
 - Service recovers automatically from transient failures.
-
----
 
 ## CFR-3: Compliance
 
@@ -63,8 +47,6 @@ Data handling must meet GDPR and QES standards to ensure Elhub remains compliant
 - Personal data is encrypted at rest and in transit.
 - Elhub's data retention policies are implemented and enforced.
 - Right to erasure is supported.
-
----
 
 ## CFR-4: Performance
 

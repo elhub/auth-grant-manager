@@ -9,53 +9,43 @@ Collect an electronic approval or rejection from a person with authority to deci
 * The requester (requestedBy) is a market entity with a valid Elhub role that allows it to request the authorization type.
 * The principal (requestedPrincipal) is an agent that has the authority to approve or reject the request.
 
-
 ## Sequence
 
 ```mermaid
 sequenceDiagram
-    participant M as Requester
-    participant A as Auth Grant Manager
-    participant P as Approving person
-    participant PDP as Policy Decision Point
-    M->>A: Create authorization request
-    A-->>M: Pending request with scopes and deadline
-    P->>A: Approve or reject, with text language
-    A->>PDP: Check person's approval authority
-    PDP-->>A: Authorization decision
-    alt Allowed and still pending within deadline
-        A->>A: Record decision; create grants only for approval
-        A-->>P: Updated request
-    else Not allowed, expired, or already processed
-        A-->>P: Error; no new grants
-    end
+    participant EU as End User
+    participant ME as Market Entity
+    participant AGM as auth-grant-manager
+    participant EMP as Elhub MyPage
+    participant EMIF as EMIF
+    EU ->> ME: Initiates transaction
+    ME ->> AGM: POST /authorization-requests
+    AGM ->> ME: 201 Created<br>(requestId)
+    ME ->> EMP: Redirect to MyPage with requestId
+    EU ->> EMP: Log in and accept or reject the request
+    EMP ->> AGM: PATCH /authorization-requests/{requestId}
+    Note right of EMP: Update request with new status.
+    AGM ->> EMP: 200 OK
+    EMP ->> ME: Redirect to chosen Market Entity URI
+    ME ->> AGM: GET /authorization-requests/{requestId}
+    AGM ->> ME: 200 OK<br>(request status and grants)
+    ME ->> EMIF: Send BRS with authorizationGrantId
 ```
 
-The service records a text reference identifying the authorization wording.
-The decision includes `textLanguage`, recording the language used for approval
-or rejection. The update route requires an end-user token and retains the
-actual person as the decision actor, including when that person acts on behalf
-of an organization.
+The market entity creates an authorization request in Elhub. Using the ID of the request, the market entity can then
+redirect the end user to Elhub MyPage, where the end user can log in and approve or reject the request. The end user
+can also log in to MyPage directly to see any pending requests. After the end user makes a decision, the market
+entity can retrieve the updated request status and any resulting grants. The market entity can then use the grant ID
+to carry out  relevant actions in the Elhub system, such as sending a BRS message to EMIF.
 
-## Outcomes
+## Outcome
 
-Approval records `approvedBy` and creates the grants defined by the authorization type in the
-same transaction. Rejection records the decision language and creates no
-grants. A source can be decided only once; concurrent or repeated decisions
+If an authorization request is approved, the system records the decision, the signatory as `approvedBy`, and creates
+the grants defined by the authorization type in the same transaction. If the request is rejected, the system records
+the decision language and creates no grants. A request can only be decided once; concurrent or repeated decisions
 cannot create a second set of grants.
 
-A pending request expires at its deadline. Clients cannot set it back to
-`Pending` or directly mark it `Expired`. If the resulting grants cannot be
-issued, approval fails.
 
-**Access distinction:** reading a request is limited to `requestedBy` and
-`requestedPrincipal`; permission to make a decision is checked separately.
-Being `requestedOf` or the eventual `approvedBy` does not itself grant read
-access.
+## Related Resources
 
-## Implementation references
-
-* [Request creation](../../src/main/kotlin/no/elhub/auth/v1/features/requests/CreateRequestHandler.kt)
-* [Decision handling](../../src/main/kotlin/no/elhub/auth/v1/features/requests/UpdateRequestHandler.kt)
-* [Decision actor resolution](../../src/main/kotlin/no/elhub/auth/common/auth/UpdateRequestActorResolver.kt)
-* [Atomic decision persistence](../../src/main/kotlin/no/elhub/auth/v1/repositories/RequestRepository.kt)
+* [AuthorizationRequest](../resources/authorization-request.md)
