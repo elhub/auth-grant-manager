@@ -5,11 +5,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
 import no.elhub.auth.common.auth.PartyType
-import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
@@ -56,36 +53,36 @@ fun Application.configureErrorHandling() {
         }
         exception<Errors> { call, cause ->
             val (status, body) = cause.toApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfValidationException> { call, cause ->
             val (status, body) = cause.toApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfSigningException> { call, cause ->
             logger.error("Failed to sign PDF", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfGenerationException> { call, cause ->
             logger.error("Failed to generate PDF", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<InvalidDocumentScopes> { call, cause ->
             logger.error("Invalid authorization document scopes", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdpAuthorizationException> { call, cause ->
             logger.error("PDP authorization check failed", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<Throwable> { call, cause ->
             logger.error("Unhandled exception", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
     }
 }

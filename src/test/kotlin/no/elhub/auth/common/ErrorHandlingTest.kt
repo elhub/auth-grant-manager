@@ -3,7 +3,10 @@ package no.elhub.auth.common
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.routing.get
@@ -15,6 +18,7 @@ import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
 import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v1.V1_REQUESTS_PATH
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.features.documents.ConfirmDocumentError
@@ -28,6 +32,88 @@ import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 class ErrorHandlingTest : FunSpec({
+    val plainJson = ContentType.Application.Json
+    val v0Path = "/access/v0/authorization-requests"
+
+    fun v1NotFoundTest(name: String, accept: String?, expectedType: ContentType) {
+        test("v1 not-found error $name") {
+            testApplication {
+                application {
+                    configureErrorHandling()
+                    routing {
+                        get(V1_REQUESTS_PATH) { throw RepositoryReadError.NotFoundError("Missing request") }
+                    }
+                }
+
+                val response = client.get(V1_REQUESTS_PATH) {
+                    if (accept != null) header(HttpHeaders.Accept, accept)
+                }
+                response.status shouldBe HttpStatusCode.NotFound
+                response.contentType() shouldBe expectedType
+                response.headers[HttpHeaders.Vary] shouldBe HttpHeaders.Accept
+                val error = Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText()).errors.single()
+                error.status shouldBe "404"
+                error.title shouldBe "Not found error"
+                error.detail shouldBe "The requested resource could not be found"
+            }
+        }
+    }
+
+    v1NotFoundTest("defaults to JSON:API without Accept", accept = null, expectedType = jsonApiContentType)
+    v1NotFoundTest("defaults to JSON:API for a wildcard", accept = "*/*", expectedType = jsonApiContentType)
+    v1NotFoundTest("keeps its status and body for PDF-only clients", accept = "application/pdf", expectedType = jsonApiContentType)
+    v1NotFoundTest("honors a plain JSON request", accept = "application/json", expectedType = plainJson)
+    v1NotFoundTest("honors a JSON:API request", accept = "application/vnd.api+json", expectedType = jsonApiContentType)
+    v1NotFoundTest(
+        "prefers JSON:API when both types have equal weight",
+        accept = "application/json, application/vnd.api+json",
+        expectedType = jsonApiContentType,
+    )
+    v1NotFoundTest(
+        "uses plain JSON when it has a higher weight",
+        accept = "application/vnd.api+json;q=0.5, application/json",
+        expectedType = plainJson,
+    )
+    v1NotFoundTest(
+        "uses JSON:API when the matching wildcard has a higher weight",
+        accept = "application/json;q=0.5, application/*",
+        expectedType = jsonApiContentType,
+    )
+    v1NotFoundTest(
+        "does not treat plain JSON with zero weight as an opt-in",
+        accept = "application/json;q=0, */*",
+        expectedType = jsonApiContentType,
+    )
+    v1NotFoundTest(
+        "uses plain JSON when an explicit JSON:API exclusion overrides the wildcard",
+        accept = "application/json;q=0.5, application/vnd.api+json;q=0, */*",
+        expectedType = plainJson,
+    )
+
+    fun v0UnhandledErrorTest(name: String, accept: String?, expectedType: ContentType) {
+        test("v0 unhandled error $name") {
+            testApplication {
+                application {
+                    configureErrorHandling()
+                    routing { get(v0Path) { error("Unexpected error") } }
+                }
+
+                val response = client.get(v0Path) {
+                    if (accept != null) header(HttpHeaders.Accept, accept)
+                }
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.contentType() shouldBe expectedType
+                response.headers[HttpHeaders.Vary] shouldBe HttpHeaders.Accept
+                val error = Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText()).errors.single()
+                error.status shouldBe "500"
+                error.detail shouldBe "An internal server error occurred"
+            }
+        }
+    }
+
+    v0UnhandledErrorTest("defaults to JSON:API without Accept", accept = null, expectedType = jsonApiContentType)
+    v0UnhandledErrorTest("honors a plain JSON request", accept = "application/json", expectedType = plainJson)
+
     data class ErrorCase(
         val cause: Throwable,
         val status: HttpStatusCode,

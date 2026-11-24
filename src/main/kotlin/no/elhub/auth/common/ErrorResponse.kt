@@ -1,0 +1,37 @@
+package no.elhub.auth.common
+
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.parseHeaderValue
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.response.respondText
+import kotlinx.serialization.json.Json
+import no.elhub.auth.common.config.jsonApiContentType
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
+
+internal suspend fun ApplicationCall.respondError(status: HttpStatusCode, body: JsonApiErrorCollection) {
+    val plainJson = ContentType.Application.Json
+    val acceptRanges = request.headers.getAll(HttpHeaders.Accept).orEmpty()
+        .flatMap { parseHeaderValue(it) }
+
+    // Both error representations are unparameterized, so only the preference weight (q) may be present.
+    fun weightFor(mediaRange: String): Double? = acceptRanges
+        .filter { it.value.equals(mediaRange, ignoreCase = true) }
+        .filter { range -> range.params.all { it.name.equals("q", ignoreCase = true) } }
+        .maxOfOrNull { it.quality }
+
+    // Plain JSON is opt-in. For JSON:API, the most specific range wins, even with q=0.
+    val plainJsonWeight = weightFor(plainJson.toString()) ?: 0.0
+    val jsonApiWeight = weightFor(jsonApiContentType.toString())
+        ?: weightFor("application/*")
+        ?: weightFor("*/*")
+        ?: 0.0
+
+    val contentType = if (plainJsonWeight > jsonApiWeight) plainJson else jsonApiContentType
+
+    response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
+    // Send the error directly: Ktor's normal negotiation would turn a missing PDF's 404 into
+    // an empty 406 if the client only accepts application/pdf, since we have no PDF error format.
+    respondText(Json.encodeToString(body), contentType, status)
+}

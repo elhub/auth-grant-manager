@@ -165,8 +165,8 @@ class GetDocumentRouteTest : FunSpec({
         }
     }
 
-    listOf(null, "application/pdf", "*/*", "application/*").forEach { accept ->
-        test("GET /{id}.pdf returns PDF bytes with Accept ${accept ?: "absent"}") {
+    fun pdfDownloadTest(name: String, accept: String?) {
+        test("GET /{id}.pdf returns PDF bytes $name") {
             coEvery { handler(documentId, authorizedAgent) } returns document
 
             testApplication {
@@ -186,22 +186,32 @@ class GetDocumentRouteTest : FunSpec({
         }
     }
 
-    test("GET /{id}.pdf returns 406 for an incompatible Accept header") {
-        testApplication {
-            setupAppWith(authorizedAgent) {
-                route(V1_DOCUMENTS_PATH) { route(handler) }
-            }
+    pdfDownloadTest("without Accept", accept = null)
+    pdfDownloadTest("when the client requests PDF", accept = "application/pdf")
+    pdfDownloadTest("when the client accepts PDF and plain JSON", accept = "application/pdf, application/json")
+    pdfDownloadTest("when the client accepts any media type", accept = "*/*")
+    pdfDownloadTest("when the client accepts any application media type", accept = "application/*")
 
-            val response = client.get("$V1_DOCUMENTS_PATH/$documentId.pdf") {
-                accept(jsonApiContentType)
-            }
+    fun pdfNotAcceptableTest(name: String, errorType: ContentType) {
+        test("GET /{id}.pdf returns a 406 error when the client accepts only $name") {
+            testApplication {
+                setupAppWith(authorizedAgent) {
+                    route(V1_DOCUMENTS_PATH) { route(handler) }
+                }
 
-            response.status shouldBe HttpStatusCode.NotAcceptable
-            response.contentType()?.withoutParameters() shouldBe jsonApiContentType
-            val body = response.body<JsonApiErrorCollection>()
-            body.errors.single().status shouldBe "406"
+                val response = createClient {}.get("$V1_DOCUMENTS_PATH/$documentId.pdf") { accept(errorType) }
+
+                response.status shouldBe HttpStatusCode.NotAcceptable
+                response.contentType() shouldBe errorType
+                response.headers[HttpHeaders.Vary] shouldBe HttpHeaders.Accept
+                val body = Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText())
+                body.errors.single().status shouldBe "406"
+            }
         }
     }
+
+    pdfNotAcceptableTest("JSON:API", errorType = jsonApiContentType)
+    pdfNotAcceptableTest("plain JSON", errorType = ContentType.Application.Json)
 
     listOf("", ".pdf").forEach { suffix ->
         listOf(

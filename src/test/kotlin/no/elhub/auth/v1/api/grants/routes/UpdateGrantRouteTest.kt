@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -208,10 +209,14 @@ class UpdateGrantRouteTest : FunSpec({
                     route(V1_GRANTS_PATH) { route(handler) }
                 }
 
-                val response = client.patchJson(path, body())
+                val response = client.patch(path) {
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(body())
+                }
 
                 response.status shouldBe status
-                response.contentType()?.withoutParameters() shouldBe jsonApiContentType
+                response.contentType()?.withoutParameters() shouldBe ContentType.Application.Json
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe status.value.toString()
                 coVerify(exactly = 1) {
                     handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable)
