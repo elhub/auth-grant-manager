@@ -13,10 +13,12 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.elhub.auth.common.configureErrorHandling
 import no.elhub.auth.v1.repositories.RepositoryReadError
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 class SerializationTest : FunSpec({
     test("v1 uses JSON:API by default and negotiates plain JSON for legacy clients") {
@@ -45,7 +47,13 @@ class SerializationTest : FunSpec({
             getV1("application/json;q=0, */*").contentType() shouldBe jsonApiContentType
             getV1("application/vnd.api+json;profile=\"https://example.com/profile\"").contentType() shouldBe jsonApiContentType
             getV1("application/vnd.api+json;ext=\"https://example.com/extension\"").status shouldBe HttpStatusCode.NotAcceptable
-            getV1("application/json;q=0").status shouldBe HttpStatusCode.NotAcceptable
+            val notAcceptable = getV1("application/json;q=0")
+            notAcceptable.status shouldBe HttpStatusCode.NotAcceptable
+            notAcceptable.contentType() shouldBe jsonApiContentType
+            notAcceptable.headers[HttpHeaders.Vary] shouldBe HttpHeaders.Accept
+            val error = Json.decodeFromString<JsonApiErrorCollection>(notAcceptable.bodyAsText()).errors.single()
+            error.status shouldBe "406"
+            error.title shouldBe "Not acceptable"
 
             val legacyResponse = getV1("application/json")
             legacyResponse.status shouldBe HttpStatusCode.OK

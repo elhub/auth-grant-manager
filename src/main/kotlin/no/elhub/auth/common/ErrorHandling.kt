@@ -21,6 +21,7 @@ import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.v0.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.v0.features.common.toNotFoundApiErrorResponse
 import no.elhub.auth.v0.features.common.toValidationApiErrorResponse
 import no.elhub.auth.v1.Errors
@@ -51,7 +52,10 @@ class InvalidTraceIdException : Exception()
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.configureErrorHandling() {
     install(StatusPages) {
-        exception<NoAcceptableJsonResponse> { call, _ -> call.respond(HttpStatusCode.NotAcceptable) }
+        exception<NoAcceptableJsonResponse> { call, _ ->
+            val (status, body) = toNotAcceptedErrorResponse()
+            call.respondError(status, body)
+        }
         exception<InvalidTraceIdException> { call, _ ->
             val (status, body) =
                 buildApiErrorResponse(

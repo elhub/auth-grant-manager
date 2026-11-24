@@ -5,9 +5,14 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.call.body
+import io.ktor.client.request.accept
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -93,6 +98,24 @@ class CreateRequestRouteTest : FunSpec({
     beforeAny {
         handler = mockk()
         agentService = mockk()
+    }
+
+    test("POST / rejects PDF-only Accept before creating a request") {
+        coEvery { agentService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+        coEvery { handler(any(), any(), any(), any()) } returns savedRequest()
+
+        testApplication {
+            setupAppWith(authorizedAgent) { route(agentService, handler) }
+
+            val response = createClient {}.post("/") {
+                accept(ContentType.Application.Pdf)
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+            }
+
+            response.status shouldBe HttpStatusCode.NotAcceptable
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
     }
 
     test("POST / rejects unsupported query parameters without calling the handler") {

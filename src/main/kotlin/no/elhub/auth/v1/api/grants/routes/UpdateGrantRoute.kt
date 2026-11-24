@@ -8,6 +8,7 @@ import io.ktor.server.routing.patch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.SerializationException
+import no.elhub.auth.common.config.requireAcceptableJsonResponse
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.errors.InputError
 import no.elhub.auth.v1.api.common.validateQueryParameters
@@ -53,6 +54,7 @@ fun Route.route(handler: UpdateGrantHandler) {
             throw InputError.IdMismatchError("data.id must match the path ID")
         }
 
+        call.requireAcceptableJsonResponse()
         val updated = handler(
             id = id,
             authorizedAgent = call.authorizedAgent,

@@ -21,6 +21,10 @@ internal val ApplicationCall.isV1Request: Boolean
 
 internal class NoAcceptableJsonResponse : Exception()
 
+internal fun ApplicationCall.requireAcceptableJsonResponse() {
+    if (acceptedJsonTypes().isEmpty()) throw NoAcceptableJsonResponse()
+}
+
 internal fun ApplicationCall.acceptedJsonTypes(): List<ContentTypeWithQuality> {
     val ranges = request.headers.getAll(HttpHeaders.Accept).orEmpty().flatMap { parseHeaderValue(it) }
     if (ranges.isEmpty()) return listOf(ContentTypeWithQuality(jsonApiContentType))
@@ -57,14 +61,15 @@ fun Application.configureSerialization() {
     install(ContentNegotiation) {
         accept { call, accepted ->
             if (!call.isV1Request) return@accept accepted
-            call.response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
-            call.acceptedJsonTypes().ifEmpty {
+            val acceptedJson = call.acceptedJsonTypes().ifEmpty {
                 if ((call.response.status()?.value ?: 200) >= 400) {
                     listOf(ContentTypeWithQuality(jsonApiContentType))
                 } else {
                     throw NoAcceptableJsonResponse()
                 }
             }
+            call.response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
+            acceptedJson
         }
         json(json = defaultJson)
         register(
