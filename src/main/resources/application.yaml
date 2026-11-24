@@ -19,6 +19,7 @@ ktor:
       - no.elhub.auth.v1.DocumentsModuleKt.module
       - no.elhub.auth.v1.GrantsModuleKt.grantsModule
       - no.elhub.auth.v1.RequestsModuleKt.requestsModule
+      - no.elhub.auth.v1.MetricsModuleKt.metricsModule
       - no.elhub.auth.v0.features.common.ModuleKt.module
   deployment:
     port: 8080
@@ -36,6 +37,8 @@ pdfGenerator:
 
 v1:
   enabled: ${V1_ENABLED:false}
+  metrics:
+    refreshInterval: ${V1_METRICS_REFRESH_INTERVAL:5m}
 
 pdfSigner:
   # HashiCorp Vault settings
