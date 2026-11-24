@@ -60,7 +60,8 @@ fun Route.route(
         val requestedPrincipal =
             agentService.resolve(requestedPrincipalIdentifier).fold(
                 ifLeft = { error ->
-                    call.respond(error.toApiErrorResponse())
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
                     return@post
                 },
                 ifRight = { it },
@@ -73,7 +74,8 @@ fun Route.route(
         val requestedOf =
             agentService.resolve(requestedOfIdentifier).fold(
                 ifLeft = { error ->
-                    call.respond(error.toApiErrorResponse())
+                    val (status, body) = error.toApiErrorResponse()
+                    call.respond(status, body)
                     return@post
                 },
                 ifRight = { it },

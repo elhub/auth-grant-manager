@@ -7,6 +7,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -17,6 +18,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.patchJson
@@ -176,15 +178,17 @@ class UpdateRequestRouteTest : FunSpec({
         }
     }
 
-    test("PATCH returns a type mismatch error for a wrong resource type without calling the handler") {
+    test("PATCH defaults to a JSON:API type mismatch error without calling the handler") {
         testApplication {
             setupAppWith(requestedOf) {
                 route(V1_REQUESTS_PATH) { route(handler) }
             }
 
-            val response = client.patchJson(path, body(type = "AuthorizationDocument"))
+            val response = createClient {}.patchJson(path, body(type = "AuthorizationDocument"))
 
             response.status shouldBe HttpStatusCode.Conflict
+            response.contentType() shouldBe jsonApiContentType
+            Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText()).errors.single().status shouldBe "409"
             coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
         }
     }

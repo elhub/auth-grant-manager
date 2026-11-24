@@ -6,7 +6,10 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.routing.route
@@ -98,6 +101,37 @@ class GetRequestRouteTest : FunSpec({
             body.data.meta shouldBe request.meta
             body.data.relationships.requestedBy.data.id shouldBe authorizedAgent.id
             body.data.links.self shouldBe "$V1_REQUESTS_PATH/$requestId"
+        }
+    }
+
+    test("GET /{id} prefers JSON:API unless the client explicitly prefers plain JSON") {
+        coEvery { handler(requestId, authorizedAgent) } returns request
+
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_REQUESTS_PATH) { route(handler) }
+            }
+            val rawClient = createClient {}
+            suspend fun assertResponse(accept: String?, expectedType: ContentType) {
+                val response = rawClient.get("$V1_REQUESTS_PATH/$requestId") {
+                    if (accept != null) header(HttpHeaders.Accept, accept)
+                }
+                response.status shouldBe HttpStatusCode.OK
+                response.contentType() shouldBe expectedType
+                response.headers[HttpHeaders.Vary] shouldBe HttpHeaders.Accept
+            }
+
+            assertResponse(null, jsonApiContentType)
+            assertResponse("*/*", jsonApiContentType)
+            assertResponse("application/*", jsonApiContentType)
+            assertResponse("application/json, application/vnd.api+json", jsonApiContentType)
+            assertResponse("application/json;q=0, */*", jsonApiContentType)
+            assertResponse("application/json", ContentType.Application.Json)
+            assertResponse("application/json, application/vnd.api+json;q=0.5", ContentType.Application.Json)
+
+            rawClient.get("$V1_REQUESTS_PATH/$requestId") {
+                accept(ContentType.Application.Pdf)
+            }.status shouldBe HttpStatusCode.NotAcceptable
         }
     }
 

@@ -11,11 +11,18 @@ import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 
 internal suspend fun ApplicationCall.respondError(status: HttpStatusCode, body: JsonApiErrorCollection) {
+    response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
+    // Send the error directly: Ktor's normal negotiation would turn a missing PDF's 404 into
+    // an empty 406 if the client only accepts application/pdf, since we have no PDF error format.
+    respondText(Json.encodeToString(body), preferredJsonResponseType() ?: jsonApiContentType, status)
+}
+
+internal fun ApplicationCall.preferredJsonResponseType(): ContentType? {
     val plainJson = ContentType.Application.Json
     val acceptRanges = request.headers.getAll(HttpHeaders.Accept).orEmpty()
         .flatMap { parseHeaderValue(it) }
 
-    // Both error representations are unparameterized, so only the preference weight (q) may be present.
+    // Both representations are unparameterized, so only the preference weight (q) may be present.
     fun weightFor(mediaRange: String): Double? = acceptRanges
         .filter { it.value.equals(mediaRange, ignoreCase = true) }
         .filter { range -> range.params.all { it.name.equals("q", ignoreCase = true) } }
@@ -23,15 +30,18 @@ internal suspend fun ApplicationCall.respondError(status: HttpStatusCode, body: 
 
     // Plain JSON is opt-in. For JSON:API, the most specific range wins, even with q=0.
     val plainJsonWeight = weightFor(plainJson.toString()) ?: 0.0
-    val jsonApiWeight = weightFor(jsonApiContentType.toString())
-        ?: weightFor("application/*")
-        ?: weightFor("*/*")
-        ?: 0.0
+    val jsonApiWeight = if (acceptRanges.isEmpty()) {
+        1.0
+    } else {
+        weightFor(jsonApiContentType.toString())
+            ?: weightFor("application/*")
+            ?: weightFor("*/*")
+            ?: 0.0
+    }
 
-    val contentType = if (plainJsonWeight > jsonApiWeight) plainJson else jsonApiContentType
-
-    response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
-    // Send the error directly: Ktor's normal negotiation would turn a missing PDF's 404 into
-    // an empty 406 if the client only accepts application/pdf, since we have no PDF error format.
-    respondText(Json.encodeToString(body), contentType, status)
+    return when {
+        plainJsonWeight > jsonApiWeight -> plainJson
+        jsonApiWeight > 0.0 -> jsonApiContentType
+        else -> null
+    }
 }
