@@ -1,7 +1,9 @@
 package no.elhub.auth.common
 
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
@@ -9,6 +11,9 @@ import io.ktor.server.response.respondText
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.common.config.NoAcceptableJsonResponse
+import no.elhub.auth.common.config.acceptedJsonTypes
+import no.elhub.auth.common.config.isV1Request
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
@@ -36,6 +41,7 @@ import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
 import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
@@ -45,6 +51,7 @@ class InvalidTraceIdException : Exception()
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.configureErrorHandling() {
     install(StatusPages) {
+        exception<NoAcceptableJsonResponse> { call, _ -> call.respond(HttpStatusCode.NotAcceptable) }
         exception<InvalidTraceIdException> { call, _ ->
             val (status, body) =
                 buildApiErrorResponse(
@@ -56,38 +63,49 @@ fun Application.configureErrorHandling() {
         }
         exception<Errors> { call, cause ->
             val (status, body) = cause.toApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfValidationException> { call, cause ->
             val (status, body) = cause.toApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfSigningException> { call, cause ->
             logger.error("Failed to sign PDF", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfGenerationException> { call, cause ->
             logger.error("Failed to generate PDF", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<InvalidDocumentScopes> { call, cause ->
             logger.error("Invalid authorization document scopes", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdpAuthorizationException> { call, cause ->
             logger.error("PDP authorization check failed", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<Throwable> { call, cause ->
             logger.error("Unhandled exception", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
     }
+}
+
+internal suspend fun ApplicationCall.respondError(status: HttpStatusCode, body: JsonApiErrorCollection) {
+    val contentType = if (isV1Request) {
+        response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
+        acceptedJsonTypes().maxByOrNull { it.quality }?.contentType ?: jsonApiContentType
+    } else {
+        jsonApiContentType
+    }
+    // Keep the original error even when the client accepts only PDF and there is no PDF error format.
+    respondText(Json.encodeToString(body), contentType, status)
 }
 
 private fun PdfValidationException.toApiErrorResponse() =

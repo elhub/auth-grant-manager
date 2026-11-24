@@ -207,10 +207,14 @@ class UpdateRequestRouteTest : FunSpec({
                     route(V1_REQUESTS_PATH) { route(handler) }
                 }
 
-                val response = client.patchJson(path, body())
+                val response = client.patch(path) {
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(body())
+                }
 
                 response.status shouldBe status
-                response.contentType()?.withoutParameters() shouldBe jsonApiContentType
+                response.contentType()?.withoutParameters() shouldBe ContentType.Application.Json
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe status.value.toString()
             }
         }
