@@ -1,22 +1,50 @@
-# Auth Grant Manager
+# auth-grant-manager
 
 ## About
 
-
-Auth Grant Manager, the service behind Access API, is designed to manage and track user authorizations across Elhub applications, services,
-and data processing activities. The goal is to provide a centralized platform for collecting, storing, and processing user authorization data.
+`auth-grant-manager`, the service behind Access API, is designed to manage and track user authorizations across Elhub
+applications, services, and data processing activities. The goal is to provide a centralized platform for collecting,
+storing, and processing user authorization data.
 
 The main objectives are to:
 
-* Facilitate the collection of explicit authorization/consent from users for a variety of business and data processing activities.
+* Facilitate the collection of explicit authorization/consent from users for a variety of business and data processing
+  activities.
 * Provide a centralized repository for storing and managing user authorization preferences.
-* Enable granular control over authorization grants, allowing users to specify their preferences for different types of data processing activities.
+* Enable granular control over authorization grants, allowing users to specify their preferences for different types of
+  data processing activities.
 * Ensure compliance with regulatory requirements and standards related to data privacy and consent management.
 
-### Production Status
+## Documentation
 
-This repository contains the current development version of Auth Grant Manager. Features, fixes, and other changes may be present here before they
-are released to production. Therefore, consumers should not assume that the production service corresponds to the latest commit in this repository.
+### Functional
+
+| Section                                | What it covers                                                                  |
+|----------------------------------------|---------------------------------------------------------------------------------|
+| [Concepts](concepts/index.md)          | Authorization actors, scopes, and validity.                                     |
+| [Processes](processes/index.md)        | Collect authorization through an electronic request or a signed document. |
+| [Resources](resources/index.md)        | Business records, relationships, status transitions, and access rules.          |
+| [Quality attributes](quality/index.md) | Cross-functional quality attributes and requirements.                           |
+
+Concepts, Processes, and Resources describe the current **v1 implementation**.
+
+### Technical
+
+| Section                                                                                                               | What it covers                   |
+|-----------------------------------------------------------------------------------------------------------------------|----------------------------------|
+| [Architecture](architecture.md)                                                                                       | System context and dependencies. |
+| [OpenAPI specification](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/static/openapi.yaml) | API Contract.                    |
+| [v1 JSON Schemas](https://github.com/elhub/auth-grant-manager/tree/main/src/main/resources/static/schemas/v1)         | JSON Schemas.                    |
+
+### Usage
+
+See the [developer portal](https://api.elhub.no/access-api).
+
+## Production Status
+
+This repository contains the current development version of `auth-grant-manager`. Features, fixes, and other changes may
+be present here before they are released to production. Do **not** assume that the production service corresponds to the
+latest commit here.
 
 ## Getting Started
 
@@ -26,7 +54,7 @@ are released to production. Therefore, consumers should not assume that the prod
 * Docker
 * Liquibase CLI (ensure the `liquibase` command is available on your PATH)
 * Environment variables for the database connection: `DB_USERNAME` and `DB_PASSWORD`
-  * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks.
+    * Run `DB_USERNAME=postgres DB_PASSWORD=postgres ./gradlew ...` to pass the variables to the gradle tasks.
 
 ### Building & Running
 
@@ -35,21 +63,23 @@ You can build and run the application locally using gradle.
 #### Run Locally
 
 1. Make sure the Liquibase CLI is installed and available on your `PATH` (the Gradle plugin is temporarily removed due to
-   [liquibase/liquibase-gradle-plugin#173](https://github.com/liquibase/liquibase-gradle-plugin/issues/173)); verify with `liquibase --version`.
+   [liquibase/liquibase-gradle-plugin#173](https://github.com/liquibase/liquibase-gradle-plugin/issues/173)); verify with
+   `liquibase --version`.
 2. Launch the application (Gradle will start Docker services and run the Liquibase update for you):
    ```bash
    ./gradlew run
    ```
 
-If you prefer to invoke the infrastructure or migrations manually, the `servicesComposeUp` and `liquibaseUpdate` tasks remain available.
+If you prefer to invoke the infrastructure or migrations manually, the `servicesComposeUp` and `liquibaseUpdate` tasks remain
+available.
 
-| Command                       | Description                                                          |
-|-------------------------------|----------------------------------------------------------------------|
-| `./gradlew run`               | Run the application (pass DB variables as mentioned above)           |
-| `./gradlew build`             | Build everything                                                     |
-| `./gradlew test`              | Run the tests                                                        |
-| `./gradlew buildFatJar`       | Build an executable JAR of the server with all dependencies included |
-| `./gradlew buildImage`        | Build the docker image to use with the fat JAR                       |
+| Command                 | Description                                                          |
+|-------------------------|----------------------------------------------------------------------|
+| `./gradlew run`         | Run the application (pass DB variables as mentioned above)           |
+| `./gradlew build`       | Build everything                                                     |
+| `./gradlew test`        | Run the tests                                                        |
+| `./gradlew buildFatJar` | Build an executable JAR of the server with all dependencies included |
+| `./gradlew buildImage`  | Build the docker image to use with the fat JAR                       |
 
 #### Preview PDFs
 
@@ -82,12 +112,12 @@ Database operations are carried out using Liquibase. To apply changes to the dat
 
 ### Elhub Dependencies
 
-Note that this project is set up to depend on Elhub's internal package manager (see settings.gradle.kts). If you wish to build this externally, you will
-need to substitute this with Maven Central or an alternative with the relevant packages. Often, it should be sufficient just to replace the elhub
-repository with `mavenCentral()`.
+Note that this project is set up to depend on Elhub's internal package manager (see settings.gradle.kts). If you wish
+to build this externally, you will need to substitute this with Maven Central or an alternative with the relevant
+packages. Often, it should be sufficient just to replace the elhub repository with `mavenCentral()`.
 
-You will also need access to Elhub's gradle plugins which are not on Maven Central. The plugins are open source, though, so you can either build them
-yourself or access them through [Jitpack](https://jitpack.io/).
+You will also need access to Elhub's gradle plugins which are not on Maven Central. The plugins are open source, though,
+so you can either build them yourself or access them through [Jitpack](https://jitpack.io/).
 
 ### Configuration
 
@@ -97,13 +127,6 @@ Modify the application.yaml to adjust server settings or override values using e
 export PORT=9090
 export DATABASE_URL=jdbc:postgresql://localhost:5432/jdbc
 ```
-## Usage
-
-See [the documentation](docs/usage.md) for information on how to use the API.
-
-## API Endpoints
-
-Review the [OpenAPI spec](https://github.com/elhub/auth-grant-manager/blob/main/src/main/resources/static/openapi.yaml) to view the available endpoints.
 
 ## Contributing
 

@@ -1,5 +1,11 @@
 # User Guide
 
+> [!NOTE]
+> This page contains earlier integration material, including person-based v0
+> flows and signing requirements. For current v1 business behavior, see the
+> [v1 processes](processes/index.md). Do not apply the v0 terminology and
+> validations below to v1 organization-based flows.
+
 The Authorization Grant Manager handles the process for requesting and maintaining authorizations in the Elhub system
 between individuals and organizations. This service offers a REST API that is used when a client application needs to
 request authorization from a user to carry out an operation in Elhub on their behalf.

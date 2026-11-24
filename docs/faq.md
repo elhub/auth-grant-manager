@@ -1,5 +1,10 @@
 # Frequently Asked Questions (FAQ)
 
+> [!NOTE]
+> The person-based market-process questions below concern earlier v0 flows.
+> Current v1 organization-based behavior is described in the
+> [v1 processes](processes/index.md).
+
 ---
 
 ## General Questions
