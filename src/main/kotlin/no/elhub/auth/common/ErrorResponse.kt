@@ -21,6 +21,7 @@ internal fun ApplicationCall.preferredJsonResponseType(): ContentType? {
     val plainJson = ContentType.Application.Json
     val acceptRanges = request.headers.getAll(HttpHeaders.Accept).orEmpty()
         .flatMap { parseHeaderValue(it) }
+    if (acceptRanges.isEmpty()) return jsonApiContentType
 
     // Both representations are unparameterized, so only the preference weight (q) may be present.
     fun weightFor(mediaRange: String): Double? = acceptRanges
@@ -28,16 +29,10 @@ internal fun ApplicationCall.preferredJsonResponseType(): ContentType? {
         .filter { range -> range.params.all { it.name.equals("q", ignoreCase = true) } }
         .maxOfOrNull { it.quality }
 
-    // Plain JSON is opt-in. For JSON:API, the most specific range wins, even with q=0.
-    val plainJsonWeight = weightFor(plainJson.toString()) ?: 0.0
-    val jsonApiWeight = if (acceptRanges.isEmpty()) {
-        1.0
-    } else {
-        weightFor(jsonApiContentType.toString())
-            ?: weightFor("application/*")
-            ?: weightFor("*/*")
-            ?: 0.0
-    }
+    // An exact match overrides wildcards, even when it excludes the type with q=0.
+    val wildcardWeight = weightFor("application/*") ?: weightFor("*/*") ?: 0.0
+    val plainJsonWeight = weightFor(plainJson.toString()) ?: wildcardWeight
+    val jsonApiWeight = weightFor(jsonApiContentType.toString()) ?: wildcardWeight
 
     return when {
         plainJsonWeight > jsonApiWeight -> plainJson

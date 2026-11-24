@@ -89,6 +89,11 @@ class ErrorHandlingTest : FunSpec({
         accept = "application/json;q=0.5, application/vnd.api+json;q=0, */*",
         expectedType = plainJson,
     )
+    v1NotFoundTest(
+        "uses wildcard-accepted plain JSON when JSON:API is excluded",
+        accept = "application/*, application/vnd.api+json;q=0",
+        expectedType = plainJson,
+    )
 
     fun v0UnhandledErrorTest(name: String, accept: String?, expectedType: ContentType) {
         test("v0 unhandled error $name") {

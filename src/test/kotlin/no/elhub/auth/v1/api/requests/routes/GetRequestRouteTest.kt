@@ -104,7 +104,7 @@ class GetRequestRouteTest : FunSpec({
         }
     }
 
-    test("GET /{id} prefers JSON:API unless the client explicitly prefers plain JSON") {
+    test("GET /{id} prefers JSON:API unless plain JSON is more acceptable") {
         coEvery { handler(requestId, authorizedAgent) } returns request
 
         testApplication {
@@ -126,6 +126,8 @@ class GetRequestRouteTest : FunSpec({
             assertResponse("application/*", jsonApiContentType)
             assertResponse("application/json, application/vnd.api+json", jsonApiContentType)
             assertResponse("application/json;q=0, */*", jsonApiContentType)
+            assertResponse("application/*, application/vnd.api+json;q=0", ContentType.Application.Json)
+            assertResponse("*/*, application/vnd.api+json;q=0.5", ContentType.Application.Json)
             assertResponse("application/json", ContentType.Application.Json)
             assertResponse("application/json, application/vnd.api+json;q=0.5", ContentType.Application.Json)
 
