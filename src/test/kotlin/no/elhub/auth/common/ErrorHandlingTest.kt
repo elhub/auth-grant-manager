@@ -116,6 +116,18 @@ class ErrorHandlingTest : FunSpec({
             "One or more requested metering points could not be found",
         ),
         ErrorCase(
+            DocumentPreparationError.RequestedPrincipalHasMeteringPointWriteAccess(),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal must not have write access to any of the requested metering points",
+        ),
+        ErrorCase(
+            DocumentPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints(),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal must have write access to all requested metering points",
+        ),
+        ErrorCase(
             DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
@@ -138,6 +150,18 @@ class ErrorHandlingTest : FunSpec({
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
             "One or more requested metering points could not be found",
+        ),
+        ErrorCase(
+            RequestPreparationError.RequestedPrincipalHasMeteringPointWriteAccess(),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal must not have write access to any of the requested metering points",
+        ),
+        ErrorCase(
+            RequestPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints(),
+            HttpStatusCode.UnprocessableEntity,
+            "Validation error",
+            "The requested principal must have write access to all requested metering points",
         ),
         ErrorCase(
             RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),

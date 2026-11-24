@@ -33,8 +33,12 @@ fun Application.requestsModule() {
 
     dependencies {
         provide<RequestRepository> { ExposedRequestRepository(resolve(), resolve()) }
-        provide<ChangeOfEnergySupplierRequestHandler> { SupplierChangeHandlerImplementation(resolve(), resolve()) }
-        provide<MoveInAndChangeOfEnergySupplierRequestHandler> { MoveInHandlerImplementation(resolve(), resolve()) }
+        provide<ChangeOfEnergySupplierRequestHandler> {
+            SupplierChangeHandlerImplementation(resolve(), resolve(), resolve())
+        }
+        provide<MoveInAndChangeOfEnergySupplierRequestHandler> {
+            MoveInHandlerImplementation(resolve(), resolve(), resolve())
+        }
         provide<EnergySupplierFrameworkAgreementRequestHandler> { FrameworkAgreementHandlerImplementation(resolve()) }
         provide<RedirectUriValidator> {
             RedirectUriValidator(
