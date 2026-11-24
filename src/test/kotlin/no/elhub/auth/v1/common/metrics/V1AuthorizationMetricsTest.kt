@@ -34,7 +34,12 @@ class V1AuthorizationMetricsTest : FunSpec({
 
     val agentRepository = ExposedAgentRepository()
 
-    suspend fun insertRequest(type: AuthorizationRequestType, approved: Boolean = false, rejected: Boolean = false) = withTransaction {
+    suspend fun insertRequest(
+        type: AuthorizationRequestType,
+        approved: Boolean = false,
+        rejected: Boolean = false,
+        timestamped: Boolean = true,
+    ) = withTransaction {
         val party = agentRepository.findOrInsert(AgentType.Person, Uuid.random().toString()).id
         AuthorizationRequestTable.insert {
             it[requestType] = type
@@ -44,12 +49,12 @@ class V1AuthorizationMetricsTest : FunSpec({
             it[requestedPrincipal] = party
             it[requestedOf] = party
             it[approvedBy] = if (approved) party else null
-            it[approvedAt] = if (approved) now() else null
+            it[approvedAt] = if (approved && timestamped) now() else null
             it[meta] = JsonObject(emptyMap())
         }
     }
 
-    suspend fun insertDocument(type: AuthorizationDocumentType, approved: Boolean = false) = withTransaction {
+    suspend fun insertDocument(type: AuthorizationDocumentType, approved: Boolean = false, timestamped: Boolean = true) = withTransaction {
         val party = agentRepository.findOrInsert(AgentType.Person, Uuid.random().toString()).id
         AuthorizationDocumentTable.insert {
             it[documentType] = type
@@ -57,7 +62,7 @@ class V1AuthorizationMetricsTest : FunSpec({
             it[requestedPrincipal] = party
             it[requestedOf] = party
             it[approvedBy] = if (approved) party else null
-            it[signedAt] = if (approved) now() else null
+            it[signedAt] = if (approved && timestamped) now() else null
             it[meta] = JsonObject(emptyMap())
             it[file] = ByteArray(0)
         }
@@ -67,8 +72,11 @@ class V1AuthorizationMetricsTest : FunSpec({
         val supplierChange = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
         insertRequest(supplierChange)
         insertRequest(supplierChange, approved = true)
+        insertRequest(supplierChange, approved = true, timestamped = false)
         insertRequest(supplierChange, rejected = true)
+        insertRequest(supplierChange, approved = true, rejected = true)
         insertDocument(AuthorizationDocumentType.EnergySupplierFrameworkAgreement, approved = true)
+        insertDocument(AuthorizationDocumentType.EnergySupplierFrameworkAgreement, approved = true, timestamped = false)
         insertDocument(AuthorizationDocumentType.EnergySupplierFrameworkAgreement)
 
         val registry = SimpleMeterRegistry()
@@ -86,12 +94,12 @@ class V1AuthorizationMetricsTest : FunSpec({
             registry.get(name).tag("type", type.name).tag("state", state.label).gauge().value().toLong()
 
         val frameworkAgreement = AuthorizationDocumentType.EnergySupplierFrameworkAgreement
-        value(REQUESTS_METRIC, supplierChange, MetricState.Created) shouldBe 3
-        value(REQUESTS_METRIC, supplierChange, MetricState.Approved) shouldBe 1
-        value(REQUESTS_METRIC, supplierChange, MetricState.Rejected) shouldBe 1
+        value(REQUESTS_METRIC, supplierChange, MetricState.Created) shouldBe 5
+        value(REQUESTS_METRIC, supplierChange, MetricState.Approved) shouldBe 2
+        value(REQUESTS_METRIC, supplierChange, MetricState.Rejected) shouldBe 2
         value(REQUESTS_METRIC, AuthorizationRequestType.EnergySupplierFrameworkAgreement, MetricState.Created) shouldBe 0
-        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Created) shouldBe 2
-        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Approved) shouldBe 1
+        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Created) shouldBe 3
+        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Approved) shouldBe 2
         value(DOCUMENTS_METRIC, AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization, MetricState.Approved) shouldBe 0
     }
 })

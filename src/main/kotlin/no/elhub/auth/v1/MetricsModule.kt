@@ -15,6 +15,9 @@ fun Application.metricsModule() {
     val registry: PrometheusMeterRegistry by dependencies
     val interval = environment.config.propertyOrNull("v1.metrics.refreshInterval")?.getString()?.let(Duration::parse)
         ?: 5.minutes
+    require(interval > Duration.ZERO && interval.isFinite()) {
+        "v1.metrics.refreshInterval must be positive and finite"
+    }
 
     V1AuthorizationMetrics(registry).start(this, interval)
 }
