@@ -12,7 +12,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.auth.PartyType
 import no.elhub.auth.common.config.NoAcceptableJsonResponse
-import no.elhub.auth.common.config.acceptedJsonTypes
+import no.elhub.auth.common.config.acceptedJsonType
 import no.elhub.auth.common.config.isV1Request
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
@@ -104,7 +104,7 @@ fun Application.configureErrorHandling() {
 internal suspend fun ApplicationCall.respondError(status: HttpStatusCode, body: JsonApiErrorCollection) {
     val contentType = if (isV1Request) {
         response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
-        acceptedJsonTypes().maxByOrNull { it.quality }?.contentType ?: jsonApiContentType
+        acceptedJsonType() ?: jsonApiContentType
     } else {
         jsonApiContentType
     }

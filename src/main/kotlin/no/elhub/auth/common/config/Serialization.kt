@@ -22,25 +22,22 @@ internal val ApplicationCall.isV1Request: Boolean
 internal class NoAcceptableJsonResponse : Exception()
 
 internal fun ApplicationCall.requireAcceptableJsonResponse() {
-    if (acceptedJsonTypes().isEmpty()) throw NoAcceptableJsonResponse()
+    if (acceptedJsonType() == null) throw NoAcceptableJsonResponse()
 }
 
-internal fun ApplicationCall.acceptedJsonTypes(): List<ContentTypeWithQuality> {
-    val ranges = request.headers.getAll(HttpHeaders.Accept).orEmpty().flatMap { parseHeaderValue(it) }
-    if (ranges.isEmpty()) return listOf(ContentTypeWithQuality(jsonApiContentType))
+internal fun ApplicationCall.acceptedJsonType(): ContentType? {
+    val acceptHeaderValues = request.headers.getAll(HttpHeaders.Accept).orEmpty().flatMap { parseHeaderValue(it) }
+    if (acceptHeaderValues.isEmpty()) return jsonApiContentType
 
-    return listOf(jsonApiContentType, ContentType.Application.Json).mapNotNull { type ->
-        // The most specific matching range supplies the weight, including an explicit q=0.
-        val match = sequenceOf(type.toString(), "application/*", "*/*").firstNotNullOfOrNull { name ->
-            ranges.firstOrNull { range ->
-                range.value.equals(name, ignoreCase = true) && range.params.all { param ->
-                    param.name.equals("q", ignoreCase = true) ||
-                        (name == jsonApiContentType.toString() && param.name.equals("profile", ignoreCase = true))
-                }
-            }
-        }
-        match?.quality?.takeIf { it > 0.0 }?.let { ContentTypeWithQuality(type, it) }
+    // V1 matches media types only; Accept parameters do not affect the response format.
+    fun accepts(mediaRange: String): Boolean = acceptHeaderValues.any { it.value.equals(mediaRange, ignoreCase = true) }
+
+    if (accepts(jsonApiContentType.toString()) || accepts("application/*") || accepts("*/*")) {
+        return jsonApiContentType
     }
+
+    val plainJson = ContentType.Application.Json
+    return plainJson.takeIf { accepts(it.toString()) }
 }
 
 /** Configure the serialization plugin for JSON
@@ -61,15 +58,15 @@ fun Application.configureSerialization() {
     install(ContentNegotiation) {
         accept { call, accepted ->
             if (!call.isV1Request) return@accept accepted
-            val acceptedJson = call.acceptedJsonTypes().ifEmpty {
+            val contentType = call.acceptedJsonType() ?: run {
                 if ((call.response.status()?.value ?: 200) >= 400) {
-                    listOf(ContentTypeWithQuality(jsonApiContentType))
+                    jsonApiContentType
                 } else {
                     throw NoAcceptableJsonResponse()
                 }
             }
             call.response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
-            acceptedJson
+            listOf(ContentTypeWithQuality(contentType))
         }
         json(json = defaultJson)
         register(

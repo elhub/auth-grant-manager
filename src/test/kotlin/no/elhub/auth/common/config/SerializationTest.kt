@@ -45,9 +45,13 @@ class SerializationTest : FunSpec({
             getV1().contentType() shouldBe jsonApiContentType
             getV1("*/*").contentType() shouldBe jsonApiContentType
             getV1("application/json;q=0, */*").contentType() shouldBe jsonApiContentType
+            getV1("application/json, application/vnd.api+json;q=0.5").contentType() shouldBe jsonApiContentType
+            getV1("application/json, application/vnd.api+json;q=0").contentType() shouldBe jsonApiContentType
+            getV1("application/json;q=0").contentType() shouldBe ContentType.Application.Json
             getV1("application/vnd.api+json;profile=\"https://example.com/profile\"").contentType() shouldBe jsonApiContentType
-            getV1("application/vnd.api+json;ext=\"https://example.com/extension\"").status shouldBe HttpStatusCode.NotAcceptable
-            val notAcceptable = getV1("application/json;q=0")
+            getV1("application/json;profile=\"https://example.com/profile\"").contentType() shouldBe ContentType.Application.Json
+            getV1("application/vnd.api+json;ext=\"https://example.com/extension\"").contentType() shouldBe jsonApiContentType
+            val notAcceptable = getV1("application/pdf")
             notAcceptable.status shouldBe HttpStatusCode.NotAcceptable
             notAcceptable.contentType() shouldBe jsonApiContentType
             notAcceptable.headers[HttpHeaders.Vary] shouldBe HttpHeaders.Accept
