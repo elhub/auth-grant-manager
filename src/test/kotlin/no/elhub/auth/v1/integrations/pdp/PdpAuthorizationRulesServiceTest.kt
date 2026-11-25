@@ -20,6 +20,7 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
+import no.elhub.auth.v1.common.MeteringPointWriteAccessDecision
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import org.slf4j.MDC
@@ -34,7 +35,7 @@ class PdpAuthorizationRulesServiceTest : FunSpec({
     var responseStatus = HttpStatusCode.OK
     var requestCount = 0
     var capturedBody = ""
-    var expectedPolicy = "representative"
+    var expectedPolicyRoute = "/v1/data/v3/token/agent/representative"
 
     beforeTest {
         MDC.put(TRACE_ID_MDC_KEY, "trace-123")
@@ -42,14 +43,14 @@ class PdpAuthorizationRulesServiceTest : FunSpec({
         responseStatus = HttpStatusCode.OK
         requestCount = 0
         capturedBody = ""
-        expectedPolicy = "representative"
+        expectedPolicyRoute = "/v1/data/v3/token/agent/representative"
         tokenProvider = mockk()
         coEvery { tokenProvider.getToken() } returns "service-token"
         client = HttpClient(
             MockEngine { request ->
                 requestCount++
                 request.method shouldBe HttpMethod.Post
-                request.url.toString() shouldBe "https://pdp.example/v1/data/v3/token/agent/$expectedPolicy"
+                request.url.toString() shouldBe "https://pdp.example$expectedPolicyRoute"
                 request.body.contentType shouldBe ContentType.Application.Json
                 capturedBody = (request.body as TextContent).text
                 respond(
@@ -68,7 +69,7 @@ class PdpAuthorizationRulesServiceTest : FunSpec({
     }
 
     context("approver policy") {
-        beforeTest { expectedPolicy = "approver" }
+        beforeTest { expectedPolicyRoute = "/v1/data/v3/token/agent/approver" }
 
         test("sends the service token, trace ID and all three agent identifiers") {
             val representative = organization.copy(id = "999888777")
@@ -200,6 +201,46 @@ class PdpAuthorizationRulesServiceTest : FunSpec({
         }
         coVerify(exactly = 0) { tokenProvider.getToken() }
         requestCount shouldBe 0
+    }
+
+    test("sends requested metering points and principal subject to the write policy") {
+        expectedPolicyRoute = "/v1/data/v3/meteringpoint/meteringpoint/write"
+        responseBody = """
+            {
+              "result": {
+                "authorized": false,
+                "unauthorizedMeteringPoints": ["mp-2"],
+                "tokenInfo": {"tokenStatus": "verified"}
+              }
+            }
+        """.trimIndent()
+
+        service.checkMeteringPointWriteAccess("principal-internal-id", listOf("mp-1", "mp-2")) shouldBe
+            MeteringPointWriteAccessDecision(
+                authorized = false,
+                unauthorizedMeteringPoints = listOf("mp-2"),
+            )
+
+        Json.parseToJsonElement(capturedBody) shouldBe Json.parseToJsonElement(
+            """
+            {
+              "input": {
+                "token": "service-token",
+                "ElhubTraceId": "trace-123",
+                "payload": {
+                  "MeteringPoints": [
+                    {"MeteringPointID": "mp-1"},
+                    {"MeteringPointID": "mp-2"}
+                  ],
+                  "subject": {
+                    "actingGLN": "principal-internal-id",
+                    "authorizedFunctions": [{"functionName": "EndUser"}]
+                  }
+                }
+              }
+            }
+            """.trimIndent(),
+        )
     }
 
     test("delegates unsupported party combinations to PDP") {

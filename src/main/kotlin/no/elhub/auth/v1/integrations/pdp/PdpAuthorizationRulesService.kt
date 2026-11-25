@@ -14,6 +14,7 @@ import no.elhub.auth.plugin.policies.token.base.agentrepresentative.AgentReprese
 import no.elhub.auth.plugin.policies.token.core.TokenPolicy
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.MeteringPointWriteAccessDecision
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import org.slf4j.LoggerFactory
 
@@ -50,6 +51,30 @@ class PdpAuthorizationRulesService(
                 principalId = requestedPrincipal.id,
             ),
         ).authorized
+    }
+
+    override suspend fun checkMeteringPointWriteAccess(
+        principalElhubInternalId: String,
+        meteringPointIds: List<String>,
+    ): MeteringPointWriteAccessDecision {
+        val result = evaluate(
+            WriteMeteringPointListPolicyWithSubject,
+            WriteMeteringPointListPolicyWithSubject.Request(
+                meteringPoints = meteringPointIds.map {
+                    WriteMeteringPointListPolicyWithSubject.MeteringPoint(it)
+                },
+                subject = WriteMeteringPointListPolicyWithSubject.Subject(
+                    actingGln = principalElhubInternalId,
+                    authorizedFunctions = listOf(
+                        WriteMeteringPointListPolicyWithSubject.AuthorizedFunction("EndUser")
+                    ),
+                ),
+            ),
+        )
+        return MeteringPointWriteAccessDecision(
+            authorized = result.authorized,
+            unauthorizedMeteringPoints = result.unauthorizedMeteringPoints,
+        )
     }
 
     private suspend fun <Request : Any, Response : TokenPdpResult> evaluate(

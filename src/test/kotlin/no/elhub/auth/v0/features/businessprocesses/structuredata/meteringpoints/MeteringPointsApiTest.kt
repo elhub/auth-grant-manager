@@ -36,6 +36,7 @@ class MeteringPointsApiTest : FunSpec({
     lateinit var traceId: String
     var capturedTraceId: String? = null
     var capturedOnBehalfOfOrganisation: String? = null
+    var capturedRequestPath: String? = null
     val organisationId = "6f2c3a1e-1d2b-4c3d-9e8f-0a1b2c3d4e5f"
     val serviceUrl = "http://localhost:8080"
     val config = MeteringPointsApiConfig(
@@ -59,12 +60,20 @@ class MeteringPointsApiTest : FunSpec({
             addHandler { request ->
                 capturedTraceId = request.headers[ELHUB_TRACE_ID_HEADER]
                 capturedOnBehalfOfOrganisation = request.headers[ApiHeaders.ON_BEHALF_OF_ORGANISATION]
+                capturedRequestPath = request.url.fullPath
                 val organisationMeteringPointPaths = listOf(validMeteringPointId, secondMeteringPointId)
                     .map { "/metering-points/$it?endUserId=$organisationId" }
-                if (capturedOnBehalfOfOrganisation == organisationId && request.url.fullPath in organisationMeteringPointPaths) {
+                if (request.url.fullPath in organisationMeteringPointPaths) {
                     val meteringPointId = request.url.fullPath.substringAfterLast('/').substringBefore('?')
                     return@addHandler respond(
                         content = """{"data":{"id":"$meteringPointId","type":"metering-point","relationships":{}}}""",
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                }
+                if (request.url.fullPath == "/metering-points/$validMeteringPointId") {
+                    return@addHandler respond(
+                        content = """{"data":{"id":"$validMeteringPointId","type":"metering-point","relationships":{}}}""",
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "application/json")
                     )
@@ -116,6 +125,7 @@ class MeteringPointsApiTest : FunSpec({
         traceId = UUID.randomUUID().toString()
         capturedTraceId = null
         capturedOnBehalfOfOrganisation = null
+        capturedRequestPath = null
         MDC.put(TRACE_ID_MDC_KEY, traceId)
     }
 
@@ -164,11 +174,19 @@ class MeteringPointsApiTest : FunSpec({
         capturedOnBehalfOfOrganisation.shouldBeNull()
     }
 
-    test("Fetches organisation metering points on behalf of the organisation in the requested order") {
+    test("Fetches organisation metering points using the end user ID query parameter") {
         val response = service.getMeteringPointsForOrganisation(listOf(secondMeteringPointId, validMeteringPointId), organisationId)
 
         response.map { it.data.id } shouldBe listOf(secondMeteringPointId, validMeteringPointId)
-        capturedOnBehalfOfOrganisation shouldBe organisationId
+        capturedOnBehalfOfOrganisation.shouldBeNull()
+    }
+
+    test("Omits the end user ID query parameter when fetching without an organisation ID") {
+        val response = service.getMeteringPointsForOrganisation(listOf(validMeteringPointId))
+
+        response.single().data.id shouldBe validMeteringPointId
+        capturedRequestPath shouldBe "/metering-points/$validMeteringPointId"
+        capturedOnBehalfOfOrganisation.shouldBeNull()
     }
 
     test("Throws not found when any requested metering point does not exist") {

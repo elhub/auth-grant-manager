@@ -7,6 +7,12 @@ sealed class DocumentPreparationError(override val detail: String) : Errors(deta
     class RequestedMeteringPointsNotFound :
         DocumentPreparationError("One or more requested metering points could not be found")
 
+    class RequestedPrincipalHasMeteringPointWriteAccess :
+        DocumentPreparationError("The requested principal already owns at least one of the requested metering points")
+
+    class RequestedPrincipalCannotWriteAllMeteringPoints :
+        DocumentPreparationError("The requested principal does not own all requested metering points")
+
     class MeteringPointsServiceFailure(val clientError: ClientError) :
         DocumentPreparationError("Failed to fetch requested metering points: $clientError")
 

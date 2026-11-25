@@ -7,6 +7,7 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientEr
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.meteringpoints.toPdfContent
 import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
@@ -24,6 +25,7 @@ private const val DOCUMENT_VALID_DAYS = 28
 class MoveInAndChangeOfEnergySupplierDocumentHandler(
     private val meteringPointsService: MeteringPointsService,
     private val organisationsService: OrganisationsService,
+    private val authorizationRulesService: AuthorizationRulesService,
 ) : HandlerContract {
     override suspend fun prepare(
         specification: DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization,
@@ -38,11 +40,18 @@ class MoveInAndChangeOfEnergySupplierDocumentHandler(
                         ?: throw DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
                 },
             )
+        val meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted()
+        val writeAccess = authorizationRulesService.checkMeteringPointWriteAccess(
+            principalElhubInternalId = requestedPrincipalElhubInternalId,
+            meteringPointIds = meteringPointIds,
+        )
+        if (!writeAccess.hasNoWriteAccessToAny(meteringPointIds)) {
+            throw DocumentPreparationError.RequestedPrincipalHasMeteringPointWriteAccess()
+        }
 
         val meteringPoints = try {
             meteringPointsService.getMeteringPointsForOrganisation(
-                meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
-                elhubInternalId = requestedPrincipalElhubInternalId,
+                meteringPointIds = meteringPointIds,
             )
         } catch (e: MeteringPointsLookupException) {
             throw e.clientError.toDocumentPreparationError()

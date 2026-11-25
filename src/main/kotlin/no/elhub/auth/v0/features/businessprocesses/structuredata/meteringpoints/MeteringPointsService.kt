@@ -24,7 +24,7 @@ interface MeteringPointsService {
 
     suspend fun getMeteringPointsForOrganisation(
         meteringPointIds: List<String>,
-        elhubInternalId: String
+        elhubInternalId: String? = null
     ): List<MeteringPointResponse>
 }
 
@@ -43,11 +43,10 @@ class MeteringPointsApi(
 
     override suspend fun getMeteringPointsForOrganisation(
         meteringPointIds: List<String>,
-        elhubInternalId: String
+        elhubInternalId: String?
     ): List<MeteringPointResponse> = meteringPointIds.map { meteringPointId ->
         getMeteringPoint(
-            url = "${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId",
-            onBehalfOfOrganisation = elhubInternalId,
+            url = "${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId${elhubInternalId?.let { "?endUserId=$it" }.orEmpty()}"
         ).fold(
             ifLeft = { throw MeteringPointsLookupException(it) },
             ifRight = { it },
