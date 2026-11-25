@@ -44,7 +44,7 @@ class ChangeOfEnergySupplierRequestHandler(
             principalElhubInternalId = requestedPrincipalElhubInternalId,
             meteringPointIds = meteringPointIds,
         )
-        if (!writeAccess.hasWriteAccessToAll()) {
+        if (!writeAccess.hasWriteAccessToAll(meteringPointIds)) {
             throw RequestPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints()
         }
 

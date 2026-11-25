@@ -1695,24 +1695,6 @@ components:
                     detail: 'The authorization request type is not currently supported.'
                 meta:
                   createdAt: '2025-12-17T12:51:57+01:00'
-            principalHasMeteringPointWriteAccess:
-              summary: Move-in rejected because the principal has write access to a requested metering point
-              value:
-                errors:
-                  - status: '422'
-                    title: 'Validation error'
-                    detail: 'The requested principal must not have write access to any of the requested metering points'
-                meta:
-                  createdAt: '2025-12-17T12:51:57+01:00'
-            principalCannotWriteAllMeteringPoints:
-              summary: Supplier change rejected because the principal lacks write access to a requested metering point
-              value:
-                errors:
-                  - status: '422'
-                    title: 'Validation error'
-                    detail: 'The requested principal must have write access to all requested metering points'
-                meta:
-                  createdAt: '2025-12-17T12:51:57+01:00'
     415UnsupportedMediaTypeError:
       description: >
         Unsupported Media Type. The request body uses a media type the server or resource does not support.

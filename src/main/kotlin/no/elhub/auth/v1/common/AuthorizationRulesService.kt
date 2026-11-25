@@ -9,8 +9,8 @@ data class MeteringPointWriteAccessDecision(
     fun hasNoWriteAccessToAny(meteringPointIds: List<String>): Boolean =
         !authorized && unauthorizedMeteringPoints?.containsAll(meteringPointIds) == true
 
-    fun hasWriteAccessToAll(): Boolean =
-        authorized && unauthorizedMeteringPoints.orEmpty().isEmpty()
+    fun hasWriteAccessToAll(meteringPointIds: List<String>): Boolean =
+        authorized && unauthorizedMeteringPoints.orEmpty().none { it in meteringPointIds }
 }
 
 interface AuthorizationRulesService {

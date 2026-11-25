@@ -119,13 +119,13 @@ class ErrorHandlingTest : FunSpec({
             DocumentPreparationError.RequestedPrincipalHasMeteringPointWriteAccess(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
-            "The requested principal must not have write access to any of the requested metering points",
+            "The requested principal already owns at least one of the requested metering points",
         ),
         ErrorCase(
             DocumentPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
-            "The requested principal must have write access to all requested metering points",
+            "The requested principal does not own all requested metering points",
         ),
         ErrorCase(
             DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),
@@ -155,13 +155,13 @@ class ErrorHandlingTest : FunSpec({
             RequestPreparationError.RequestedPrincipalHasMeteringPointWriteAccess(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
-            "The requested principal must not have write access to any of the requested metering points",
+            "The requested principal already owns at least one of the requested metering points",
         ),
         ErrorCase(
             RequestPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints(),
             HttpStatusCode.UnprocessableEntity,
             "Validation error",
-            "The requested principal must have write access to all requested metering points",
+            "The requested principal does not own all requested metering points",
         ),
         ErrorCase(
             RequestPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound),

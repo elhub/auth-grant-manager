@@ -8,10 +8,10 @@ sealed class RequestPreparationError(override val detail: String) : Errors(detai
         RequestPreparationError("One or more requested metering points could not be found")
 
     class RequestedPrincipalHasMeteringPointWriteAccess :
-        RequestPreparationError("The requested principal must not have write access to any of the requested metering points")
+        RequestPreparationError("The requested principal already owns at least one of the requested metering points")
 
     class RequestedPrincipalCannotWriteAllMeteringPoints :
-        RequestPreparationError("The requested principal must have write access to all requested metering points")
+        RequestPreparationError("The requested principal does not own all requested metering points")
 
     class MeteringPointsServiceFailure(val clientError: ClientError) :
         RequestPreparationError("Failed to fetch requested metering points: $clientError")
