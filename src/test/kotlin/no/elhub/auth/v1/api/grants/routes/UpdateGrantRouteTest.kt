@@ -6,6 +6,8 @@ import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -15,6 +17,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.serialization.json.Json
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.patchJson
 import no.elhub.auth.v0.setupAppWith
@@ -63,6 +66,25 @@ class UpdateGrantRouteTest : FunSpec({
     ) = """{"data":{"id":"$dataId","type":"$type","attributes":{"status":"$status"}}}"""
 
     beforeTest { clearMocks(handler) }
+
+    test("PATCH rejects PDF-only Accept before updating a grant") {
+        coEvery { handler(any(), any(), any(), any()) } returns grant
+
+        testApplication {
+            setupAppWith(system) { route(V1_GRANTS_PATH) { route(handler) } }
+
+            val response = createClient {}.patch(path) {
+                accept(ContentType.Application.Pdf)
+                contentType(ContentType.Application.Json)
+                setBody(body())
+            }
+
+            response.status shouldBe HttpStatusCode.NotAcceptable
+            response.contentType() shouldBe jsonApiContentType
+            Json.decodeFromString<JsonApiErrorCollection>(response.bodyAsText()).errors.single().status shouldBe "406"
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
+    }
 
     test("PATCH rejects unsupported query parameters without calling the handler") {
         testApplication {
@@ -208,10 +230,14 @@ class UpdateGrantRouteTest : FunSpec({
                     route(V1_GRANTS_PATH) { route(handler) }
                 }
 
-                val response = client.patchJson(path, body())
+                val response = client.patch(path) {
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(body())
+                }
 
                 response.status shouldBe status
-                response.contentType()?.withoutParameters() shouldBe jsonApiContentType
+                response.contentType()?.withoutParameters() shouldBe ContentType.Application.Json
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe status.value.toString()
                 coVerify(exactly = 1) {
                     handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable)

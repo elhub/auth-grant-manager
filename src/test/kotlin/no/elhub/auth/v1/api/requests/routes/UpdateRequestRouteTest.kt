@@ -65,6 +65,23 @@ class UpdateRequestRouteTest : FunSpec({
 
     beforeTest { clearMocks(handler) }
 
+    test("PATCH rejects PDF-only Accept before updating a request") {
+        coEvery { handler(any(), any(), any(), any()) } returns request
+
+        testApplication {
+            setupAppWith(requestedOf) { route(V1_REQUESTS_PATH) { route(handler) } }
+
+            val response = createClient {}.patch(path) {
+                accept(ContentType.Application.Pdf)
+                contentType(ContentType.Application.Json)
+                setBody(body())
+            }
+
+            response.status shouldBe HttpStatusCode.NotAcceptable
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
+    }
+
     test("PATCH rejects unsupported query parameters without calling the handler") {
         testApplication {
             setupAppWith(requestedOf) {
@@ -207,10 +224,14 @@ class UpdateRequestRouteTest : FunSpec({
                     route(V1_REQUESTS_PATH) { route(handler) }
                 }
 
-                val response = client.patchJson(path, body())
+                val response = client.patch(path) {
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(body())
+                }
 
                 response.status shouldBe status
-                response.contentType()?.withoutParameters() shouldBe jsonApiContentType
+                response.contentType()?.withoutParameters() shouldBe ContentType.Application.Json
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe status.value.toString()
             }
         }

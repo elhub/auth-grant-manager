@@ -4,6 +4,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import no.elhub.auth.common.config.requireAcceptableJsonResponse
 import no.elhub.auth.v0.features.common.receiveEither
 import no.elhub.auth.v0.features.common.toApiErrorResponse
 import no.elhub.auth.v0.features.common.toTypeMismatchApiErrorResponse
@@ -75,6 +76,7 @@ fun Route.route(
                 ifRight = { it },
             )
 
+        call.requireAcceptableJsonResponse()
         val authorizationRequest =
             handler(
                 specification = specification,
