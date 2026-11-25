@@ -11,21 +11,21 @@ permitting clients to perform authorization requests or provide signatures on au
 
 ### Key Actors
 
-- End Users
-- Market Party Systems
+- End Users (Organizations and Persons)
+- Market Entity Systems
 
 ### Interactions
 
-The auth-grant-manager provides two key interaction flows: authorization requests and authorization document signing.
+The auth-grant-manager provides two key processes: authorization requests and authorization document signing.
 The system interacts with external authentication services to validate and process these requests.
 
 **Authorization Requests:**
 
-![Request Flow](assets/request-flow.png)
+![Request Flow](processes/authorization-request.md)
 
 **Authorization Documents:**
 
-![Document Flow](assets/document-flow.png)
+![Document Flow](processes/authorization-document.md)
 
 ## Containers
 

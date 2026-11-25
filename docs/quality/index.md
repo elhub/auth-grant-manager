@@ -1,28 +1,10 @@
-# Requirements
+# Quality Attributes
 
-## Component Overview
 
-**Component Name:** Authorization Grant Manager
+The following requirements are targets, not confirmation that each acceptance
+criterion is implemented or verified in the current repository or deployment.
 
-**Purpose:** Centralized service for managing, tracking, and verifying user authorizations and consents for Elhub
-services and market processes.
-
-**Owner:** squad-auth
-
-**Related System(s):** MyPage, Market Processes
-
----
-
-## Functional Requirements
-
-> [!NOTE]
-> See  Jira project.
-
----
-
-## Cross-Functional Requirements
-
-### CFR-1: Security
+## CFR-1: Security
 
 All API endpoints require authentication and authorization to ensure only authorized parties can access the system.
 
@@ -40,9 +22,7 @@ All API endpoints require authentication and authorization to ensure only author
 - Unauthorized requests are rejected with HTTP 403.
 - Sensitive data is encrypted in transit using TLS.
 
----
-
-### CFR-2: Reliability
+## CFR-2: Reliability
 
 The service must be highly available to ensure market parties can access the system when needed.
 
@@ -54,12 +34,7 @@ The service must be highly available to ensure market parties can access the sys
 - Health check endpoints are available for monitoring the service.
 - Service recovers automatically from transient failures.
 
-> [!NOTE]
-> Database connection management? Circuit breakers?
-
----
-
-### CFR-3: Compliance
+## CFR-3: Compliance
 
 Data handling must meet GDPR and QES standards to ensure Elhub remains compliant with legal requirements.
 
@@ -73,9 +48,7 @@ Data handling must meet GDPR and QES standards to ensure Elhub remains compliant
 - Elhub's data retention policies are implemented and enforced.
 - Right to erasure is supported.
 
----
-
-### CFR-4: Performance
+## CFR-4: Performance
 
 The API must respond quickly to provide a responsive experience for market parties and end users in MinSide.
 
@@ -89,7 +62,7 @@ The API must respond quickly to provide a responsive experience for market parti
 
 ---
 
-### CFR-5: Scalability
+## CFR-5: Scalability
 
 The system must support increasing numbers of requests to handle peaks in demand.
 
@@ -104,7 +77,7 @@ The system must support increasing numbers of requests to handle peaks in demand
 
 ---
 
-### CFR-6: Observability
+## CFR-6: Observability
 
 The system must provide comprehensive monitoring and troubleshooting capabilities.
 
@@ -120,7 +93,8 @@ The system must provide comprehensive monitoring and troubleshooting capabilitie
 
 ---
 
-### CFR-7: Data Integrity
+## CFR-7: Data Integrity
+
 Data must remain accurate and consistent to ensure authorization records are trustworthy.
 
 **Priority:** High
@@ -135,7 +109,7 @@ Data must remain accurate and consistent to ensure authorization records are tru
 
 ---
 
-### CFR-8: Flexibility
+## CFR-8: Flexibility
 
 The system must be designed to accommodate future changes (additional grant types, documents, new regulations) with
 minimal effort.
@@ -152,7 +126,7 @@ minimal effort.
 
 ---
 
-### CFR-9: API Versioning
+## CFR-9: API Versioning
 
 API changes must be managed to avoid breaking existing client integrations.
 
@@ -163,12 +137,12 @@ API changes must be managed to avoid breaking existing client integrations.
 - API versioning strategy is documented and implemented.
 - Breaking changes are communicated in advance.
 - Deprecated endpoints are maintained for a defined period.
-- OpenAPI specification reflects current API version.
+- The OpenAPI specification and JSON schemas are available and reflect the current API version.
 - Backward compatibility is maintained where possible.
 
 ---
 
-### CFR-10: Error Handling
+## CFR-10: Error Handling
 
 Errors must be handled consistently and provide meaningful information to clients.
 
@@ -184,7 +158,7 @@ Errors must be handled consistently and provide meaningful information to client
 
 ---
 
-### CFR-11: Audit Logging
+## CFR-11: Audit Logging
 
 All authorization-related operations must be logged to support auditing of compliance, security monitoring, and troubleshooting.
 
@@ -200,14 +174,3 @@ All authorization-related operations must be logged to support auditing of compl
 - Failed operations include reason for failure in the logs.
 - Logs are queryable and searchable for audit purposes.
 - Logs are automatically archived according to Elhub's retention policies.
-
----
-
-## ✅ Acceptance Criteria Summary
-
-- Authorization requests and document flows are supported via REST API
-- All endpoints require authentication and support Maskinporten tokens
-- Consent documents are signed and verified according to QES/PAdES B-LT standards
-- Audit logs are generated for all authorization events
-- API documentation and schemas are available and up-to-date
-- Service meets reliability, performance, and compliance requirements

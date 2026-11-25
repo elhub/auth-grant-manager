@@ -1,0 +1,11 @@
+nav:
+    - index.md
+    - Concepts:
+        - concepts/index.md
+        - concepts/authorization-scopes.md
+        - concepts/authorization-types.md
+    - Processes: processes/index.md
+    - Resources: resources/index.md
+    - Quality attributes: quality/index.md
+    - Architecture: architecture.md
+    - User Guide: https://api.elhub.no/access-api
