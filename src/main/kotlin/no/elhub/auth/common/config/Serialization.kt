@@ -29,7 +29,6 @@ internal fun ApplicationCall.acceptedJsonType(): ContentType? {
     val acceptHeaderValues = request.headers.getAll(HttpHeaders.Accept).orEmpty().flatMap { parseHeaderValue(it) }
     if (acceptHeaderValues.isEmpty()) return jsonApiContentType
 
-    // V1 matches media types only; Accept parameters do not affect the response format.
     fun accepts(mediaRange: String): Boolean = acceptHeaderValues.any { it.value.equals(mediaRange, ignoreCase = true) }
 
     if (accepts(jsonApiContentType.toString()) || accepts("application/*") || accepts("*/*")) {
