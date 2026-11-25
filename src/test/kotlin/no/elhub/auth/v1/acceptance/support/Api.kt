@@ -45,8 +45,8 @@ class Api(private val httpClient: HttpClient) {
         header(HttpHeaders.Authorization, "Bearer ${caller.token}")
         when (caller) {
             is Caller.MarketEntity -> {
-                caller.senderGln?.let { header(ApiHeaders.SENDER_GLN, it) }
-                caller.onBehalfOfGln?.let { header(ApiHeaders.ON_BEHALF_OF_GLN, it) }
+                caller.senderGln?.let { header(ApiHeaders.ELHUB_SENDER_GLN, it) }
+                caller.onBehalfOfGln?.let { header(ApiHeaders.ELHUB_ON_BEHALF_OF_GLN, it) }
             }
 
             is Caller.EndUser -> caller.onBehalfOfOrganization?.let {

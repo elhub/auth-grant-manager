@@ -1,8 +1,7 @@
 package no.elhub.auth.common
 
 object ApiHeaders {
-    // Legacy GLN names remain accepted on v1 temporarily while consumers migrate to Elhub-* headers.
-    // v0 continues to use only these original names.
+    // v0 uses the original names; v1 uses the Elhub-* names.
     const val SENDER_GLN = "SenderGln"
     const val ON_BEHALF_OF_GLN = "OnBehalfOfGln"
     const val ELHUB_SENDER_GLN = "Elhub-Sender-Gln"

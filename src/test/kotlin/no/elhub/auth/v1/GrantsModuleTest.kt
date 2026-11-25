@@ -313,10 +313,10 @@ private class GrantPatchFixture(
                     header(ApiHeaders.ON_BEHALF_OF_ORGANISATION, onBehalfOfOrganisation)
                 }
                 if (senderGln != null) {
-                    header(ApiHeaders.SENDER_GLN, senderGln)
+                    header(ApiHeaders.ELHUB_SENDER_GLN, senderGln)
                 }
                 if (onBehalfOfGln != null) {
-                    header(ApiHeaders.ON_BEHALF_OF_GLN, onBehalfOfGln)
+                    header(ApiHeaders.ELHUB_ON_BEHALF_OF_GLN, onBehalfOfGln)
                 }
                 accept(jsonApiContentType)
                 contentType(jsonApiContentType)

@@ -26,7 +26,7 @@ class GlnHeaderTest : FunSpec({
             legacyValue?.let { header(legacy, it) }
         }.bodyAsText()
 
-        test("v1 prefers $preferred and falls back to $legacy") {
+        test("v1 reads only $preferred and ignores $legacy") {
             testApplication {
                 application {
                     install(ResolveAuthorizationHeaders)
@@ -45,9 +45,9 @@ class GlnHeaderTest : FunSpec({
                 }
 
                 resolvedGln("/access/v1/authorization-documents", preferredValue = "123") shouldBe "123"
-                resolvedGln("/access/v1/authorization-documents", legacyValue = "456") shouldBe "456"
+                resolvedGln("/access/v1/authorization-documents", legacyValue = "456") shouldBe "missing"
                 resolvedGln("/access/v1/authorization-documents", preferredValue = "123", legacyValue = "456") shouldBe "123"
-                resolvedGln("/access/v1/authorization-documents", preferredValue = "", legacyValue = "456") shouldBe "456"
+                resolvedGln("/access/v1/authorization-documents", preferredValue = "", legacyValue = "456") shouldBe "missing"
             }
         }
 
