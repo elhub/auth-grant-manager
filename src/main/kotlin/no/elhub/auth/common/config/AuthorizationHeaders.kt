@@ -15,7 +15,7 @@ internal val ApplicationCall.authorizationHeaders: AuthorizationHeaders
 val ResolveAuthorizationHeaders = createApplicationPlugin(name = "ResolveAuthorizationHeaders") {
     onCall { call ->
         val headers = call.request.headers
-        val isV1 = call.isV1
+        val isV1 = call.isV1Request
         call.attributes.put(
             AuthorizationHeadersKey,
             AuthorizationHeaders(

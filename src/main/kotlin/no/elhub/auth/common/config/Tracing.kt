@@ -14,10 +14,10 @@ fun Application.configureRequestTracing() {
         // v1 only accepts Elhub-Trace-Id; v0 keeps accepting both header names.
         retrieve { call ->
             call.request.headers[V1_ELHUB_TRACE_ID_HEADER]
-                ?: if (call.isV1) null else call.request.headers[ELHUB_TRACE_ID_HEADER]
+                ?: if (call.isV1Request) null else call.request.headers[ELHUB_TRACE_ID_HEADER]
         }
         reply { call, callId ->
-            call.response.headers.append(if (call.isV1) V1_ELHUB_TRACE_ID_HEADER else ELHUB_TRACE_ID_HEADER, callId)
+            call.response.headers.append(if (call.isV1Request) V1_ELHUB_TRACE_ID_HEADER else ELHUB_TRACE_ID_HEADER, callId)
         }
         verify { callId ->
             try {

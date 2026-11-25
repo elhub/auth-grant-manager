@@ -10,14 +10,10 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.contentnegotiation.ContentTypeWithQuality
-import io.ktor.server.request.path
 import kotlinx.serialization.json.Json
 
 /** The media type required by the JSON:API specification. */
 val jsonApiContentType: ContentType = ContentType.parse("application/vnd.api+json")
-
-internal val ApplicationCall.isV1Request: Boolean
-    get() = request.path().startsWith("/access/v1/")
 
 internal class NoAcceptableJsonResponse : Exception()
 
