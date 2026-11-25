@@ -44,7 +44,7 @@ class V1AuthorizationMetrics(registry: MeterRegistry) {
         countsSql = """
             SELECT request_type::text AS type,
                    count(*) AS created,
-                   count(*) FILTER (WHERE status = 'Pending' AND approved_by IS NOT NULL) AS approved,
+                   count(*) FILTER (WHERE status = 'Pending' AND decided_by IS NOT NULL) AS approved,
                    count(*) FILTER (WHERE status = 'Rejected') AS rejected
             FROM auth_v1.authorization_request
             GROUP BY request_type
@@ -59,7 +59,7 @@ class V1AuthorizationMetrics(registry: MeterRegistry) {
         countsSql = """
             SELECT document_type::text AS type,
                    count(*) AS created,
-                   count(*) FILTER (WHERE approved_by IS NOT NULL) AS approved
+                   count(*) FILTER (WHERE decided_by IS NOT NULL) AS approved
             FROM auth_v1.authorization_document
             GROUP BY document_type
         """,

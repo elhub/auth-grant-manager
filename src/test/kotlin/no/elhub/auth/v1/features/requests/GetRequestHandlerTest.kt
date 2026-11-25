@@ -41,7 +41,7 @@ class GetRequestHandlerTest : FunSpec({
         requestedBy = requestedBy,
         requestedPrincipal = requestedPrincipal,
         requestedOf = requestedOf,
-        approvedBy = null,
+        decidedBy = null,
         authorizationGrants = null,
     )
 

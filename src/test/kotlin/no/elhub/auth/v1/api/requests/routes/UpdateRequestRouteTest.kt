@@ -109,7 +109,7 @@ class UpdateRequestRouteTest : FunSpec({
         )
         coEvery { handler(id, requestedOf, AuthorizationRequestStatus.Approved, TextLanguage.NN) } returns request.copy(
             status = AuthorizationRequestStatus.Approved,
-            approvedBy = requestedOf,
+            decidedBy = requestedOf,
             authorizationGrants = listOf(grant),
             textLanguage = TextLanguage.NN,
         )

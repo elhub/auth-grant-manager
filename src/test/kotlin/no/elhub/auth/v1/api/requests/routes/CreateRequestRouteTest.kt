@@ -91,7 +91,7 @@ class CreateRequestRouteTest : FunSpec({
         requestedBy = authorizedAgent,
         requestedPrincipal = requestedPrincipal,
         requestedOf = requestedOf,
-        approvedBy = null,
+        decidedBy = null,
         authorizationGrants = null,
     )
 

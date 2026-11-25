@@ -61,7 +61,7 @@ class GetDocumentRouteTest : FunSpec({
         requestedBy = authorizedAgent,
         requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity),
         requestedOf = AuthorizationAgent("person-1", AgentType.Person),
-        approvedBy = null,
+        decidedBy = null,
         authorizationGrants = null,
         pdfBytes = "%PDF-1.7\nexample document".toByteArray(),
     )
@@ -103,7 +103,7 @@ class GetDocumentRouteTest : FunSpec({
         val persistentGrant = grant.copy(id = Uuid.random(), type = AuthorizationGrantType.Persistent)
         coEvery { handler(documentId, authorizedAgent) } returns document.copy(
             status = AuthorizationDocumentStatus.Approved,
-            approvedBy = document.requestedOf,
+            decidedBy = document.requestedOf,
             authorizationGrants = listOf(grant, persistentGrant),
         )
 
@@ -117,7 +117,7 @@ class GetDocumentRouteTest : FunSpec({
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<JsonApiGetAuthorizationDocumentResponse>()
             body.data.attributes.status.name shouldBe "Approved"
-            body.data.relationships.approvedBy.shouldNotBeNull().data.id shouldBe document.requestedOf.id
+            body.data.relationships.decidedBy.shouldNotBeNull().data.id shouldBe document.requestedOf.id
             val grants = body.data.relationships.authorizationGrants.shouldNotBeNull().data
             grants.map { it.id } shouldBe listOf(grant.id.toString(), persistentGrant.id.toString())
             grants.map { it.type } shouldBe listOf(GrantResourceType.ConsumableGrant, GrantResourceType.PersistentGrant)

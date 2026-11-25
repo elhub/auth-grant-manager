@@ -97,7 +97,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val requestedBy = agentId(document.requestedBy)
         val requestedPrincipal = agentId(document.requestedPrincipal)
         val requestedOf = agentId(document.requestedOf)
-        val approvedBy = document.approvedBy?.let { agentId(it) }
+        val decidedBy = document.decidedBy?.let { agentId(it) }
         val documentId = Uuid.parse(document.id)
         AuthorizationDocumentTable.insert {
             it[id] = documentId
@@ -105,7 +105,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
             it[AuthorizationDocumentTable.requestedBy] = requestedBy
             it[AuthorizationDocumentTable.requestedPrincipal] = requestedPrincipal
             it[AuthorizationDocumentTable.requestedOf] = requestedOf
-            it[AuthorizationDocumentTable.approvedBy] = approvedBy
+            it[AuthorizationDocumentTable.decidedBy] = decidedBy
             it[externalReference] = document.externalReference
             it[meta] = document.meta
             it[file] = document.pdfBytes
@@ -160,7 +160,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val unconstrained = RequestedAuthorizationScope(ResourceType.MeteringPointContract, emptyList())
         val expected = document().copy(
             status = AuthorizationDocumentStatus.Approved,
-            approvedBy = agent(),
+            decidedBy = agent(),
             externalReference = "contract-123",
             requestedScopes = listOf(RequestedAuthorizationScope(ResourceType.MeteringPointContract, constraints), unconstrained),
         )
@@ -193,8 +193,8 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val expected = listOf(
             document() to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(approvedBy = agent()) to AuthorizationDocumentStatus.Approved,
-            document().copy(approvedBy = agent(), validTo = past) to AuthorizationDocumentStatus.Approved,
+            document().copy(decidedBy = agent()) to AuthorizationDocumentStatus.Approved,
+            document().copy(decidedBy = agent(), validTo = past) to AuthorizationDocumentStatus.Approved,
         )
 
         expected.forEach { (document, status) ->
@@ -217,7 +217,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val requestedPrincipal = seed(document().copy(requestedPrincipal = agent))
         val both = seed(document().copy(requestedBy = agent, requestedPrincipal = agent))
         seed(document().copy(requestedOf = agent))
-        seed(document().copy(approvedBy = agent))
+        seed(document().copy(decidedBy = agent))
         seed(document().copy(requestedBy = agent.copy(type = AgentType.Person)))
         seed(document())
 
@@ -255,11 +255,11 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val expected = listOf(
             document() to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(approvedBy = agent()) to AuthorizationDocumentStatus.Approved,
-            document().copy(approvedBy = agent(), validTo = past) to AuthorizationDocumentStatus.Approved,
+            document().copy(decidedBy = agent()) to AuthorizationDocumentStatus.Approved,
+            document().copy(decidedBy = agent(), validTo = past) to AuthorizationDocumentStatus.Approved,
         ).associate { (document, status) -> seed(document.copy(requestedBy = agent)).toString() to status }
         seed(document().copy(validTo = past))
-        seed(document().copy(approvedBy = agent()))
+        seed(document().copy(decidedBy = agent()))
         val filters = AuthorizationDocumentStatus.entries.map { listOf(it) } + listOf(
             listOf(AuthorizationDocumentStatus.Pending, AuthorizationDocumentStatus.Expired),
             AuthorizationDocumentStatus.entries.toList(),
@@ -312,7 +312,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val documents = listOf(
             document().copy(
                 requestedBy = agent,
-                approvedBy = agent(),
+                decidedBy = agent(),
                 status = AuthorizationDocumentStatus.Approved,
                 externalReference = "listed-contract",
                 requestedScopes = listOf(constrained, unconstrained),
@@ -409,7 +409,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val cases = listOf(
             document().copy(status = AuthorizationDocumentStatus.Approved) to AuthorizationDocumentStatus.Pending,
             document().copy(validTo = past) to AuthorizationDocumentStatus.Expired,
-            document().copy(validTo = past, approvedBy = agent()) to AuthorizationDocumentStatus.Approved,
+            document().copy(validTo = past, decidedBy = agent()) to AuthorizationDocumentStatus.Approved,
         )
 
         cases.forEach { (document, status) ->
@@ -440,7 +440,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val after = now()
         result.copy(pdfBytes = original.pdfBytes) shouldBe original.copy(
             status = AuthorizationDocumentStatus.Approved,
-            approvedBy = signatory,
+            decidedBy = signatory,
             updatedAt = result.updatedAt,
             authorizationGrants = listOf(storedGrant),
         )
@@ -471,7 +471,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         val result = documentRepository.confirm(id, signedFile, signatory, grants)
 
         result.status shouldBe AuthorizationDocumentStatus.Approved
-        result.approvedBy shouldBe signatory
+        result.decidedBy shouldBe signatory
         result.pdfBytes.toList() shouldBe signedFile.toList()
         val insertedGrants = result.authorizationGrants ?: error("Confirmed document must contain its inserted grants")
         val fetchedGrants = storedGrantRepository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(id))[id].orEmpty()
@@ -541,7 +541,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
 
     test("confirm rejects accepted documents") {
         listOf(future, Instant.parse("2000-01-01T00:00:00Z")).forEach { validTo ->
-            val original = document().copy(approvedBy = agent(), validTo = validTo)
+            val original = document().copy(decidedBy = agent(), validTo = validTo)
             val id = seed(original)
             val before = repository.find(id)
             val signatory = agent()
@@ -571,7 +571,7 @@ class ExposedDocumentRepositoryTest : FunSpec({
         coEvery { grantRepository.insert(secondGrant) } coAnswers {
             withTransaction {
                 val row = AuthorizationDocumentTable.selectAll().where { AuthorizationDocumentTable.id eq id }.single()
-                (row[AuthorizationDocumentTable.approvedBy] != null) shouldBe true
+                (row[AuthorizationDocumentTable.decidedBy] != null) shouldBe true
             }
             storedGrantRepository.find(firstGrant.id).id shouldBe firstGrant.id
             throw failure

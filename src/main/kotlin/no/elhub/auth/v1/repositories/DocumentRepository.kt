@@ -80,7 +80,7 @@ class ExposedDocumentRepository(
             requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
             requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByDocumentId(listOf(id))[id].orEmpty(),
-            approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agentRepository.find(it.toKotlinUuid()).toAuthorizationAgent() },
+            decidedBy = row[AuthorizationDocumentTable.decidedBy]?.let { agentRepository.find(it.toKotlinUuid()).toAuthorizationAgent() },
             now = now(),
         )
     }
@@ -110,7 +110,7 @@ class ExposedDocumentRepository(
                 it[AuthorizationDocumentTable.requestedBy],
                 it[AuthorizationDocumentTable.requestedPrincipal],
                 it[AuthorizationDocumentTable.requestedOf],
-                it[AuthorizationDocumentTable.approvedBy],
+                it[AuthorizationDocumentTable.decidedBy],
             )
         }.distinct()
         val agents = AuthorizationAgentTable.selectAll()
@@ -127,7 +127,7 @@ class ExposedDocumentRepository(
                 requestedPrincipal = agent(row[AuthorizationDocumentTable.requestedPrincipal].toKotlinUuid()),
                 requestedOf = agent(row[AuthorizationDocumentTable.requestedOf].toKotlinUuid()),
                 requestedScopes = scopes[row[AuthorizationDocumentTable.id].value].orEmpty(),
-                approvedBy = row[AuthorizationDocumentTable.approvedBy]?.let { agent(it.toKotlinUuid()) },
+                decidedBy = row[AuthorizationDocumentTable.decidedBy]?.let { agent(it.toKotlinUuid()) },
                 now = now,
             )
         }
@@ -139,7 +139,7 @@ class ExposedDocumentRepository(
         val requestedBy = agentRepository.findOrInsert(document.requestedBy.type, document.requestedBy.id)
         val requestedPrincipal = agentRepository.findOrInsert(document.requestedPrincipal.type, document.requestedPrincipal.id)
         val requestedOf = agentRepository.findOrInsert(document.requestedOf.type, document.requestedOf.id)
-        val approvedBy = document.approvedBy?.let { agentRepository.findOrInsert(it.type, it.id) }
+        val decidedBy = document.decidedBy?.let { agentRepository.findOrInsert(it.type, it.id) }
 
         val inserted = AuthorizationDocumentTable.insert {
             it[id] = documentId
@@ -147,7 +147,7 @@ class ExposedDocumentRepository(
             it[AuthorizationDocumentTable.requestedBy] = requestedBy.id
             it[AuthorizationDocumentTable.requestedPrincipal] = requestedPrincipal.id
             it[AuthorizationDocumentTable.requestedOf] = requestedOf.id
-            it[AuthorizationDocumentTable.approvedBy] = approvedBy?.id
+            it[AuthorizationDocumentTable.decidedBy] = decidedBy?.id
             it[externalReference] = document.externalReference
             it[meta] = document.meta
             it[file] = document.pdfBytes
@@ -183,7 +183,7 @@ class ExposedDocumentRepository(
             requestedPrincipal = requestedPrincipal.toAuthorizationAgent(),
             requestedOf = requestedOf.toAuthorizationAgent(),
             requestedScopes = document.requestedScopes,
-            approvedBy = approvedBy?.toAuthorizationAgent(),
+            decidedBy = decidedBy?.toAuthorizationAgent(),
             now = now(),
         )
     }
@@ -216,12 +216,12 @@ class ExposedDocumentRepository(
             AuthorizationDocumentStatus.Pending -> Unit
         }
 
-        val approvedBy = agentRepository.findOrInsert(signatory.type, signatory.id)
+        val decidedBy = agentRepository.findOrInsert(signatory.type, signatory.id)
         val updated = AuthorizationDocumentTable.updateReturning(
             where = { AuthorizationDocumentTable.id eq documentId },
         ) {
             it[file] = signedFile
-            it[AuthorizationDocumentTable.approvedBy] = approvedBy.id
+            it[AuthorizationDocumentTable.decidedBy] = decidedBy.id
             it[signedAt] = now
             it[updatedAt] = now
         }.single()
@@ -232,7 +232,7 @@ class ExposedDocumentRepository(
             requestedPrincipal = agentRepository.find(row[AuthorizationDocumentTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
             requestedOf = agentRepository.find(row[AuthorizationDocumentTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByDocumentId(listOf(documentId))[documentId].orEmpty(),
-            approvedBy = approvedBy.toAuthorizationAgent(),
+            decidedBy = decidedBy.toAuthorizationAgent(),
             now = now,
         ).copy(authorizationGrants = insertedGrants)
     }
@@ -249,13 +249,13 @@ class ExposedDocumentRepository(
         }
         val statusCondition = statuses.map { status ->
             when (status) {
-                AuthorizationDocumentStatus.Pending -> AuthorizationDocumentTable.approvedBy.isNull() and
+                AuthorizationDocumentStatus.Pending -> AuthorizationDocumentTable.decidedBy.isNull() and
                     (AuthorizationDocumentTable.validTo greater now)
 
-                AuthorizationDocumentStatus.Expired -> AuthorizationDocumentTable.approvedBy.isNull() and
+                AuthorizationDocumentStatus.Expired -> AuthorizationDocumentTable.decidedBy.isNull() and
                     (AuthorizationDocumentTable.validTo lessEq now)
 
-                AuthorizationDocumentStatus.Approved -> AuthorizationDocumentTable.approvedBy.isNotNull()
+                AuthorizationDocumentStatus.Approved -> AuthorizationDocumentTable.decidedBy.isNotNull()
             }
         }.reduce { acc, op -> acc or op }
         return agentCondition and statusCondition
@@ -291,7 +291,7 @@ object AuthorizationDocumentTable : UuidTable("auth_v1.authorization_document") 
     val requestedBy = javaUUID("requested_by").references(AuthorizationAgentTable.id)
     val requestedPrincipal = javaUUID("requested_principal").references(AuthorizationAgentTable.id)
     val requestedOf = javaUUID("requested_of").references(AuthorizationAgentTable.id)
-    val approvedBy = javaUUID("approved_by").references(AuthorizationAgentTable.id).nullable()
+    val decidedBy = javaUUID("decided_by").references(AuthorizationAgentTable.id).nullable()
     val signedAt = timestamp("signed_at").nullable()
     val externalReference = varchar("external_reference", 255).nullable()
     val meta = jsonb("meta", Json, JsonObject.serializer())
@@ -305,7 +305,7 @@ object AuthorizationDocumentTable : UuidTable("auth_v1.authorization_document") 
 }
 
 private fun ResultRow.toAuthorizationDocumentStatus(now: Instant): AuthorizationDocumentStatus = when {
-    this[AuthorizationDocumentTable.approvedBy] != null -> AuthorizationDocumentStatus.Approved
+    this[AuthorizationDocumentTable.decidedBy] != null -> AuthorizationDocumentStatus.Approved
     this[AuthorizationDocumentTable.validTo] <= now -> AuthorizationDocumentStatus.Expired
     else -> AuthorizationDocumentStatus.Pending
 }
@@ -315,7 +315,7 @@ fun ResultRow.toAuthorizationDocument(
     requestedPrincipal: AuthorizationAgent,
     requestedOf: AuthorizationAgent,
     requestedScopes: List<RequestedAuthorizationScope>,
-    approvedBy: AuthorizationAgent? = null,
+    decidedBy: AuthorizationAgent? = null,
     now: Instant,
 ): AuthorizationDocument = AuthorizationDocument(
     id = this[AuthorizationDocumentTable.id].value.toString(),
@@ -333,7 +333,7 @@ fun ResultRow.toAuthorizationDocument(
     requestedBy = requestedBy,
     requestedPrincipal = requestedPrincipal,
     requestedOf = requestedOf,
-    approvedBy = approvedBy,
+    decidedBy = decidedBy,
     authorizationGrants = null,
     pdfBytes = this[AuthorizationDocumentTable.file],
 )

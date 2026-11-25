@@ -80,8 +80,8 @@ jq -e '
   .data.id == $id and
   .data.attributes.status == "Approved" and
   .data.attributes.requestedScopes == [$scope] and
-  .data.relationships.approvedBy.data.type == "Person" and
-  (.data.relationships.approvedBy.data.id | type == "string" and length > 0) and
+  .data.relationships.decidedBy.data.type == "Person" and
+  (.data.relationships.decidedBy.data.id | type == "string" and length > 0) and
   (.data.relationships.authorizationGrants.data | length) == 1 and
   .data.relationships.authorizationGrants.data[0].type == "PersistentGrant"
 ' --arg id "$DOCUMENT_ID" --argjson scope "$EXPECTED_SCOPE" "$WORK_DIR/approved.json" > /dev/null \
@@ -100,7 +100,7 @@ jq -e '
   .data.relationships.principal == $created[0].data.relationships.requestedPrincipal and
   .data.relationships.grantedBy == $created[0].data.relationships.requestedOf and
   .data.relationships.grantedTo == $created[0].data.relationships.requestedBy and
-  .data.relationships.approvedBy == $approved[0].data.relationships.approvedBy and
+  .data.relationships.approvedBy == $approved[0].data.relationships.decidedBy and
   .data.relationships.source.data == {type: "AuthorizationDocument", id: $document}
 ' --arg grant "$GRANT_ID" \
   --arg document "$DOCUMENT_ID" \

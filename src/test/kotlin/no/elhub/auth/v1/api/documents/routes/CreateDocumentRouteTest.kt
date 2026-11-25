@@ -120,7 +120,7 @@ class CreateDocumentRouteTest : FunSpec({
         requestedBy = authorizedAgent,
         requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
         requestedOf = AuthorizationAgent("999888772", AgentType.Organization),
-        approvedBy = null,
+        decidedBy = null,
         authorizationGrants = null,
         pdfBytes = ByteArray(0),
     )

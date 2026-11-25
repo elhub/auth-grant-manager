@@ -93,7 +93,7 @@
               "$ref": "../elhub-common.schema.json#/$defs/agentRelationship",
               "description": "The agent asked to sign the document. When the document is signed, this agent becomes grantedBy in the resulting authorization grant."
             },
-            "approvedBy": {
+            "decidedBy": {
               "$ref": "../elhub-common.schema.json#/$defs/approvedByRelationship",
               "description": "The person who signed the document. This person becomes approvedBy in the resulting authorization grant."
             },
