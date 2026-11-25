@@ -512,6 +512,11 @@ private fun Errors.toApiErrorResponse() =
             toValidationApiErrorResponse(detail)
         }
 
+        is DocumentPreparationError.RequestedPrincipalHasMeteringPointWriteAccess,
+        is DocumentPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints -> {
+            toValidationApiErrorResponse(detail)
+        }
+
         is DocumentPreparationError.MeteringPointsServiceFailure -> {
             logger.error("Failed to fetch requested metering points: {}", clientError)
             toInternalServerApiErrorResponse()
@@ -551,6 +556,11 @@ private fun Errors.toApiErrorResponse() =
         }
 
         is RequestPreparationError.RequestedMeteringPointsNotFound -> {
+            toValidationApiErrorResponse(detail)
+        }
+
+        is RequestPreparationError.RequestedPrincipalHasMeteringPointWriteAccess,
+        is RequestPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints -> {
             toValidationApiErrorResponse(detail)
         }
 
