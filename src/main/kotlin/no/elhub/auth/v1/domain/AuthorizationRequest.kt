@@ -25,7 +25,7 @@ data class AuthorizationRequest(
     val requestedBy: AuthorizationAgent,
     val requestedPrincipal: AuthorizationAgent,
     val requestedOf: AuthorizationAgent,
-    val approvedBy: AuthorizationAgent?,
+    val decidedBy: AuthorizationAgent?,
     val authorizationGrants: List<AuthorizationGrant>?,
     val textLanguage: TextLanguage? = null,
     val textReference: String = AuthorizationRequestTextReference.forRequestType(requestType),
@@ -165,7 +165,7 @@ data class AuthorizationRequest(
                 requestedBy = requestedBy,
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
-                approvedBy = null,
+                decidedBy = null,
                 authorizationGrants = null,
             )
         }

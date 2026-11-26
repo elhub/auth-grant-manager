@@ -86,7 +86,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         requestedBy: AuthorizationAgent,
         requestedPrincipal: AuthorizationAgent = requestedBy,
         requestedOf: AuthorizationAgent = requestedBy,
-        approvedBy: AuthorizationAgent? = null,
+        decidedBy: AuthorizationAgent? = null,
         status: DatabaseRequestStatus = DatabaseRequestStatus.Pending,
         validTo: Instant = future,
         created: Instant = createdAt,
@@ -102,7 +102,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         val byId = agentId(requestedBy)
         val principalId = agentId(requestedPrincipal)
         val ofId = agentId(requestedOf)
-        val approverId = approvedBy?.let { agentId(it) }
+        val decidedById = decidedBy?.let { agentId(it) }
         val requestId = AuthorizationRequestTable.insert {
             it[requestType] = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
             it[AuthorizationRequestTable.textReference] = AuthorizationRequestTextReference.forRequestType(
@@ -112,7 +112,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             it[AuthorizationRequestTable.requestedBy] = byId
             it[AuthorizationRequestTable.requestedPrincipal] = principalId
             it[AuthorizationRequestTable.requestedOf] = ofId
-            it[AuthorizationRequestTable.approvedBy] = approverId
+            it[AuthorizationRequestTable.decidedBy] = decidedById
             it[AuthorizationRequestTable.validTo] = validTo
             it[AuthorizationRequestTable.createdAt] = created
             it[updatedAt] = created + 1.days
@@ -171,7 +171,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
-            approvedBy = approver,
+            decidedBy = approver,
             externalReference = "contract-123",
             scopes = listOf(constrained, unconstrained),
             requestedGrantValidFrom = createdAt,
@@ -198,7 +198,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
-            approvedBy = approver,
+            decidedBy = approver,
             authorizationGrants = null,
         )
         result.requestedScopes.size shouldBe 2
@@ -219,7 +219,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         result.requestedPrincipal shouldBe requestedBy
         result.requestedOf shouldBe requestedBy
         result.requestedScopes shouldBe emptyList()
-        result.approvedBy shouldBe null
+        result.decidedBy shouldBe null
         result.externalReference shouldBe null
         result.redirectUri shouldBe null
         result.status shouldBe AuthorizationRequestStatus.Pending
@@ -230,11 +230,11 @@ class ExposedRequestRepositoryTest : FunSpec({
         val approver = agent()
         val expected = mapOf(
             insertRequest(requestedBy) to AuthorizationRequestStatus.Pending,
-            insertRequest(requestedBy, approvedBy = approver) to AuthorizationRequestStatus.Approved,
-            insertRequest(requestedBy, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
+            insertRequest(requestedBy, decidedBy = approver) to AuthorizationRequestStatus.Approved,
+            insertRequest(requestedBy, decidedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
             insertRequest(requestedBy, validTo = past) to AuthorizationRequestStatus.Expired,
             insertRequest(requestedBy, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
-            insertRequest(requestedBy, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
+            insertRequest(requestedBy, status = DatabaseRequestStatus.Rejected, decidedBy = approver, validTo = past) to
                 AuthorizationRequestStatus.Rejected,
         )
 
@@ -481,7 +481,7 @@ class ExposedRequestRepositoryTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
-            approvedBy = approver,
+            decidedBy = approver,
             externalReference = "contract-123",
             scopes = listOf(constrained, otherScope),
         )
@@ -495,7 +495,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         mapped.requestedBy shouldBe requestedBy
         mapped.requestedPrincipal shouldBe requestedPrincipal
         mapped.requestedOf shouldBe requestedOf
-        mapped.approvedBy shouldBe approver
+        mapped.decidedBy shouldBe approver
         mapped.status shouldBe AuthorizationRequestStatus.Approved
         mapped.requestType shouldBe AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
         mapped.externalReference shouldBe "contract-123"
@@ -510,9 +510,9 @@ class ExposedRequestRepositoryTest : FunSpec({
         mappedScope.constraints.shouldContainExactlyInAnyOrder(appliesTo, allowedChanges)
 
         items.getValue(withOtherScope).requestedScopes shouldBe listOf(otherScope)
-        items.getValue(withOtherScope).approvedBy shouldBe null
+        items.getValue(withOtherScope).decidedBy shouldBe null
         items.getValue(withoutScopes).requestedScopes shouldBe emptyList()
-        items.getValue(withoutScopes).approvedBy shouldBe null
+        items.getValue(withoutScopes).decidedBy shouldBe null
         items.getValue(withoutScopes).externalReference shouldBe null
     }
 
@@ -521,15 +521,15 @@ class ExposedRequestRepositoryTest : FunSpec({
         val approver = agent()
         val expected = mapOf(
             insertRequest(agent) to AuthorizationRequestStatus.Pending,
-            insertRequest(agent, approvedBy = approver) to AuthorizationRequestStatus.Approved,
-            insertRequest(agent, approvedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
+            insertRequest(agent, decidedBy = approver) to AuthorizationRequestStatus.Approved,
+            insertRequest(agent, decidedBy = approver, validTo = past) to AuthorizationRequestStatus.Approved,
             insertRequest(agent, validTo = past) to AuthorizationRequestStatus.Expired,
             insertRequest(agent, status = DatabaseRequestStatus.Rejected) to AuthorizationRequestStatus.Rejected,
-            insertRequest(agent, status = DatabaseRequestStatus.Rejected, approvedBy = approver, validTo = past) to
+            insertRequest(agent, status = DatabaseRequestStatus.Rejected, decidedBy = approver, validTo = past) to
                 AuthorizationRequestStatus.Rejected,
         )
         insertRequest(approver)
-        insertRequest(approver, approvedBy = agent)
+        insertRequest(approver, decidedBy = agent)
         insertRequest(approver, validTo = past)
         insertRequest(approver, status = DatabaseRequestStatus.Rejected)
 
@@ -594,7 +594,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
     test("reject(id) throws conflict for accepted requests") {
         listOf(future, past).forEach { validTo ->
-            val id = insertRequest(agent(), approvedBy = agent(), validTo = validTo)
+            val id = insertRequest(agent(), decidedBy = agent(), validTo = validTo)
             val original = repository.find(id)
             val error = shouldThrow<RepositoryWriteError.ConflictError> {
                 repository.reject(id, TextLanguage.NB)
@@ -636,7 +636,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         original.textLanguage shouldBe null
         accepted shouldBe original.copy(
             status = AuthorizationRequestStatus.Approved,
-            approvedBy = grant.approvedBy,
+            decidedBy = grant.approvedBy,
             updatedAt = accepted.updatedAt,
             authorizationGrants = listOf(grant),
             textLanguage = TextLanguage.EN,
@@ -661,7 +661,7 @@ class ExposedRequestRepositoryTest : FunSpec({
 
         val accepted = repository.accept(id, grants, TextLanguage.NB)
 
-        accepted.approvedBy shouldBe requestedBy
+        accepted.decidedBy shouldBe requestedBy
         accepted.authorizationGrants.shouldContainExactlyInAnyOrder(grants)
         val found = repository.find(id)
         val listed = repository.findAndSortByCreatedAt(
@@ -841,7 +841,7 @@ class ExposedRequestRepositoryTest : FunSpec({
         } else {
             AuthorizationRequestStatus.Rejected
         }
-        winner.approvedBy shouldBe if (results.first().isSuccess) grant.approvedBy else null
+        winner.decidedBy shouldBe if (results.first().isSuccess) grant.approvedBy else null
         winner.authorizationGrants shouldBe if (results.first().isSuccess) listOf(grant) else null
         repository.find(id) shouldBe winner
     }

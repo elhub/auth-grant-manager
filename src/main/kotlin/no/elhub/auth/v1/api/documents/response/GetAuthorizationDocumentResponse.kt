@@ -66,7 +66,7 @@ data class AuthorizationDocumentRelationships(
     val requestedBy: ResponseRelationship<AgentTypeResponse>,
     val requestedPrincipal: ResponseRelationship<AgentTypeResponse>,
     val requestedOf: ResponseRelationship<AgentTypeResponse>,
-    val approvedBy: ResponseRelationship<AgentTypeResponse>? = null,
+    val decidedBy: ResponseRelationship<AgentTypeResponse>? = null,
     val authorizationGrants: ResponseGrantRelationship? = null,
 )
 
@@ -102,7 +102,7 @@ fun AuthorizationDocument.toGetResponse() =
                 requestedBy = requestedBy.toResponseRelationship(),
                 requestedPrincipal = requestedPrincipal.toResponseRelationship(),
                 requestedOf = requestedOf.toResponseRelationship(),
-                approvedBy = approvedBy?.let { it.toApprovalRelationship() },
+                decidedBy = decidedBy?.let { it.toApprovalRelationship() },
                 authorizationGrants = authorizationGrants?.let {
                     ResponseGrantRelationship(data = it.map(AuthorizationGrant::toResponseIdentifier))
                 },

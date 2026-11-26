@@ -23,7 +23,7 @@ data class AuthorizationDocument(
     val requestedBy: AuthorizationAgent,
     val requestedPrincipal: AuthorizationAgent,
     val requestedOf: AuthorizationAgent,
-    val approvedBy: AuthorizationAgent?,
+    val decidedBy: AuthorizationAgent?,
     val authorizationGrants: List<AuthorizationGrant>?,
     val pdfBytes: ByteArray,
 ) {
@@ -108,7 +108,7 @@ data class AuthorizationDocument(
                 requestedBy = requestedBy,
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
-                approvedBy = null,
+                decidedBy = null,
                 authorizationGrants = null,
                 pdfBytes = pdfBytes,
             )

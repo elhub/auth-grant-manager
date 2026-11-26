@@ -87,7 +87,7 @@ class UpdateRequestHandlerTest : FunSpec({
     test("accepting records the authorized approver even when different from requestedOf") {
         val approver = requestedOf.copy(id = "other-person")
         val grants = slot<List<AuthorizationGrant>>()
-        val accepted = request.copy(status = AuthorizationRequestStatus.Approved, approvedBy = approver)
+        val accepted = request.copy(status = AuthorizationRequestStatus.Approved, decidedBy = approver)
         coEvery { requestRepository.find(id) } returns request
         coEvery { requestRepository.accept(id, capture(grants), TextLanguage.NB) } returns accepted
 
@@ -99,7 +99,7 @@ class UpdateRequestHandlerTest : FunSpec({
 
     test("accepting creates grants approved by requestedOf and stores the text language") {
         val grants = slot<List<AuthorizationGrant>>()
-        val accepted = request.copy(status = AuthorizationRequestStatus.Approved, approvedBy = requestedOf)
+        val accepted = request.copy(status = AuthorizationRequestStatus.Approved, decidedBy = requestedOf)
         coEvery { requestRepository.find(id) } returns request
         coEvery { requestRepository.accept(id, capture(grants), TextLanguage.NN) } returns accepted
 

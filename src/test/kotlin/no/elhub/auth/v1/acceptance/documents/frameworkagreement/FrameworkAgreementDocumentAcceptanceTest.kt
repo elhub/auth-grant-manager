@@ -300,7 +300,7 @@ class FrameworkAgreementDocumentAcceptanceTest : FunSpec({
 
             val document = documentApiClient.get(id = documentId, by = energySupplier.caller())
                 .shouldHaveField("data.attributes.status", "Approved")
-                .shouldHaveField("data.relationships.approvedBy.data.type", "Person")
+                .shouldHaveField("data.relationships.decidedBy.data.type", "Person")
             val grantId = document.singleRelatedId("authorizationGrants")
             val grant = documentApiClient.getGrant(id = grantId, by = energySupplier.caller()).shouldHaveStatus(HttpStatusCode.OK)
             val createdAt = requireNotNull(grant.field("data.attributes.createdAt"))

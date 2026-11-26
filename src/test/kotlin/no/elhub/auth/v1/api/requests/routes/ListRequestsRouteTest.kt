@@ -100,7 +100,7 @@ class ListRequestsRouteTest : FunSpec({
         )
         val accepted = request.copy(
             status = AuthorizationRequestStatus.Approved,
-            approvedBy = request.requestedOf,
+            decidedBy = request.requestedOf,
             authorizationGrants = listOf(grant),
         )
         coEvery { handler(authorizedAgent, Pagination(), emptyList()) } returns

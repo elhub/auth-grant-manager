@@ -427,6 +427,7 @@ class CommonRequestBehaviorAcceptanceTest : FunSpec({
 
             requestApiClient.approve(id = requestId, by = approver.caller(onBehalfOf = requestedOf)).shouldHaveStatus(HttpStatusCode.OK)
                 .shouldHaveField("data.attributes.status", "Approved")
+                .shouldHaveField("data.relationships.decidedBy.data.id", approver.id)
             val grant = requestApiClient.getGrant(
                 id = requestApiClient.grantIds(requestId = requestId, by = energySupplier.caller()).single(),
                 by = energySupplier.caller(),

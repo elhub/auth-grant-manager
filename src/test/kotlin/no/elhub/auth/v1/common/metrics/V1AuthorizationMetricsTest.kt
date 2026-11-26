@@ -48,7 +48,7 @@ class V1AuthorizationMetricsTest : FunSpec({
             it[requestedBy] = party
             it[requestedPrincipal] = party
             it[requestedOf] = party
-            it[approvedBy] = if (approved) party else null
+            it[decidedBy] = if (approved) party else null
             it[approvedAt] = if (approved && timestamped) now() else null
             it[meta] = JsonObject(emptyMap())
         }
@@ -61,7 +61,7 @@ class V1AuthorizationMetricsTest : FunSpec({
             it[requestedBy] = party
             it[requestedPrincipal] = party
             it[requestedOf] = party
-            it[approvedBy] = if (approved) party else null
+            it[decidedBy] = if (approved) party else null
             it[signedAt] = if (approved && timestamped) now() else null
             it[meta] = JsonObject(emptyMap())
             it[file] = ByteArray(0)

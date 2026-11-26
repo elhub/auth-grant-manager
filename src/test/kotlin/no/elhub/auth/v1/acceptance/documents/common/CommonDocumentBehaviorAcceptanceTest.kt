@@ -250,7 +250,7 @@ class CommonDocumentBehaviorAcceptanceTest : FunSpec({
 
             documentApiClient.get(id = documentId, by = energySupplier.caller())
                 .shouldHaveField("data.attributes.status", "Approved")
-                .shouldHaveField("data.relationships.approvedBy.data.type", "Person")
+                .shouldHaveField("data.relationships.decidedBy.data.type", "Person")
             documentApiClient.getGrant(
                 id = documentApiClient.grantIds(documentId = documentId, by = energySupplier.caller()).single(),
                 by = energySupplier.caller(),
