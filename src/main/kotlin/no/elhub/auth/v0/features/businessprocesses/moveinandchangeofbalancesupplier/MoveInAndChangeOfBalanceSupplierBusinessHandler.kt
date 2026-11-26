@@ -7,7 +7,6 @@ import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.common.structuredata.meteringpoints.AccessType.OWNED
 import no.elhub.auth.common.structuredata.organisations.PartyStatus
 import no.elhub.auth.common.structuredata.organisations.PartyType
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
@@ -24,6 +23,7 @@ import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesuppl
 import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesupplier.domain.toMoveInAndChangeOfBalanceSupplierBusinessModel
 import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesupplier.domain.toRequestCommand
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v0.features.common.CreateScopeData
@@ -54,6 +54,7 @@ private fun moveInRequestValidTo() = todayOslo().plus(DatePeriod(days = MOVE_IN_
 private fun moveInGrantValidTo() = todayOslo().plus(DatePeriod(years = MOVE_IN_GRANT_VALID_YEARS))
 
 class MoveInAndChangeOfBalanceSupplierBusinessHandler(
+    private val endUsersService: EndUsersService,
     private val organisationsService: OrganisationsService,
     private val meteringPointsService: MeteringPointsService,
     private val stromprisService: StromprisService,
@@ -188,7 +189,22 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             }
         }.getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.MeteringPointNotFound.left() }
 
-        if (meteringPoint.data.relationships.endUser != null && meteringPoint.data.attributes?.accessType == OWNED) {
+        val currentEndUserId = endUsersService.getEndUserByMeteringPointId(meteringPointId = model.requestedForMeteringPointId)
+            .fold(
+                ifLeft = { err ->
+                    when (err) {
+                        ClientError.NotFound -> null
+                        else -> return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+                    }
+                },
+                ifRight = { response ->
+                    response.data.attributes?.endUserId
+                        ?.takeIf { it.isNotBlank() }
+                        ?: return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+                }
+            )
+
+        if (currentEndUserId == model.requestedFrom.id) {
             return MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromIsMeteringPointEndUser.left()
         }
 

@@ -15,6 +15,9 @@ import no.elhub.auth.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType.Organization
 import no.elhub.auth.common.auth.PartyType.Person
+import no.elhub.auth.common.structuredata.endusers.EndUserAttributes
+import no.elhub.auth.common.structuredata.endusers.EndUserResponse
+import no.elhub.auth.common.structuredata.endusers.EndUserType
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.datasharing.Attributes
@@ -25,6 +28,7 @@ import no.elhub.auth.v0.features.businessprocesses.ediel.EdielPartyRedirectRespo
 import no.elhub.auth.v0.features.businessprocesses.ediel.EdielRedirectUrlsDto
 import no.elhub.auth.v0.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -83,6 +87,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         val edielService = mockk<EdielService>()
         val jwtTokenProvider = mockk<JwtTokenProvider>()
         coEvery { jwtTokenProvider.getToken() } returns "token"
+        val mockkEndUsersService = mockk<EndUsersService>()
 
         beforeSpec {
             meteringPointsService = MeteringPointsApi(
@@ -100,6 +105,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 jwtTokenProvider
             )
             handler = ChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 meteringPointsService = meteringPointsService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
@@ -112,11 +118,20 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         beforeTest {
             MDC.put(TRACE_ID_MDC_KEY, UUID.randomUUID().toString())
-            clearMocks(edielService, answers = false, recordedCalls = true)
+            clearMocks(edielService, mockkEndUsersService, answers = false, recordedCalls = true)
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
                 EdielPartyRedirectResponseDto(
                     redirectUrls = EdielRedirectUrlsDto(
                         production = "https://example.com"
+                    )
+                )
+            )
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(any()) } returns Either.Right(
+                EndUserResponse(
+                    data = JsonApiResponseResourceObject(
+                        id = END_USER_ID_1,
+                        type = "end-user",
+                        attributes = EndUserAttributes(endUserUniqueId = END_USER_ID_1, endUserType = EndUserType.Person, endUserId = END_USER_ID_1)
                     )
                 )
             )
@@ -190,6 +205,60 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
             handler.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
+        }
+
+        test("request validation fails when requestedFrom is not found") {
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } returns Either.Left(ClientError.NotFound)
+            val model =
+                CreateRequestBusinessModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    meta =
+                    CreateRequestBusinessMeta(
+                        requestedFromName = "From",
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Validation(ChangeOfBalanceSupplierValidationError.RequestedFromNotMeteringPointEndUser.message))
+        }
+
+        test("request validation fails on end user response not having endUserId") {
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } returns Either.Right(
+                EndUserResponse(
+                    data = JsonApiResponseResourceObject(
+                        id = END_USER_ID_1,
+                        type = "end-user",
+                        attributes = EndUserAttributes(endUserUniqueId = END_USER_ID_1, endUserType = EndUserType.Person)
+                    )
+                )
+            )
+            val model =
+                CreateRequestBusinessModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    meta =
+                    CreateRequestBusinessMeta(
+                        requestedFromName = "From",
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfBalanceSupplierValidationError.UnexpectedError.message))
         }
 
         test("request validation fails on invalid metering point") {
@@ -356,6 +425,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation in test environment uses test URL from Ediel") {
             val handlerWithTestEnvironment = ChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 meteringPointsService = meteringPointsService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
@@ -395,6 +465,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         test("request validation skips redirect URI validation when feature toggle is disabled") {
             val mockEdielService = mockk<EdielService>()
             val handlerWithRedirectValidationDisabled = ChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 meteringPointsService = meteringPointsService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
@@ -499,6 +570,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             } returns Either.Left(ClientError.BadRequest)
             val handlerWithMockedService = ChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 meteringPointsService = mockMeteringPointsService,
                 organisationsService = organisationsService,
                 stromprisService = stromprisService,
@@ -538,6 +610,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             } returns Either.Left(ClientError.ServerError)
             val handlerWithMockedService = ChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 meteringPointsService = meteringPointsService,
                 organisationsService = mockOrganisationsService,
                 stromprisService = stromprisService,
@@ -565,6 +638,34 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
 
             handlerWithMockedService.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfBalanceSupplierValidationError.UnexpectedError.message))
+        }
+
+        test("request validation fails with UnexpectedError when a non-validation-specific error happens in end users service") {
+            coEvery {
+                mockkEndUsersService.getEndUserByMeteringPointId(
+                    any()
+                )
+            } returns Either.Left(ClientError.ServerError)
+
+            val model =
+                CreateRequestBusinessModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    meta =
+                    CreateRequestBusinessMeta(
+                        requestedFromName = "From",
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfBalanceSupplierValidationError.UnexpectedError.message))
         }
 
@@ -609,6 +710,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             )
             val handlerWithMockedStromprisService = ChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 meteringPointsService = meteringPointsService,
                 organisationsService = organisationsService,
                 stromprisService = mockStromprisService,

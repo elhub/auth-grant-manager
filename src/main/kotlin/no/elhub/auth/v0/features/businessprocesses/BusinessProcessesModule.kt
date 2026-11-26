@@ -13,6 +13,7 @@ fun Application.businessProcessesModule() {
     dependencies {
         provide<ChangeOfBalanceSupplierBusinessHandler> {
             ChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = resolve(),
                 meteringPointsService = resolve(),
                 organisationsService = resolve(),
                 stromprisService = resolve(),
@@ -24,6 +25,7 @@ fun Application.businessProcessesModule() {
         }
         provide<MoveInAndChangeOfBalanceSupplierBusinessHandler> {
             MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = resolve(),
                 meteringPointsService = resolve(),
                 organisationsService = resolve(),
                 stromprisService = resolve(),
