@@ -715,21 +715,23 @@ class ExposedGrantRepositoryTest : FunSpec({
             val grant = insertGrant(type = type, scopes = listOf(constrained, unconstrained))
 
             val changedBy = if (status == AuthorizationGrantStatus.Exhausted) agent(AgentType.System) else grant.principal
-            val result = repository.update(grant.id, status, changedBy)
+            val changedByActor = if (status == AuthorizationGrantStatus.Exhausted) changedBy else agent(AgentType.Person)
+            val result = repository.update(grant.id, status, changedBy, changedByActor)
 
             result.updatedAt shouldBeGreaterThan grant.updatedAt
             assertGrant(result, grant.copy(status = status, updatedAt = result.updatedAt))
             assertGrant(repository.find(grant.id), result)
             val audit = auditRows(grant.id).single()
             audit[AuthorizationAuditLogTable.changedAt] shouldBe result.updatedAt
-            audit[AuthorizationAuditLogTable.changedBy] shouldBe changedBy.id
+            audit[AuthorizationAuditLogTable.changedByPrincipal] shouldBe changedBy.id
+            audit[AuthorizationAuditLogTable.changedByActor] shouldBe changedByActor.id
             audit[AuthorizationAuditLogTable.valueChanged] shouldBe "status"
             audit[AuthorizationAuditLogTable.valueBefore] shouldBe "Active"
             audit[AuthorizationAuditLogTable.valueAfter] shouldBe status.name
             audit[AuthorizationAuditLogTable.message] shouldBe null
 
             shouldThrow<RepositoryWriteError.ConflictError> {
-                repository.update(grant.id, status, changedBy)
+                repository.update(grant.id, status, changedBy, changedByActor)
             }
 
             assertGrant(repository.find(grant.id), result)
@@ -739,7 +741,9 @@ class ExposedGrantRepositoryTest : FunSpec({
         }
         illegalTransitions.forEach { (type, status) ->
             val grant = insertGrant(type = type, scopes = listOf(constrained, unconstrained))
-            val error = shouldThrow<RepositoryWriteError.ConflictError> { repository.update(grant.id, status, grant.principal) }
+            val error = shouldThrow<RepositoryWriteError.ConflictError> {
+                repository.update(grant.id, status, grant.principal, grant.principal)
+            }
             error.detail shouldBe "Invalid transition for grant ${grant.id} from Active to $status"
             auditRows(grant.id) shouldBe emptyList()
         }
@@ -749,7 +753,7 @@ class ExposedGrantRepositoryTest : FunSpec({
         AuthorizationGrantType.entries.forEach { type ->
             val expired = insertGrant(type = type, validTo = past)
             AuthorizationGrantStatus.entries.forEach { target ->
-                shouldThrow<RepositoryWriteError.ExpiredError> { repository.update(expired.id, target, expired.principal) }
+                shouldThrow<RepositoryWriteError.ExpiredError> { repository.update(expired.id, target, expired.principal, expired.principal) }
                     .detail shouldBe "Grant ${expired.id} has expired"
                 repository.find(expired.id) shouldBe expired.copy(status = AuthorizationGrantStatus.Expired)
                 auditRows(expired.id) shouldBe emptyList()
@@ -757,7 +761,7 @@ class ExposedGrantRepositoryTest : FunSpec({
             listOf(DatabaseGrantStatus.Revoked, DatabaseGrantStatus.Exhausted).forEach { status ->
                 val terminal = insertGrant(type = type, status = status, validTo = past)
                 shouldThrow<RepositoryWriteError.ConflictError> {
-                    repository.update(terminal.id, AuthorizationGrantStatus.Revoked, terminal.principal)
+                    repository.update(terminal.id, AuthorizationGrantStatus.Revoked, terminal.principal, terminal.principal)
                 }
                 repository.find(terminal.id) shouldBe terminal
                 auditRows(terminal.id) shouldBe emptyList()
@@ -767,9 +771,10 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("update rejects exhaustion of a pending consumable grant without changing the row") {
         val grant = insertGrant(validFrom = future, validTo = future + 1.days, scopes = listOf(constrained, unconstrained))
+        val changedBy = agent(AgentType.System)
 
         shouldThrow<RepositoryWriteError.ConflictError> {
-            repository.update(grant.id, AuthorizationGrantStatus.Exhausted, agent(AgentType.System))
+            repository.update(grant.id, AuthorizationGrantStatus.Exhausted, changedBy, changedBy)
         }
 
         withTransaction {
@@ -792,13 +797,15 @@ class ExposedGrantRepositoryTest : FunSpec({
                 scopes = listOf(constrained, unconstrained),
             )
 
-            val result = repository.update(grant.id, AuthorizationGrantStatus.Revoked, grant.grantedTo)
+            val changedByActor = agent(AgentType.Person)
+            val result = repository.update(grant.id, AuthorizationGrantStatus.Revoked, grant.grantedTo, changedByActor)
 
             result.updatedAt shouldBeGreaterThan grant.updatedAt
             assertGrant(result, grant.copy(status = AuthorizationGrantStatus.Revoked, updatedAt = result.updatedAt))
             assertGrant(repository.find(grant.id), result)
             val audit = auditRows(grant.id).single()
-            audit[AuthorizationAuditLogTable.changedBy] shouldBe grant.grantedTo.id
+            audit[AuthorizationAuditLogTable.changedByPrincipal] shouldBe grant.grantedTo.id
+            audit[AuthorizationAuditLogTable.changedByActor] shouldBe changedByActor.id
             audit[AuthorizationAuditLogTable.valueBefore] shouldBe "Active"
             audit[AuthorizationAuditLogTable.valueAfter] shouldBe "Revoked"
             withTransaction {
@@ -811,8 +818,9 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("update throws a modeled write not found error for an unknown grant") {
         val id = UUID.randomUUID()
+        val changedBy = agent(AgentType.Person)
 
-        shouldThrow<RepositoryWriteError.NotFoundError> { repository.update(id, AuthorizationGrantStatus.Revoked, agent(AgentType.Person)) }
+        shouldThrow<RepositoryWriteError.NotFoundError> { repository.update(id, AuthorizationGrantStatus.Revoked, changedBy, changedBy) }
             .detail shouldBe "Grant not found: $id"
         auditRows(id) shouldBe emptyList()
     }
@@ -822,7 +830,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         shouldThrow<IllegalStateException> {
             withTransaction {
-                repository.update(grant.id, AuthorizationGrantStatus.Revoked, grant.principal)
+                repository.update(grant.id, AuthorizationGrantStatus.Revoked, grant.principal, grant.principal)
                 auditRows(grant.id).size shouldBe 1
                 error("Abort grant update")
             }
@@ -834,10 +842,11 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("an audit write failure rolls back the status update") {
         val grant = insertGrant()
-        val changedBy = AuthorizationAgent("x".repeat(65), AgentType.System)
+        val changedBy = agent(AgentType.System)
+        val changedByActor = AuthorizationAgent("x".repeat(65), AgentType.System)
 
         shouldThrow<IllegalArgumentException> {
-            repository.update(grant.id, AuthorizationGrantStatus.Exhausted, changedBy)
+            repository.update(grant.id, AuthorizationGrantStatus.Exhausted, changedBy, changedByActor)
         }
 
         repository.find(grant.id) shouldBe grant
@@ -853,7 +862,7 @@ class ExposedGrantRepositoryTest : FunSpec({
                 async {
                     ready.await()
                     try {
-                        Result.success(repository.update(grant.id, target, grant.principal))
+                        Result.success(repository.update(grant.id, target, grant.principal, grant.principal))
                     } catch (error: RepositoryWriteError.ConflictError) {
                         Result.failure<AuthorizationGrant>(error)
                     }

@@ -9,12 +9,17 @@ import io.ktor.client.request.setBody
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.install
+import io.ktor.server.routing.Routing
 import io.ktor.server.routing.route
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import no.elhub.auth.common.auth.AuthenticatedActorKey
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.v0.patchJson
 import no.elhub.auth.v0.setupAppWith
@@ -66,22 +71,22 @@ class UpdateGrantRouteTest : FunSpec({
 
     test("PATCH rejects unsupported query parameters without calling the handler") {
         testApplication {
-            setupAppWith(system) {
+            setupGrantAppWith(system) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 
             assertUnsupportedQueryParameters(client, path, method = HttpMethod.Patch)
 
-            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { handler(any(), any(), any(), any(), any()) }
         }
     }
 
     test("PATCH consumes a grant and returns it as JSON:API") {
-        coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable) } returns
+        coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable, system) } returns
             grant.copy(status = AuthorizationGrantStatus.Exhausted)
 
         testApplication {
-            setupAppWith(system) {
+            setupGrantAppWith(system) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 
@@ -100,17 +105,17 @@ class UpdateGrantRouteTest : FunSpec({
             data.relationships.principal.data.id shouldBe principal.id
             data.links.self shouldBe path
             coVerify(exactly = 1) {
-                handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable)
+                handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable, system)
             }
         }
     }
 
     test("PATCH revokes a persistent grant as its principal") {
-        coEvery { handler(id, principal, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent) } returns
+        coEvery { handler(id, principal, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent, principal) } returns
             grant.copy(type = AuthorizationGrantType.Persistent, status = AuthorizationGrantStatus.Revoked)
 
         testApplication {
-            setupAppWith(principal) {
+            setupGrantAppWith(principal) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 
@@ -121,7 +126,7 @@ class UpdateGrantRouteTest : FunSpec({
             data.type shouldBe GrantResourceType.PersistentGrant
             data.attributes.status shouldBe AuthorizationGrantStatus.Revoked
             coVerify(exactly = 1) {
-                handler(id, principal, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent)
+                handler(id, principal, AuthorizationGrantStatus.Revoked, AuthorizationGrantType.Persistent, principal)
             }
         }
     }
@@ -133,11 +138,11 @@ class UpdateGrantRouteTest : FunSpec({
             status = AuthorizationGrantStatus.Pending,
             validFrom = Instant.parse("2099-01-01T00:00:00Z"),
         )
-        coEvery { repository.update(id, AuthorizationGrantStatus.Exhausted, system) } throws
+        coEvery { repository.update(id, AuthorizationGrantStatus.Exhausted, system, system) } throws
             RepositoryWriteError.ConflictError("Cannot exhaust a pending grant")
 
         testApplication {
-            setupAppWith(system) {
+            setupGrantAppWith(system) {
                 route(V1_GRANTS_PATH) { route(updateHandler) }
             }
 
@@ -149,7 +154,7 @@ class UpdateGrantRouteTest : FunSpec({
             error.title shouldBe "Invalid status transition"
             error.detail shouldBe
                 "Only pending or active AuthorizationGrants may be revoked, and only active consumable grants may be exhausted."
-            coVerify(exactly = 1) { repository.update(id, AuthorizationGrantStatus.Exhausted, system) }
+            coVerify(exactly = 1) { repository.update(id, AuthorizationGrantStatus.Exhausted, system, system) }
         }
     }
 
@@ -165,7 +170,7 @@ class UpdateGrantRouteTest : FunSpec({
     ).forEach { (description, input) ->
         test("PATCH returns 422 for $description without calling the handler") {
             testApplication {
-                setupAppWith(system) {
+                setupGrantAppWith(system) {
                     route(V1_GRANTS_PATH) { route(handler) }
                 }
 
@@ -173,14 +178,14 @@ class UpdateGrantRouteTest : FunSpec({
 
                 response.status shouldBe HttpStatusCode.UnprocessableEntity
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe "422"
-                coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+                coVerify(exactly = 0) { handler(any(), any(), any(), any(), any()) }
             }
         }
     }
 
     test("PATCH returns 422 for a wrong resource type without calling the handler") {
         testApplication {
-            setupAppWith(system) {
+            setupGrantAppWith(system) {
                 route(V1_GRANTS_PATH) { route(handler) }
             }
 
@@ -188,7 +193,7 @@ class UpdateGrantRouteTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.UnprocessableEntity
             response.body<JsonApiErrorCollection>().errors.single().status shouldBe "422"
-            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { handler(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -201,10 +206,10 @@ class UpdateGrantRouteTest : FunSpec({
         IllegalStateException("boom") to HttpStatusCode.InternalServerError,
     ).forEach { (error, status) ->
         test("PATCH returns ${status.value} for ${error::class.simpleName}") {
-            coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable) } throws error
+            coEvery { handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable, system) } throws error
 
             testApplication {
-                setupAppWith(system) {
+                setupGrantAppWith(system) {
                     route(V1_GRANTS_PATH) { route(handler) }
                 }
 
@@ -214,9 +219,22 @@ class UpdateGrantRouteTest : FunSpec({
                 response.contentType()?.withoutParameters() shouldBe jsonApiContentType
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe status.value.toString()
                 coVerify(exactly = 1) {
-                    handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable)
+                    handler(id, system, AuthorizationGrantStatus.Exhausted, AuthorizationGrantType.Consumable, system)
                 }
             }
         }
     }
 })
+
+private fun ApplicationTestBuilder.setupGrantAppWith(agent: AuthorizationAgent, routes: Routing.() -> Unit) {
+    application {
+        install(
+            createApplicationPlugin("InjectAuthenticatedActor") {
+                onCall { call -> call.attributes.put(AuthenticatedActorKey, agent) }
+            }
+        )
+    }
+    setupAppWith(agent) {
+        routes()
+    }
+}

@@ -20,6 +20,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import no.elhub.auth.common.ApiHeaders
@@ -56,7 +57,12 @@ class GrantsModuleTest : FunSpec({
             fixture.pdpInput().getValue("token").jsonPrimitive.content shouldBe "test-token"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
             coVerify(exactly = 1) {
-                fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Exhausted, AuthorizationAgent("system-1", AgentType.System))
+                fixture.repository.update(
+                    fixture.grant.id,
+                    AuthorizationGrantStatus.Exhausted,
+                    AuthorizationAgent("system-1", AgentType.System),
+                    AuthorizationAgent("system-1", AgentType.System),
+                )
             }
         }
     }
@@ -67,7 +73,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -85,7 +91,40 @@ class GrantsModuleTest : FunSpec({
             input.getValue("token").jsonPrimitive.content shouldBe "test-token"
             input.getValue("payload").jsonObject.getValue("OnBehalfOfOrganisationId").jsonPrimitive.content shouldBe "999888771"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked, fixture.grant.principal) }
+            coVerify(exactly = 1) {
+                fixture.repository.update(
+                    fixture.grant.id,
+                    AuthorizationGrantStatus.Revoked,
+                    fixture.grant.principal,
+                    AuthorizationAgent("person-1", AgentType.Person),
+                )
+            }
+        }
+    }
+
+    test("PATCH delegated ENDUSER with missing originalId cannot revoke a grant") {
+        GrantPatchFixture(
+            tokenType = "enduser",
+            authInfo = """{"actingId":"organisation-1","actingType":"organisation","actingOrganisationNumber":"999888771"}""",
+            principal = AuthorizationAgent("999888771", AgentType.Organization),
+        ).use { fixture ->
+            val response = fixture.patch(AuthorizationGrantStatus.Revoked, onBehalfOfOrganisation = "999888771")
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
+        }
+    }
+
+    test("PATCH delegated ENDUSER with blank originalId cannot revoke a grant") {
+        GrantPatchFixture(
+            tokenType = "enduser",
+            authInfo = """{"actingId":"organisation-1","actingType":"organisation","originalId":" ","actingOrganisationNumber":"999888771"}""",
+            principal = AuthorizationAgent("999888771", AgentType.Organization),
+        ).use { fixture ->
+            val response = fixture.patch(AuthorizationGrantStatus.Revoked, onBehalfOfOrganisation = "999888771")
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -99,7 +138,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -116,7 +155,7 @@ class GrantsModuleTest : FunSpec({
             input.getValue("token").jsonPrimitive.content shouldBe "test-token"
             input.getValue("payload").jsonObject.getValue("OnBehalfOfOrganisationId").jsonPrimitive.content shouldBe "999888771"
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -130,7 +169,7 @@ class GrantsModuleTest : FunSpec({
             response.status shouldBe HttpStatusCode.Forbidden
             fixture.pdpInput().getValue("token").jsonPrimitive.content shouldBe "test-token"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -143,7 +182,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -156,7 +195,14 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.OK
             response.assertGrant(fixture.grant.id, AuthorizationGrantStatus.Revoked)
-            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked, fixture.grant.principal) }
+            coVerify(exactly = 1) {
+                fixture.repository.update(
+                    fixture.grant.id,
+                    AuthorizationGrantStatus.Revoked,
+                    fixture.grant.principal,
+                    AuthorizationAgent("person-2", AgentType.Person),
+                )
+            }
         }
     }
 
@@ -164,6 +210,7 @@ class GrantsModuleTest : FunSpec({
         GrantPatchFixture(
             tokenType = "maskinporten",
             authInfo = """{"actingGLN":"7080005053246","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}]}""",
+            partyId = "999888777",
         ).use { fixture ->
             val response = fixture.patch(
                 AuthorizationGrantStatus.Revoked,
@@ -179,7 +226,48 @@ class GrantsModuleTest : FunSpec({
             payload.getValue("SenderGLN").jsonPrimitive.content shouldBe "7080005053013"
             payload.getValue("OnBehalfOfGLN").jsonPrimitive.content shouldBe "7080005053246"
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 1) { fixture.repository.update(fixture.grant.id, AuthorizationGrantStatus.Revoked, fixture.grant.grantedTo) }
+            coVerify(exactly = 1) {
+                fixture.repository.update(
+                    fixture.grant.id,
+                    AuthorizationGrantStatus.Revoked,
+                    fixture.grant.grantedTo,
+                    AuthorizationAgent("999888777", AgentType.Organization),
+                )
+            }
+        }
+    }
+
+    test("PATCH Maskinporten with missing tokenInfo partyId cannot revoke a grant") {
+        GrantPatchFixture(
+            tokenType = "maskinporten",
+            authInfo = """{"actingGLN":"7080005053246","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}]}""",
+            partyId = null,
+        ).use { fixture ->
+            val response = fixture.patch(
+                AuthorizationGrantStatus.Revoked,
+                senderGln = "7080005053013",
+                onBehalfOfGln = "7080005053246",
+            )
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
+        }
+    }
+
+    test("PATCH Maskinporten with blank tokenInfo partyId cannot revoke a grant") {
+        GrantPatchFixture(
+            tokenType = "maskinporten",
+            authInfo = """{"actingGLN":"7080005053246","authorizedFunctions":[{"functionCode":"SELF","functionName":"BalanceSupplier"}]}""",
+            partyId = " ",
+        ).use { fixture ->
+            val response = fixture.patch(
+                AuthorizationGrantStatus.Revoked,
+                senderGln = "7080005053013",
+                onBehalfOfGln = "7080005053246",
+            )
+
+            response.status shouldBe HttpStatusCode.Forbidden
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -196,7 +284,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 1) { fixture.repository.find(fixture.grant.id) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -217,7 +305,7 @@ class GrantsModuleTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.Forbidden
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 
@@ -235,7 +323,7 @@ class GrantsModuleTest : FunSpec({
             response.status shouldBe HttpStatusCode.Forbidden
             fixture.pdpInput().getValue("token").jsonPrimitive.content shouldBe "test-token"
             coVerify(exactly = 0) { fixture.repository.find(any()) }
-            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any()) }
+            coVerify(exactly = 0) { fixture.repository.update(any(), any(), any(), any()) }
         }
     }
 })
@@ -244,6 +332,7 @@ private class GrantPatchFixture(
     tokenType: String,
     authInfo: String,
     principal: AuthorizationAgent = AuthorizationAgent("person-2", AgentType.Person),
+    partyId: String? = "system-1",
 ) : AutoCloseable {
     val repository = mockk<GrantRepository>()
     val grant = AuthorizationGrant.new(
@@ -263,7 +352,7 @@ private class GrantPatchFixture(
 
     init {
         coEvery { repository.find(grant.id) } returns grant
-        coEvery { repository.update(grant.id, any(), any()) } answers { grant.copy(status = secondArg()) }
+        coEvery { repository.update(grant.id, any(), any(), any()) } answers { grant.copy(status = secondArg()) }
         pdp.createContext(AUTHINFO_POLICY_ROUTE) { exchange ->
             exchange.use {
                 val body = exchange.requestBody.bufferedReader().use { it.readText() }
@@ -273,7 +362,7 @@ private class GrantPatchFixture(
                     pdpRequest.completeExceptionally(AssertionError("Unexpected PDP request: ${exchange.requestURI}"))
                 }
                 val response =
-                    """{"result":{"tokenInfo":{"partyId":"system-1","tokenStatus":"verified","tokenType":"$tokenType"},"authInfo":$authInfo}}"""
+                    """{"result":{"tokenInfo":{"partyId":${JsonPrimitive(partyId)},"tokenStatus":"verified","tokenType":"$tokenType"},"authInfo":$authInfo}}"""
                         .toByteArray()
                 exchange.responseHeaders.add("Content-Type", "application/json")
                 exchange.sendResponseHeaders(200, response.size.toLong())

@@ -11,8 +11,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.ApiHeaders
+import no.elhub.auth.common.auth.AuthenticatedActorKey
 import no.elhub.auth.common.auth.AuthorizedPartyKey
 import no.elhub.auth.common.auth.UpdateRequestAuthInfoPolicy
+import no.elhub.auth.common.auth.resolveAuthenticatedActor
 import no.elhub.auth.common.auth.resolveAuthorizedParty
 import no.elhub.auth.common.auth.resolveUpdateRequestActor
 import no.elhub.auth.plugin.authorization
@@ -54,11 +56,11 @@ fun Application.configureAuthorization() {
             }
 
             enforce { response ->
-                // Resolve the AuthorizationParty from the PDP response and store it on call attributes
-                // so route handlers can access it via call.authorizedParty
+                // Keep the effective principal and authenticated actor separate for delegated calls.
                 val party = resolveAuthorizedParty(response.result)
                 if (party != null) {
                     attributes.put(AuthorizedPartyKey, party)
+                    resolveAuthenticatedActor(response.result)?.let { attributes.put(AuthenticatedActorKey, it) }
                     true
                 } else {
                     false

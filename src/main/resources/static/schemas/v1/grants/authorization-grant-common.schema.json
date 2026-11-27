@@ -10,7 +10,13 @@
     },
     "status": {
       "description": "Status of the grant. Pending: not yet valid. Active: valid. Exhausted: used. Expired: past validTo. Revoked: withdrawn.",
-      "enum": ["Pending", "Active", "Exhausted", "Expired", "Revoked"]
+      "enum": [
+        "Pending",
+        "Active",
+        "Exhausted",
+        "Expired",
+        "Revoked"
+      ]
     },
     "scopes": {
       "type": "array",

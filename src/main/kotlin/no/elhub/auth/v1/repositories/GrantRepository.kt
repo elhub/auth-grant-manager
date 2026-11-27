@@ -64,7 +64,12 @@ interface GrantRepository {
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
-    suspend fun update(grantId: UUID, newStatus: AuthorizationGrantStatus, changedBy: AuthorizationAgent): AuthorizationGrant
+    suspend fun update(
+        grantId: UUID,
+        newStatus: AuthorizationGrantStatus,
+        changedByPrincipal: AuthorizationAgent,
+        changedByActor: AuthorizationAgent,
+    ): AuthorizationGrant
 }
 
 class ExposedGrantRepository(
@@ -280,7 +285,8 @@ class ExposedGrantRepository(
     override suspend fun update(
         grantId: UUID,
         newStatus: AuthorizationGrantStatus,
-        changedBy: AuthorizationAgent,
+        changedByPrincipal: AuthorizationAgent,
+        changedByActor: AuthorizationAgent,
     ): AuthorizationGrant = withTransaction {
         val row = AuthorizationGrantTable.selectAll()
             .where { AuthorizationGrantTable.id eq grantId }
@@ -313,7 +319,8 @@ class ExposedGrantRepository(
         AuthorizationAuditLogTable.insert {
             it[AuthorizationAuditLogTable.grantId] = grantId
             it[changedAt] = now
-            it[AuthorizationAuditLogTable.changedBy] = changedBy.id
+            it[AuthorizationAuditLogTable.changedByPrincipal] = changedByPrincipal.id
+            it[AuthorizationAuditLogTable.changedByActor] = changedByActor.id
             it[valueChanged] = "status"
             it[valueBefore] = row[AuthorizationGrantTable.status].name
             it[valueAfter] = target.name
@@ -448,7 +455,8 @@ enum class DatabaseGrantStatus {
 object AuthorizationAuditLogTable : Table("auth_v1.authorization_audit_log") {
     val grantId = javaUUID("authorization_grant_id").references(AuthorizationGrantTable.id)
     val changedAt = timestamp("changed_at")
-    val changedBy = varchar("changed_by", 64)
+    val changedByPrincipal = varchar("changed_by_principal", 64)
+    val changedByActor = varchar("changed_by_actor", 64)
     val valueChanged = varchar("value_changed", 64).nullable()
     val valueBefore = varchar("value_before", 255).nullable()
     val valueAfter = varchar("value_after", 255).nullable()
