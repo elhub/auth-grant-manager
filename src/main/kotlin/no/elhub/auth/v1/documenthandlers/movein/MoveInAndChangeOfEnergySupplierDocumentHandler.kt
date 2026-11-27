@@ -50,7 +50,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandler(
         }
 
         val meteringPoints = try {
-            meteringPointsService.getMeteringPointsForOrganisation(
+            meteringPointsService.getMeteringPointsByIds(
                 meteringPointIds = meteringPointIds,
             )
         } catch (e: MeteringPointsLookupException) {

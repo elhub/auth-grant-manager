@@ -162,9 +162,8 @@ class ChangeOfBalanceSupplierBusinessHandler(
             return ChangeOfBalanceSupplierValidationError.MissingRequestedFrom.left()
         }
 
-        val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
+        val meteringPoint = meteringPointsService.getMeteringPointById(
             meteringPointId = model.requestedForMeteringPointId,
-            elhubInternalId = model.requestedFrom.id
         ).mapLeft { err ->
             return when (err) {
                 ClientError.NotFound -> ChangeOfBalanceSupplierValidationError.MeteringPointNotFound.left()

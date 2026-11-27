@@ -564,9 +564,8 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         test("request validation fails with UnexpectedError when a non-validation-specific error happens in metering points service") {
             val mockMeteringPointsService = mockk<MeteringPointsService>()
             coEvery {
-                mockMeteringPointsService.getMeteringPointByIdAndElhubInternalId(
+                mockMeteringPointsService.getMeteringPointById(
                     any(),
-                    any()
                 )
             } returns Either.Left(ClientError.BadRequest)
             val handlerWithMockedService = ChangeOfBalanceSupplierBusinessHandler(

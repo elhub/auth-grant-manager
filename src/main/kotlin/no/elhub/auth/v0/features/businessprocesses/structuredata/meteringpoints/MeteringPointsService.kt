@@ -16,14 +16,12 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.common.mapError
 import org.slf4j.LoggerFactory
 
 interface MeteringPointsService {
-    suspend fun getMeteringPointByIdAndElhubInternalId(
+    suspend fun getMeteringPointById(
         meteringPointId: String,
-        elhubInternalId: String
     ): Either<ClientError, MeteringPointResponse>
 
-    suspend fun getMeteringPointsForOrganisation(
+    suspend fun getMeteringPointsByIds(
         meteringPointIds: List<String>,
-        elhubInternalId: String? = null
     ): List<MeteringPointResponse>
 }
 
@@ -37,16 +35,13 @@ class MeteringPointsApi(
 ) : MeteringPointsService {
     private val logger = LoggerFactory.getLogger(MeteringPointsService::class.java)
 
-    override suspend fun getMeteringPointByIdAndElhubInternalId(meteringPointId: String, elhubInternalId: String): Either<ClientError, MeteringPointResponse> =
-        getMeteringPoint(url = "${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId?endUserId=$elhubInternalId")
+    override suspend fun getMeteringPointById(meteringPointId: String): Either<ClientError, MeteringPointResponse> =
+        getMeteringPoint(url = "${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId")
 
-    override suspend fun getMeteringPointsForOrganisation(
+    override suspend fun getMeteringPointsByIds(
         meteringPointIds: List<String>,
-        elhubInternalId: String?
     ): List<MeteringPointResponse> = meteringPointIds.map { meteringPointId ->
-        getMeteringPoint(
-            url = "${meteringPointsApiConfig.serviceUrl}/metering-points/$meteringPointId${elhubInternalId?.let { "?endUserId=$it" }.orEmpty()}"
-        ).fold(
+        getMeteringPointById(meteringPointId = meteringPointId).fold(
             ifLeft = { throw MeteringPointsLookupException(it) },
             ifRight = { it },
         )
