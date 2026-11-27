@@ -15,10 +15,10 @@ import no.elhub.auth.v1.acceptance.support.customerOrganization
 import no.elhub.auth.v1.acceptance.support.exampleApprover
 import no.elhub.auth.v1.acceptance.support.exampleSupplier
 import no.elhub.auth.v1.acceptance.support.instant
-import no.elhub.auth.v1.acceptance.support.osloStartOfDay
 import no.elhub.auth.v1.acceptance.support.text
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.time.toKotlinInstant
 
 private val customerMeteringPointIds = listOf("707057500000000001", "707057500000000002")
@@ -61,17 +61,18 @@ class MoveInRequestAcceptanceTest : FunSpec({
 
     test("Approval with a move-in date creates one consumable grant per point, valid through the Oslo date two years after approval") {
         stubMoveInRequestApproval(customerMeteringPointIds)
-        val moveInDate = todayInOslo.toString()
+        val moveInDate = todayInOslo
+        val expectedScopeValidFrom = moveInDate.atStartOfDay(oslo).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
         val createdRequest = requestApiClient.create(
-            moveInRequestPayload(customerOrganization, customerMeteringPointIds, moveInDate),
+            moveInRequestPayload(customerOrganization, customerMeteringPointIds, moveInDate.toString()),
             exampleSupplier.caller(),
         ).shouldHaveStatus(HttpStatusCode.Created)
 
         createdRequest.shouldHaveField("data.attributes.requestType", "MoveInAndChangeOfEnergySupplierForOrganization")
             .shouldHaveField("data.meta.energySupplierName", exampleSupplier.name)
             .shouldHaveField("data.meta.organizationName", customerOrganization.name)
-            .shouldHaveField("data.meta.moveInDate", moveInDate)
+            .shouldHaveField("data.meta.moveInDate", moveInDate.toString())
         createdRequest.shouldHaveJson(
             "data.attributes.requestedScopes",
             """
@@ -80,7 +81,7 @@ class MoveInRequestAcceptanceTest : FunSpec({
               "appliesTo": [{ "attribute": "meteringPoint.id", "value": ["${customerMeteringPointIds[0]}", "${customerMeteringPointIds[1]}"] }],
               "allowedChanges": [
                 { "attribute": "type", "value": ["EndUser", "EnergySupplier"] },
-                { "attribute": "validFrom", "value": ["${osloStartOfDay(0)}"] }
+                { "attribute": "validFrom", "value": ["$expectedScopeValidFrom"] }
               ]
             }]
             """,
@@ -115,7 +116,7 @@ class MoveInRequestAcceptanceTest : FunSpec({
                   "appliesTo": [{ "attribute": "meteringPoint.id", "value": ["$grantedMeteringPointId"] }],
                   "allowedChanges": [
                     { "attribute": "type", "value": ["EndUser", "EnergySupplier"] },
-                    { "attribute": "validFrom", "value": ["${osloStartOfDay(0)}"] }
+                    { "attribute": "validFrom", "value": ["$expectedScopeValidFrom"] }
                   ]
                 }]
                 """,

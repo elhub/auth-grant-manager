@@ -15,11 +15,11 @@ import no.elhub.auth.v1.acceptance.support.caller
 import no.elhub.auth.v1.acceptance.support.customerOrganization
 import no.elhub.auth.v1.acceptance.support.exampleSupplier
 import no.elhub.auth.v1.acceptance.support.instant
-import no.elhub.auth.v1.acceptance.support.osloStartOfDay
 import no.elhub.auth.v1.acceptance.support.shouldBeWithin
 import no.elhub.auth.v1.acceptance.support.text
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toKotlinInstant
@@ -64,17 +64,18 @@ class MoveInDocumentAcceptanceTest : FunSpec({
 
     test("Signing with a move-in date creates one consumable grant per point, valid through the Oslo date two years after signing") {
         stubMoveInDocumentSigning(customerMeteringPointIds)
-        val moveInDate = LocalDate.now(oslo).toString()
+        val moveInDate = LocalDate.now(oslo)
+        val expectedScopeValidFrom = moveInDate.atStartOfDay(oslo).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
         val createdDocument = documentApiClient.create(
-            payload = moveInDocumentPayload(customerOrganization, customerMeteringPointIds, moveInDate),
+            payload = moveInDocumentPayload(customerOrganization, customerMeteringPointIds, moveInDate.toString()),
             by = exampleSupplier.caller(),
         ).shouldHaveStatus(HttpStatusCode.Created)
             .shouldHaveField("data.attributes.status", "Pending")
             .shouldHaveField("data.attributes.documentType", "MoveInAndChangeOfEnergySupplierForOrganization")
             .shouldHaveField("data.meta.energySupplierName", exampleSupplier.name)
             .shouldHaveField("data.meta.organizationName", customerOrganization.name)
-            .shouldHaveField("data.meta.validFrom", moveInDate)
+            .shouldHaveField("data.meta.validFrom", moveInDate.toString())
         createdDocument.shouldHaveJson(
             "data.attributes.requestedScopes",
             """
@@ -83,7 +84,7 @@ class MoveInDocumentAcceptanceTest : FunSpec({
               "appliesTo": [{ "attribute": "meteringPoint.id", "value": ["${customerMeteringPointIds[0]}", "${customerMeteringPointIds[1]}"] }],
               "allowedChanges": [
                 { "attribute": "type", "value": ["EndUser", "EnergySupplier"] },
-                { "attribute": "validFrom", "value": ["${osloStartOfDay(0)}"] }
+                { "attribute": "validFrom", "value": ["$expectedScopeValidFrom"] }
               ]
             }]
             """,
@@ -123,7 +124,7 @@ class MoveInDocumentAcceptanceTest : FunSpec({
                   "appliesTo": [{ "attribute": "meteringPoint.id", "value": ["$grantedMeteringPointId"] }],
                   "allowedChanges": [
                     { "attribute": "type", "value": ["EndUser", "EnergySupplier"] },
-                    { "attribute": "validFrom", "value": ["${osloStartOfDay(0)}"] }
+                    { "attribute": "validFrom", "value": ["$expectedScopeValidFrom"] }
                   ]
                 }]
                 """,
