@@ -20,8 +20,8 @@ import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.repositories.DocumentRepository
 import no.elhub.auth.v1.repositories.GrantRepository
 import no.elhub.auth.v1.repositories.RepositoryReadError
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GetDocumentHandlerTest : FunSpec({
     val documentRepository = mockk<DocumentRepository>()
@@ -41,7 +41,7 @@ class GetDocumentHandlerTest : FunSpec({
         requestedOf = requestedOf,
         pdfBytes = "%PDF-1.7\nexample document".toByteArray(),
     )
-    val documentId = UUID.fromString(document.id)
+    val documentId = Uuid.parse(document.id)
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
@@ -69,7 +69,7 @@ class GetDocumentHandlerTest : FunSpec({
     }
 
     test("returns all corresponding grants regardless of their status") {
-        val revokedGrant = grant.copy(id = UUID.randomUUID(), status = AuthorizationGrantStatus.Revoked)
+        val revokedGrant = grant.copy(id = Uuid.random(), status = AuthorizationGrantStatus.Revoked)
         val grants = listOf(grant, revokedGrant)
         coEvery { documentRepository.find(documentId) } returns document
         coEvery {

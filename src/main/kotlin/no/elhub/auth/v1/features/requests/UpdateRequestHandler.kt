@@ -8,7 +8,7 @@ import no.elhub.auth.v1.domain.TextLanguage
 import no.elhub.auth.v1.repositories.RepositoryWriteError
 import no.elhub.auth.v1.repositories.RequestRepository
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 class UpdateRequestHandler(
     private val requestRepository: RequestRepository,
@@ -17,7 +17,7 @@ class UpdateRequestHandler(
     private val logger = LoggerFactory.getLogger(UpdateRequestHandler::class.java)
 
     suspend operator fun invoke(
-        id: UUID,
+        id: Uuid,
         authorizedAgent: AuthorizationAgent,
         status: AuthorizationRequestStatus,
         textLanguage: TextLanguage,

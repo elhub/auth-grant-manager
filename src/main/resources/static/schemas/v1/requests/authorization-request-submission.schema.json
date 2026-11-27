@@ -3,15 +3,18 @@
   "title": "Authorization Request Submission",
   "description": "Schema for creating an authorization request.",
   "type": "object",
+  "required": ["data"],
   "properties": {
     "data": {
       "type": "object",
+      "required": ["type", "attributes", "meta"],
       "properties": {
         "type": {
           "$ref": "authorization-request-common.schema.json#/$defs/type"
         },
         "attributes": {
           "type": "object",
+          "required": ["requestType"],
           "properties": {
             "requestType": {
               "$ref": "authorization-request-common.schema.json#/$defs/requestType"
@@ -35,14 +38,7 @@
         },
         "meta": {
           "type": "object",
-          "properties": {
-            "requestedPrincipal": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestedPrincipal"
-            },
-            "requestedOf": {
-              "$ref": "authorization-request-common.schema.json#/$defs/requestedOf"
-            }
-          }
+          "additionalProperties": true
         }
       }
     }

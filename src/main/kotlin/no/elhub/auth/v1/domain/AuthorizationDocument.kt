@@ -3,9 +3,9 @@ package no.elhub.auth.v1.domain
 import kotlinx.serialization.json.JsonObject
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.documents.DocumentSpecification
-import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 data class AuthorizationDocument(
     val id: String,
@@ -23,7 +23,7 @@ data class AuthorizationDocument(
     val requestedBy: AuthorizationAgent,
     val requestedPrincipal: AuthorizationAgent,
     val requestedOf: AuthorizationAgent,
-    val approvedBy: AuthorizationAgent?,
+    val decidedBy: AuthorizationAgent?,
     val authorizationGrants: List<AuthorizationGrant>?,
     val pdfBytes: ByteArray,
 ) {
@@ -93,7 +93,7 @@ data class AuthorizationDocument(
         ): AuthorizationDocument {
             val now = Clock.System.now()
             return AuthorizationDocument(
-                id = UUID.randomUUID().toString(),
+                id = Uuid.random().toString(),
                 documentType = documentType,
                 status = AuthorizationDocumentStatus.Pending,
                 requestedScopes = requestedScopes,
@@ -108,7 +108,7 @@ data class AuthorizationDocument(
                 requestedBy = requestedBy,
                 requestedPrincipal = requestedPrincipal,
                 requestedOf = requestedOf,
-                approvedBy = null,
+                decidedBy = null,
                 authorizationGrants = null,
                 pdfBytes = pdfBytes,
             )

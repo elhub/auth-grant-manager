@@ -71,9 +71,7 @@ jq -e '
 log "Created document=$DOCUMENT_ID"
 
 # Sign through BankID and confirm the signed PDF with Grant Manager.
-APPROVAL_DAY_BEFORE=$(TZ=Europe/Oslo date +%F)
 sign_and_confirm "$BASE" "$DOCUMENT_ID"
-APPROVAL_DAY_AFTER=$(TZ=Europe/Oslo date +%F)
 
 # Approval must produce exactly one persistent grant and identify the signer.
 api_request GET "$BASE/authorization-documents/$DOCUMENT_ID" 200 "$WORK_DIR/approved.json"
@@ -82,8 +80,8 @@ jq -e '
   .data.id == $id and
   .data.attributes.status == "Approved" and
   .data.attributes.requestedScopes == [$scope] and
-  .data.relationships.approvedBy.data.type == "Person" and
-  (.data.relationships.approvedBy.data.id | type == "string" and length > 0) and
+  .data.relationships.decidedBy.data.type == "Person" and
+  (.data.relationships.decidedBy.data.id | type == "string" and length > 0) and
   (.data.relationships.authorizationGrants.data | length) == 1 and
   .data.relationships.authorizationGrants.data[0].type == "PersistentGrant"
 ' --arg id "$DOCUMENT_ID" --argjson scope "$EXPECTED_SCOPE" "$WORK_DIR/approved.json" > /dev/null \
@@ -102,7 +100,7 @@ jq -e '
   .data.relationships.principal == $created[0].data.relationships.requestedPrincipal and
   .data.relationships.grantedBy == $created[0].data.relationships.requestedOf and
   .data.relationships.grantedTo == $created[0].data.relationships.requestedBy and
-  .data.relationships.approvedBy == $approved[0].data.relationships.approvedBy and
+  .data.relationships.approvedBy == $approved[0].data.relationships.decidedBy and
   .data.relationships.source.data == {type: "AuthorizationDocument", id: $document}
 ' --arg grant "$GRANT_ID" \
   --arg document "$DOCUMENT_ID" \
@@ -111,16 +109,16 @@ jq -e '
   --slurpfile approved "$WORK_DIR/approved.json" "$WORK_DIR/grant.json" > /dev/null \
   || fail 'Persistent grant has unexpected permissions, parties, or document source'
 
-# Compare instants regardless of response offset; allow signing across midnight.
+# Compare instants regardless of response offset.
 ACTUAL_END=$(jq -er '.data.attributes.validTo' "$WORK_DIR/grant.json")
 [[ "$(date -d "$ACTUAL_END" +%s)" == "$(date -d "$VALID_TO" +%s)" ]] || fail 'Unexpected grant expiry'
 
 ACTUAL_START=$(jq -er '.data.attributes.validFrom' "$WORK_DIR/grant.json")
-START_DAY=$(TZ=Europe/Oslo date -d "$ACTUAL_START" +%F)
-
-[[ "$START_DAY" == "$APPROVAL_DAY_BEFORE" || "$START_DAY" == "$APPROVAL_DAY_AFTER" ]] \
-  || fail 'Unexpected grant start day'
-[[ "$(TZ=Europe/Oslo date -d "$ACTUAL_START" +%T)" == '00:00:00' ]] \
-  || fail 'Grant must start at Oslo midnight'
+CREATED_AT=$(jq -er '.data.attributes.createdAt' "$WORK_DIR/grant.json")
+# No start was requested, so validity starts when confirmation creates the grant.
+ACTUAL_START=$(date -d "$ACTUAL_START" +%s.%N)
+CREATED_AT=$(date -d "$CREATED_AT" +%s.%N)
+[[ "$ACTUAL_START" == "$CREATED_AT" ]] \
+  || fail 'Grant must start at confirmation'
 
 log "PASS: approved framework agreement; persistent grant=$GRANT_ID; parties, scope and validity verified"

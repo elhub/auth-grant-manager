@@ -40,8 +40,12 @@ http_request() {
 }
 
 api_request() {
+  local sender_header=SenderGln
+  if [[ "$2" == */access/v1/* ]]; then
+    sender_header=Elhub-Sender-Gln
+  fi
   http_request "$@" -H "Authorization: Bearer $MASKINPORTEN_TOKEN" \
-    -H "SenderGln: $SENDER_GLN" -H "User-Agent: $USER_AGENT" -H 'Accept: application/json'
+    -H "$sender_header: $SENDER_GLN" -H "User-Agent: $USER_AGENT" -H 'Accept: application/json'
 }
 
 json_id() {

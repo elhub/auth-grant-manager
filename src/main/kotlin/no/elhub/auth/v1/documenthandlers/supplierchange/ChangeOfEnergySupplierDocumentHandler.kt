@@ -7,6 +7,7 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientEr
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.meteringpoints.toPdfContent
 import no.elhub.auth.v1.common.meteringpoints.toRequestedMeteringPointMetadata
 import no.elhub.auth.v1.documenthandlers.common.toPdfLanguage
@@ -24,6 +25,7 @@ private const val DOCUMENT_VALID_DAYS = 28
 class ChangeOfEnergySupplierDocumentHandler(
     private val meteringPointsService: MeteringPointsService,
     private val organisationsService: OrganisationsService,
+    private val authorizationRulesService: AuthorizationRulesService,
 ) : HandlerContract {
     override suspend fun prepare(
         specification: DocumentSpecification.ChangeOfEnergySupplierForOrganization,
@@ -38,16 +40,24 @@ class ChangeOfEnergySupplierDocumentHandler(
                         ?: throw DocumentPreparationError.RequestedPrincipalLookupFailure(ClientError.NotFound)
                 },
             )
+        val meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted()
+        val writeAccess = authorizationRulesService.checkMeteringPointWriteAccess(
+            principalElhubInternalId = requestedPrincipalElhubInternalId,
+            meteringPointIds = meteringPointIds,
+        )
+        if (!writeAccess.hasWriteAccessToAll(meteringPointIds)) {
+            throw DocumentPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints()
+        }
+
         val meteringPoints = try {
-            meteringPointsService.getMeteringPointsForOrganisation(
-                meteringPointIds = specification.meteringPointIds.ids.map { it.value }.sorted(),
-                elhubInternalId = requestedPrincipalElhubInternalId,
+            meteringPointsService.getMeteringPointsByIds(
+                meteringPointIds = meteringPointIds
             )
         } catch (e: MeteringPointsLookupException) {
             throw e.clientError.toDocumentPreparationError()
         }
 
-        val balanceSupplierName = organisationsService
+        val energySupplierName = organisationsService
             .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
                 ifLeft = { throw DocumentPreparationError.RequestedByLookupFailure(it) },
@@ -64,7 +74,7 @@ class ChangeOfEnergySupplierDocumentHandler(
 
         val metadata = ChangeOfEnergySupplierDocumentMetadata(
             requestedMeteringPoints = meteringPoints.toRequestedMeteringPointMetadata(),
-            balanceSupplierName = balanceSupplierName,
+            energySupplierName = energySupplierName,
             organizationName = organisationName,
         )
 
@@ -74,7 +84,7 @@ class ChangeOfEnergySupplierDocumentHandler(
                 organizationName = organisationName,
                 organizationNumber = context.requestedPrincipal.id,
                 meteringPoints = metadata.requestedMeteringPoints.map { it.toPdfContent() },
-                balanceSupplierName = balanceSupplierName,
+                balanceSupplierName = energySupplierName,
                 agreementReference = context.externalReference,
             ),
             validTo = Clock.System.now() + DOCUMENT_VALID_DAYS.days,

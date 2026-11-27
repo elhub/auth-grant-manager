@@ -66,7 +66,7 @@ class TracingTest : FunSpec({
             }
         }
 
-        test("accepts the other header for $version and replies with $header") {
+        test("${if (version == "v0") "accepts" else "ignores"} the other header for $version and replies with $header") {
             testApplication {
                 application {
                     configureRequestTracing()
@@ -77,8 +77,14 @@ class TracingTest : FunSpec({
                 val response = client.get("/access/$version/call-id") {
                     headers.append(otherHeader, traceId)
                 }
-                response.bodyAsText() shouldBe traceId
-                response.headers[header] shouldBe traceId
+                val resolvedTraceId = response.bodyAsText()
+                if (version == "v0") {
+                    resolvedTraceId shouldBe traceId
+                } else {
+                    UUID.fromString(resolvedTraceId).toString() shouldBe resolvedTraceId
+                    (resolvedTraceId == traceId) shouldBe false
+                }
+                response.headers[header] shouldBe resolvedTraceId
                 response.headers[otherHeader].shouldBeNull()
             }
         }
@@ -200,7 +206,7 @@ class TracingTest : FunSpec({
         }
     }
 
-    test("v1 rejects an invalid legacy trace header") {
+    test("v1 ignores an invalid legacy trace header") {
         testApplication {
             application {
                 configureSerialization()
@@ -212,10 +218,11 @@ class TracingTest : FunSpec({
             val response = jsonClient.get("/access/v1/call-id") {
                 headers.append(ELHUB_TRACE_ID_HEADER, "not-a-uuid")
             }
-            response.status shouldBe HttpStatusCode.BadRequest
-            response.headers[V1_ELHUB_TRACE_ID_HEADER].shouldBeNull()
-            val body: JsonApiErrorCollection = response.body()
-            body.errors[0].detail shouldBe "Elhub-Trace-Id header must be a valid UUID"
+            response.status shouldBe HttpStatusCode.OK
+            val generatedTraceId = response.bodyAsText()
+            UUID.fromString(generatedTraceId).toString() shouldBe generatedTraceId
+            response.headers[V1_ELHUB_TRACE_ID_HEADER] shouldBe generatedTraceId
+            response.headers[ELHUB_TRACE_ID_HEADER].shouldBeNull()
         }
     }
 })

@@ -3,9 +3,11 @@
   "title": "Authorization Document Submission",
   "description": "Schema for creating an authorization document.",
   "type": "object",
+  "required": ["data"],
   "properties": {
     "data": {
       "type": "object",
+      "required": ["type", "attributes", "meta"],
       "properties": {
         "type": {
           "$ref": "authorization-document-common.schema.json#/$defs/type"
@@ -33,18 +35,7 @@
         },
         "meta": {
           "type": "object",
-          "required": ["requestedPrincipal", "requestedOf"],
-          "properties": {
-            "requestedPrincipal": {
-              "$ref": "authorization-document-common.schema.json#/$defs/requestedPrincipal"
-            },
-            "requestedOf": {
-              "$ref": "authorization-document-common.schema.json#/$defs/requestedOf"
-            },
-            "language": {
-              "$ref": "authorization-document-common.schema.json#/$defs/language"
-            }
-          }
+          "additionalProperties": true
         }
       }
     }

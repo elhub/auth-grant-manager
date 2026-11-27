@@ -23,7 +23,7 @@ class EnergySupplierFrameworkAgreementDocumentHandler(private val organisationsS
     ): DocumentCreationDetails {
         val now = now()
 
-        val balanceSupplierName = organisationsService
+        val energySupplierName = organisationsService
             .getPartyByIdAndPartyType(partyId = context.requestedBy.id, partyType = PartyType.BalanceSupplier)
             .fold(
                 ifLeft = { throw DocumentPreparationError.RequestedByLookupFailure(it) },
@@ -39,14 +39,14 @@ class EnergySupplierFrameworkAgreementDocumentHandler(private val organisationsS
             }
         )
 
-        val metadata = EnergySupplierFrameworkAgreementDocumentMetadata(balanceSupplierName = balanceSupplierName, organizationName = organisationName)
+        val metadata = EnergySupplierFrameworkAgreementDocumentMetadata(energySupplierName = energySupplierName, organizationName = organisationName)
 
         return DocumentCreationDetails(
             pdfContent = AuthorizationDocumentPdfContent.EnergySupplierFrameworkAgreement(
                 language = context.language.toPdfLanguage(),
                 organizationName = organisationName,
                 organizationNumber = context.requestedPrincipal.id,
-                balanceSupplierName = balanceSupplierName,
+                balanceSupplierName = energySupplierName,
                 agreementReference = context.externalReference,
                 startDate = (specification.requestedGrantValidFrom ?: now).toOsloDate(),
                 endDate = specification.requestedGrantValidTo?.toOsloDate(),

@@ -3,6 +3,7 @@ package no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesupp
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
@@ -15,6 +16,9 @@ import kotlinx.datetime.plus
 import no.elhub.auth.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.common.auth.AuthorizationParty
 import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.common.structuredata.endusers.EndUserAttributes
+import no.elhub.auth.common.structuredata.endusers.EndUserResponse
+import no.elhub.auth.common.structuredata.endusers.EndUserType
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
 import no.elhub.auth.v0.features.businessprocesses.datasharing.Attributes
@@ -25,6 +29,9 @@ import no.elhub.auth.v0.features.businessprocesses.ediel.EdielPartyRedirectRespo
 import no.elhub.auth.v0.features.businessprocesses.ediel.EdielRedirectUrlsDto
 import no.elhub.auth.v0.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.CurrentEndUserNotFoundException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUserLookupException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
@@ -58,6 +65,7 @@ import no.elhub.auth.v0.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.v0.features.requests.create.command.TEXT_VERSION_KEY
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
 import org.slf4j.MDC
+import java.io.IOException
 import java.util.UUID
 
 private val VALID_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = PartyType.Organization)
@@ -82,6 +90,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         val edielService = mockk<EdielService>()
         val jwtTokenProvider = mockk<JwtTokenProvider>()
         coEvery { jwtTokenProvider.getToken() } returns "token"
+        val mockkEndUsersService = mockk<EndUsersService>()
 
         beforeSpec {
             organisationsService = OrganisationsApi(
@@ -99,6 +108,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 jwtTokenProvider
             )
             handler = MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 organisationsService = organisationsService,
                 meteringPointsService = meteringPointsService,
                 stromprisService = stromprisService,
@@ -111,7 +121,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
         beforeTest {
             MDC.put(TRACE_ID_MDC_KEY, UUID.randomUUID().toString())
-            clearMocks(edielService, answers = false, recordedCalls = true)
+            clearMocks(edielService, mockkEndUsersService, answers = false, recordedCalls = true)
             coEvery { edielService.getPartyRedirect(any()) } returns Either.Right(
                 EdielPartyRedirectResponseDto(
                     redirectUrls = EdielRedirectUrlsDto(
@@ -119,6 +129,14 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                     )
                 )
             )
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } returns
+                EndUserResponse(
+                    data = JsonApiResponseResourceObject(
+                        id = END_USER_ID_1,
+                        type = "end-user",
+                        attributes = EndUserAttributes(endUserUniqueId = END_USER_ID_1, endUserType = EndUserType.Person, endUserId = END_USER_ID_1)
+                    )
+                )
         }
 
         afterTest {
@@ -289,6 +307,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
         test("request validation in test environment uses test URL from Ediel") {
             val handlerWithTestEnvironment = MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 organisationsService = organisationsService,
                 meteringPointsService = meteringPointsService,
                 stromprisService = stromprisService,
@@ -327,6 +346,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         test("request validation skips redirect URI validation when feature toggle is disabled") {
             val mockEdielService = mockk<EdielService>()
             val handlerWithRedirectValidationDisabled = MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 organisationsService = organisationsService,
                 meteringPointsService = meteringPointsService,
                 stromprisService = stromprisService,
@@ -450,6 +470,60 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.NotFound(MoveInAndChangeOfBalanceSupplierValidationError.MeteringPointNotFound.message))
         }
 
+        test("request validation passes on not owner registered on the metering point") {
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } throws CurrentEndUserNotFoundException()
+            val model =
+                CreateRequestBusinessModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    meta =
+                    CreateRequestBusinessMeta(
+                        requestedFromName = "From",
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        moveInDate = VALID_MOVEIN_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model).shouldBeRight()
+        }
+
+        test("request validation fails on end user response not having endUserId") {
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } returns
+                EndUserResponse(
+                    data = JsonApiResponseResourceObject(
+                        id = END_USER_ID_1,
+                        type = "end-user",
+                        attributes = EndUserAttributes(endUserUniqueId = END_USER_ID_1, endUserType = EndUserType.Person)
+                    )
+                )
+            val model =
+                CreateRequestBusinessModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = END_USER,
+                    meta =
+                    CreateRequestBusinessMeta(
+                        requestedFromName = "From",
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        moveInDate = VALID_MOVEIN_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.message))
+        }
+
         test("request validation fails on requestedFrom being owner of metering point") {
             val model =
                 CreateRequestBusinessModel(
@@ -473,7 +547,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 .shouldBeLeft(BusinessProcessError.Validation(MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromIsMeteringPointEndUser.message))
         }
 
-        test("request validation allows on requestedFrom having access to metering point") {
+        test("request validation succeeds on requestedFrom not being the owner of the metering point") {
             val model =
                 CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -567,12 +641,12 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
         test("request validation fails with UnexpectedError when a non-validation-specific error happens in metering points service") {
             val mockMeteringPointsService = mockk<MeteringPointsService>()
             coEvery {
-                mockMeteringPointsService.getMeteringPointByIdAndElhubInternalId(
+                mockMeteringPointsService.getMeteringPointById(
                     any(),
-                    any()
                 )
             } returns Either.Left(ClientError.BadRequest)
             val handlerWithMockedService = MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 organisationsService = organisationsService,
                 meteringPointsService = mockMeteringPointsService,
                 stromprisService = stromprisService,
@@ -613,6 +687,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             } returns Either.Left(ClientError.ServerError)
             val handlerWithMockedService = MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 organisationsService = mockOrganisationsService,
                 meteringPointsService = meteringPointsService,
                 stromprisService = stromprisService,
@@ -642,6 +717,61 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
 
             handlerWithMockedService.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Unexpected(MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.message))
+        }
+
+        test("request validation fails with UnexpectedError when a non-validation-specific error happens in end users service") {
+            coEvery {
+                mockkEndUsersService.getEndUserByMeteringPointId(
+                    any()
+                )
+            } throws EndUserLookupException("EndUsersService returned HTTP 500")
+
+            val model =
+                CreateRequestBusinessModel(
+                    authorizedParty = AUTHORIZED_PARTY,
+                    requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                    requestedBy = VALID_PARTY,
+                    requestedFrom = ANOTHER_END_USER,
+                    meta =
+                    CreateRequestBusinessMeta(
+                        requestedFromName = "From",
+                        requestedForMeteringPointId = VALID_METERING_POINT_1,
+                        requestedForMeteringPointAddress = "addr",
+                        balanceSupplierName = "Supplier",
+                        balanceSupplierContractName = "Contract",
+                        moveInDate = VALID_MOVEIN_DATE,
+                        redirectURI = "https://example.com",
+                    ),
+                )
+
+            handler.validateAndReturnRequestCommand(model)
+                .shouldBeLeft(BusinessProcessError.Unexpected(MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.message))
+        }
+
+        test("request validation propagates unexpected end user lookup failures") {
+            val failure = IOException("End user service unavailable")
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(any()) } throws failure
+            val model = CreateRequestBusinessModel(
+                authorizedParty = AUTHORIZED_PARTY,
+                requestType = AuthorizationRequest.Type.MoveInAndChangeOfBalanceSupplierForPerson,
+                requestedBy = VALID_PARTY,
+                requestedFrom = ANOTHER_END_USER,
+                meta = CreateRequestBusinessMeta(
+                    requestedFromName = "From",
+                    requestedForMeteringPointId = VALID_METERING_POINT_1,
+                    requestedForMeteringPointAddress = "addr",
+                    balanceSupplierName = "Supplier",
+                    balanceSupplierContractName = "Contract",
+                    moveInDate = VALID_MOVEIN_DATE,
+                    redirectURI = "https://example.com",
+                ),
+            )
+
+            val thrown = shouldThrow<IOException> {
+                handler.validateAndReturnRequestCommand(model)
+            }
+
+            thrown shouldBe failure
         }
 
         test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {
@@ -686,6 +816,7 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandlerTest :
                 )
             )
             val handlerWithMockedStromprisService = MoveInAndChangeOfBalanceSupplierBusinessHandler(
+                endUsersService = mockkEndUsersService,
                 organisationsService = organisationsService,
                 meteringPointsService = meteringPointsService,
                 stromprisService = mockStromprisService,

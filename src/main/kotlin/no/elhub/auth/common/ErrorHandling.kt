@@ -1,7 +1,9 @@
 package no.elhub.auth.common
 
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
@@ -9,6 +11,9 @@ import io.ktor.server.response.respondText
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.auth.PartyType
+import no.elhub.auth.common.config.NoAcceptableJsonResponse
+import no.elhub.auth.common.config.acceptedJsonType
+import no.elhub.auth.common.config.isV1Request
 import no.elhub.auth.common.config.jsonApiContentType
 import no.elhub.auth.common.documents.pdf.PdfGenerationException
 import no.elhub.auth.common.documents.pdf.PdfSigningException
@@ -16,6 +21,7 @@ import no.elhub.auth.common.documents.pdf.PdfValidationException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import no.elhub.auth.v0.features.common.buildApiErrorResponse
 import no.elhub.auth.v0.features.common.toInternalServerApiErrorResponse
+import no.elhub.auth.v0.features.common.toNotAcceptedErrorResponse
 import no.elhub.auth.v0.features.common.toNotFoundApiErrorResponse
 import no.elhub.auth.v0.features.common.toValidationApiErrorResponse
 import no.elhub.auth.v1.Errors
@@ -36,6 +42,7 @@ import no.elhub.auth.v1.features.requests.creation.RequestPreparationError
 import no.elhub.auth.v1.integrations.pdp.PdpAuthorizationException
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.auth.v1.repositories.RepositoryWriteError
+import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
@@ -45,6 +52,10 @@ class InvalidTraceIdException : Exception()
 @OptIn(ExperimentalSerializationApi::class)
 fun Application.configureErrorHandling() {
     install(StatusPages) {
+        exception<NoAcceptableJsonResponse> { call, _ ->
+            val (status, body) = toNotAcceptedErrorResponse()
+            call.respondError(status, body)
+        }
         exception<InvalidTraceIdException> { call, _ ->
             val (status, body) =
                 buildApiErrorResponse(
@@ -56,38 +67,49 @@ fun Application.configureErrorHandling() {
         }
         exception<Errors> { call, cause ->
             val (status, body) = cause.toApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfValidationException> { call, cause ->
             val (status, body) = cause.toApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfSigningException> { call, cause ->
             logger.error("Failed to sign PDF", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdfGenerationException> { call, cause ->
             logger.error("Failed to generate PDF", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<InvalidDocumentScopes> { call, cause ->
             logger.error("Invalid authorization document scopes", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<PdpAuthorizationException> { call, cause ->
             logger.error("PDP authorization check failed", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
         exception<Throwable> { call, cause ->
             logger.error("Unhandled exception", cause)
             val (status, body) = toInternalServerApiErrorResponse()
-            call.respondText(Json.encodeToString(body), jsonApiContentType, status)
+            call.respondError(status, body)
         }
     }
+}
+
+internal suspend fun ApplicationCall.respondError(status: HttpStatusCode, body: JsonApiErrorCollection) {
+    val contentType = if (isV1Request) {
+        response.headers.append(HttpHeaders.Vary, HttpHeaders.Accept)
+        acceptedJsonType() ?: jsonApiContentType
+    } else {
+        jsonApiContentType
+    }
+    // Keep the original error even when the client accepts only PDF and there is no PDF error format.
+    respondText(Json.encodeToString(body), contentType, status)
 }
 
 private fun PdfValidationException.toApiErrorResponse() =
@@ -380,6 +402,24 @@ private fun Errors.toApiErrorResponse() =
             )
         }
 
+        is InputError.MissingIdError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Missing input",
+            detail = detail,
+        )
+
+        is InputError.MalformedIdError -> buildApiErrorResponse(
+            status = HttpStatusCode.BadRequest,
+            title = "Malformed input",
+            detail = detail,
+        )
+
+        is InputError.DataIdMismatchError -> buildApiErrorResponse(
+            status = HttpStatusCode.Conflict,
+            title = "ID mismatch",
+            detail = detail,
+        )
+
         is InputError.IdMismatchError -> {
             buildApiErrorResponse(
                 status = HttpStatusCode.UnprocessableEntity,
@@ -472,6 +512,11 @@ private fun Errors.toApiErrorResponse() =
             toValidationApiErrorResponse(detail)
         }
 
+        is DocumentPreparationError.RequestedPrincipalHasMeteringPointWriteAccess,
+        is DocumentPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints -> {
+            toValidationApiErrorResponse(detail)
+        }
+
         is DocumentPreparationError.MeteringPointsServiceFailure -> {
             logger.error("Failed to fetch requested metering points: {}", clientError)
             toInternalServerApiErrorResponse()
@@ -511,6 +556,11 @@ private fun Errors.toApiErrorResponse() =
         }
 
         is RequestPreparationError.RequestedMeteringPointsNotFound -> {
+            toValidationApiErrorResponse(detail)
+        }
+
+        is RequestPreparationError.RequestedPrincipalHasMeteringPointWriteAccess,
+        is RequestPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints -> {
             toValidationApiErrorResponse(detail)
         }
 

@@ -26,7 +26,7 @@ import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.inList
@@ -42,15 +42,16 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.jetbrains.exposed.v1.json.jsonb
 import org.postgresql.util.PGobject
-import java.util.UUID
 import kotlin.time.Instant
-import no.elhub.auth.v0.features.common.party.AuthorizationPartyRecord as AuthorizationAgentRecord
+import kotlin.uuid.Uuid
+import kotlin.uuid.toJavaUuid
+import kotlin.uuid.toKotlinUuid
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
 import no.elhub.auth.v0.features.common.party.toAuthorizationParty as toAuthorizationAgent
 import no.elhub.auth.v0.features.grants.common.toAuthorizationParty as toAuthorizationAgent
 
 interface RequestRepository {
-    suspend fun find(requestId: UUID): AuthorizationRequest
+    suspend fun find(requestId: Uuid): AuthorizationRequest
     suspend fun findAndSortByCreatedAt(
         agent: AuthorizationAgent,
         pagination: Pagination,
@@ -58,26 +59,26 @@ interface RequestRepository {
     ): Page<AuthorizationRequest>
 
     suspend fun insert(request: AuthorizationRequest): AuthorizationRequest
-    suspend fun reject(requestId: UUID, textLanguage: TextLanguage): AuthorizationRequest
-    suspend fun accept(requestId: UUID, grants: List<AuthorizationGrant>, textLanguage: TextLanguage): AuthorizationRequest
+    suspend fun reject(requestId: Uuid, textLanguage: TextLanguage): AuthorizationRequest
+    suspend fun accept(requestId: Uuid, grants: List<AuthorizationGrant>, textLanguage: TextLanguage): AuthorizationRequest
 }
 
 class ExposedRequestRepository(
     val agentRepository: AgentRepository,
     val grantRepository: GrantRepository,
 ) : RequestRepository {
-    override suspend fun find(requestId: UUID): AuthorizationRequest = withTransaction {
+    override suspend fun find(requestId: Uuid): AuthorizationRequest = withTransaction {
         val row = AuthorizationRequestTable.selectAll()
             .where { AuthorizationRequestTable.id eq requestId }
             .singleOrNull()
             ?: throw RepositoryReadError.NotFoundError("Request not found: $requestId")
 
         row.toAuthorizationRequest(
-            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
-            approvedBy = row[AuthorizationRequestTable.approvedBy]?.let { agentRepository.find(it).toAuthorizationAgent() },
+            decidedBy = row[AuthorizationRequestTable.decidedBy]?.let { agentRepository.find(it.toKotlinUuid()).toAuthorizationAgent() },
             now = now(),
             grants = grantRepository.findBySourceIds(AuthorizationGrantSourceType.Request, listOf(requestId))[requestId],
         )
@@ -90,7 +91,7 @@ class ExposedRequestRepository(
     ): Page<AuthorizationRequest> = withTransaction {
         val agentId = agentRepository.findOrInsert(type = agent.type, agentId = agent.id).id
         val now = now()
-        val whereClause = generateFilterByCondition(agentId, statuses, now)
+        val whereClause = generateFilterByCondition(agentId.toKotlinUuid(), statuses, now)
 
         val totalItems = AuthorizationRequestTable
             .selectAll()
@@ -116,10 +117,10 @@ class ExposedRequestRepository(
                 it[AuthorizationRequestTable.requestedBy],
                 it[AuthorizationRequestTable.requestedPrincipal],
                 it[AuthorizationRequestTable.requestedOf],
-                it[AuthorizationRequestTable.approvedBy],
+                it[AuthorizationRequestTable.decidedBy],
             )
         }.distinct()
-        val agentMap: Map<UUID, AuthorizationAgentRecord> = AuthorizationAgentTable
+        val agentMap = AuthorizationAgentTable
             .selectAll()
             .where { AuthorizationAgentTable.id inList allAgentIds }
             .associate { it[AuthorizationAgentTable.id].value to it.toAuthorizationAgent() }
@@ -135,7 +136,7 @@ class ExposedRequestRepository(
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
             val requestedOf = agentMap[row[AuthorizationRequestTable.requestedOf]]
                 ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
-            val approvedBy = row[AuthorizationRequestTable.approvedBy]?.let {
+            val decidedBy = row[AuthorizationRequestTable.decidedBy]?.let {
                 agentMap[it] ?: throw RepositoryReadError.UnexpectedError(unexpectedMessage)
             }
             val requestId = row[AuthorizationRequestTable.id].value
@@ -144,7 +145,7 @@ class ExposedRequestRepository(
                 requestedPrincipal = requestedPrincipal.toAuthorizationAgent(),
                 requestedOf = requestedOf.toAuthorizationAgent(),
                 requestedScopes = scopesByRequestId[requestId].orEmpty(),
-                approvedBy = approvedBy?.toAuthorizationAgent(),
+                decidedBy = decidedBy?.toAuthorizationAgent(),
                 now = now,
                 grants = grantsByRequestId[requestId],
             )
@@ -157,7 +158,7 @@ class ExposedRequestRepository(
         val requestedBy = agentRepository.findOrInsert(request.requestedBy.type, request.requestedBy.id)
         val requestedPrincipal = agentRepository.findOrInsert(request.requestedPrincipal.type, request.requestedPrincipal.id)
         val requestedOf = agentRepository.findOrInsert(request.requestedOf.type, request.requestedOf.id)
-        val approvedBy = request.approvedBy?.let { agentRepository.findOrInsert(it.type, it.id) }
+        val decidedBy = request.decidedBy?.let { agentRepository.findOrInsert(it.type, it.id) }
 
         val inserted = AuthorizationRequestTable.insert {
             it[id] = request.id
@@ -170,7 +171,7 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.requestedBy] = requestedBy.id
             it[AuthorizationRequestTable.requestedPrincipal] = requestedPrincipal.id
             it[AuthorizationRequestTable.requestedOf] = requestedOf.id
-            it[AuthorizationRequestTable.approvedBy] = approvedBy?.id
+            it[AuthorizationRequestTable.decidedBy] = decidedBy?.id
             it[externalReference] = request.externalReference
             it[meta] = request.meta
             it[redirectUri] = request.redirectUri
@@ -207,12 +208,12 @@ class ExposedRequestRepository(
             requestedPrincipal = requestedPrincipal.toAuthorizationAgent(),
             requestedOf = requestedOf.toAuthorizationAgent(),
             requestedScopes = request.requestedScopes,
-            approvedBy = approvedBy?.toAuthorizationAgent(),
+            decidedBy = decidedBy?.toAuthorizationAgent(),
             now = now(),
         )
     }
 
-    override suspend fun reject(requestId: UUID, textLanguage: TextLanguage): AuthorizationRequest = withTransaction {
+    override suspend fun reject(requestId: Uuid, textLanguage: TextLanguage): AuthorizationRequest = withTransaction {
         // Lock the row using SELECT ... FOR NO KEY UPDATE for atomicity
         val row = AuthorizationRequestTable.selectAll()
             .where { AuthorizationRequestTable.id eq requestId }
@@ -239,16 +240,16 @@ class ExposedRequestRepository(
             it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
-            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
             now = now,
         )
     }
 
     override suspend fun accept(
-        requestId: UUID,
+        requestId: Uuid,
         grants: List<AuthorizationGrant>,
         textLanguage: TextLanguage,
     ): AuthorizationRequest = withTransaction {
@@ -270,34 +271,34 @@ class ExposedRequestRepository(
 
         val insertedGrants = grants.map { grantRepository.insert(it) }
 
-        val approvedBy = insertedGrants.first().approvedBy
-        val approvedById = agentRepository.findOrInsert(approvedBy.type, approvedBy.id).id
+        val decidedBy = insertedGrants.first().approvedBy
+        val decidedById = agentRepository.findOrInsert(decidedBy.type, decidedBy.id).id
 
         AuthorizationRequestTable.updateReturning(
             where = { AuthorizationRequestTable.id eq requestId }
         ) {
-            it[AuthorizationRequestTable.approvedBy] = approvedById
+            it[AuthorizationRequestTable.decidedBy] = decidedById
             it[approvedAt] = now
             it[AuthorizationRequestTable.textLanguage] = textLanguage
             it[updatedAt] = now
         }.single().toAuthorizationRequest(
-            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy]).toAuthorizationAgent(),
-            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal]).toAuthorizationAgent(),
-            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf]).toAuthorizationAgent(),
+            requestedBy = agentRepository.find(row[AuthorizationRequestTable.requestedBy].toKotlinUuid()).toAuthorizationAgent(),
+            requestedPrincipal = agentRepository.find(row[AuthorizationRequestTable.requestedPrincipal].toKotlinUuid()).toAuthorizationAgent(),
+            requestedOf = agentRepository.find(row[AuthorizationRequestTable.requestedOf].toKotlinUuid()).toAuthorizationAgent(),
             requestedScopes = getScopesByRequestId(listOf(requestId))[requestId].orEmpty(),
-            approvedBy = approvedBy,
+            decidedBy = decidedBy,
             now = now,
             grants = insertedGrants,
         )
     }
 
     private fun generateFilterByCondition(
-        agentId: UUID,
+        agentId: Uuid,
         statuses: List<AuthorizationRequestStatus>,
         now: Instant,
     ): Op<Boolean> {
-        val agentCondition = (AuthorizationRequestTable.requestedPrincipal eq agentId) or
-            (AuthorizationRequestTable.requestedBy eq agentId)
+        val agentCondition = (AuthorizationRequestTable.requestedPrincipal eq agentId.toJavaUuid()) or
+            (AuthorizationRequestTable.requestedBy eq agentId.toJavaUuid())
         if (statuses.isEmpty()) {
             return agentCondition
         }
@@ -306,17 +307,17 @@ class ExposedRequestRepository(
             when (status) {
                 AuthorizationRequestStatus.Pending ->
                     (AuthorizationRequestTable.status eq DatabaseRequestStatus.Pending) and
-                        AuthorizationRequestTable.approvedBy.isNull() and
+                        AuthorizationRequestTable.decidedBy.isNull() and
                         (AuthorizationRequestTable.validTo greater now)
 
                 AuthorizationRequestStatus.Expired ->
                     (AuthorizationRequestTable.status eq DatabaseRequestStatus.Pending) and
-                        AuthorizationRequestTable.approvedBy.isNull() and
+                        AuthorizationRequestTable.decidedBy.isNull() and
                         (AuthorizationRequestTable.validTo lessEq now)
 
                 AuthorizationRequestStatus.Approved ->
                     (AuthorizationRequestTable.status eq DatabaseRequestStatus.Pending) and
-                        AuthorizationRequestTable.approvedBy.isNotNull()
+                        AuthorizationRequestTable.decidedBy.isNotNull()
 
                 AuthorizationRequestStatus.Rejected -> AuthorizationRequestTable.status eq DatabaseRequestStatus.Rejected
             }
@@ -325,8 +326,8 @@ class ExposedRequestRepository(
     }
 
     private fun getScopesByRequestId(
-        requestIds: List<UUID>,
-    ): Map<UUID, List<RequestedAuthorizationScope>> {
+        requestIds: List<Uuid>,
+    ): Map<Uuid, List<RequestedAuthorizationScope>> {
         if (requestIds.isEmpty()) {
             return emptyMap()
         }
@@ -353,7 +354,7 @@ class ExposedRequestRepository(
     }
 }
 
-object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
+object AuthorizationRequestTable : UuidTable("auth_v1.authorization_request") {
     val requestType =
         customEnumeration(
             name = "request_type",
@@ -372,7 +373,7 @@ object AuthorizationRequestTable : UUIDTable("auth_v1.authorization_request") {
     val requestedBy = javaUUID("requested_by").references(AuthorizationAgentTable.id)
     val requestedPrincipal = javaUUID("requested_principal").references(AuthorizationAgentTable.id)
     val requestedOf = javaUUID("requested_of").references(AuthorizationAgentTable.id)
-    val approvedBy = javaUUID("approved_by").references(AuthorizationAgentTable.id).nullable()
+    val decidedBy = javaUUID("decided_by").references(AuthorizationAgentTable.id).nullable()
     val approvedAt = timestamp("approved_at").nullable()
     val createdAt = timestamp("created_at").clientDefault { now() }
     val externalReference = varchar("external_reference", 255).nullable()
@@ -393,7 +394,7 @@ private fun ResultRow.toAuthorizationRequestStatus(now: Instant): AuthorizationR
         DatabaseRequestStatus.Rejected -> AuthorizationRequestStatus.Rejected
 
         DatabaseRequestStatus.Pending -> when {
-            this[AuthorizationRequestTable.approvedBy] != null -> AuthorizationRequestStatus.Approved
+            this[AuthorizationRequestTable.decidedBy] != null -> AuthorizationRequestStatus.Approved
             this[AuthorizationRequestTable.validTo] <= now -> AuthorizationRequestStatus.Expired
             else -> AuthorizationRequestStatus.Pending
         }
@@ -404,7 +405,7 @@ fun ResultRow.toAuthorizationRequest(
     requestedPrincipal: AuthorizationAgent,
     requestedOf: AuthorizationAgent,
     requestedScopes: List<RequestedAuthorizationScope>,
-    approvedBy: AuthorizationAgent? = null,
+    decidedBy: AuthorizationAgent? = null,
     now: Instant,
     grants: List<AuthorizationGrant>? = null
 ): AuthorizationRequest {
@@ -427,7 +428,7 @@ fun ResultRow.toAuthorizationRequest(
         requestedBy = AuthorizationAgent(id = requestedBy.id, type = requestedBy.type),
         requestedPrincipal = AuthorizationAgent(id = requestedPrincipal.id, type = requestedPrincipal.type),
         requestedOf = AuthorizationAgent(id = requestedOf.id, type = requestedOf.type),
-        approvedBy = approvedBy?.let { AuthorizationAgent(id = approvedBy.id, type = approvedBy.type) },
+        decidedBy = decidedBy?.let { AuthorizationAgent(id = decidedBy.id, type = decidedBy.type) },
         authorizationGrants = grants,
         textLanguage = this[AuthorizationRequestTable.textLanguage],
     )
@@ -438,8 +439,8 @@ enum class DatabaseRequestStatus {
     Rejected,
 }
 
-object AuthorizationRequestScopeTable : UUIDTable("auth_v1.authorization_request_scope") {
-    val requestId = javaUUID("request_id")
+object AuthorizationRequestScopeTable : UuidTable("auth_v1.authorization_request_scope") {
+    val requestId = uuid("request_id")
         .references(AuthorizationRequestTable.id)
     val resourceType = customEnumeration(
         name = "resource_type",
@@ -449,8 +450,8 @@ object AuthorizationRequestScopeTable : UUIDTable("auth_v1.authorization_request
     )
 }
 
-object AuthorizationRequestScopeConstraintTable : UUIDTable("auth_v1.authorization_request_scope_constraint") {
-    val scopeId = javaUUID("scope_id").references(AuthorizationRequestScopeTable.id)
+object AuthorizationRequestScopeConstraintTable : UuidTable("auth_v1.authorization_request_scope_constraint") {
+    val scopeId = uuid("scope_id").references(AuthorizationRequestScopeTable.id)
     val kind = customEnumeration(
         name = "kind",
         sql = "auth_v1.authorization_constraint_kind",

@@ -23,6 +23,7 @@ import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.V1_GRANTS_PATH
 import no.elhub.auth.v1.api.common.STATUS_FILTER_PARAM
+import no.elhub.auth.v1.api.common.assertInvalidPagination
 import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.grants.response.JsonApiListAuthorizationGrantsResponse
 import no.elhub.auth.v1.common.auth.AgentType
@@ -35,8 +36,8 @@ import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class ListGrantsRouteTest : FunSpec({
     val handler = mockk<ListGrantsHandler>()
@@ -47,7 +48,7 @@ class ListGrantsRouteTest : FunSpec({
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Consumable,
         sourceType = AuthorizationGrantSourceType.Document,
-        sourceId = UUID.randomUUID(),
+        sourceId = Uuid.random(),
         principal = organization,
         grantedBy = grantedBy,
         grantedTo = authorizedAgent,
@@ -126,31 +127,18 @@ class ListGrantsRouteTest : FunSpec({
         }
     }
 
-    listOf(
-        Triple("-1", "101", Pagination(page = 0, size = 100)),
-        Triple("invalid", "invalid", Pagination()),
-        Triple("2", "0", Pagination(page = 2, size = 1)),
-    ).forEach { (page, size, pagination) ->
-        test("GET normalizes page '$page' and size '$size' like v0") {
-            coEvery { handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters(), emptyList()) } returns Page(emptyList(), 0, pagination)
+    test("GET rejects invalid pagination parameters without calling the handler") {
+        coEvery { handler(authorizedAgent, any(), emptyList(), GrantAgentFilters(), emptyList()) } answers {
+            Page(emptyList(), 0, secondArg())
+        }
 
-            testApplication {
-                setupAppWith(authorizedAgent) {
-                    route(V1_GRANTS_PATH) { route(handler) }
-                }
-
-                val response = client.get(V1_GRANTS_PATH) {
-                    accept(jsonApiContentType)
-                    url {
-                        parameters.append("page[number]", page)
-                        parameters.append("page[size]", size)
-                    }
-                }
-
-                response.status shouldBe HttpStatusCode.OK
-                response.body<JsonApiListAuthorizationGrantsResponse>().data shouldBe emptyList()
-                coVerify(exactly = 1) { handler(authorizedAgent, pagination, emptyList(), GrantAgentFilters(), emptyList()) }
+        testApplication {
+            setupAppWith(authorizedAgent) {
+                route(V1_GRANTS_PATH) { route(handler) }
             }
+
+            assertInvalidPagination(client, V1_GRANTS_PATH)
+            coVerify(exactly = 0) { handler(any(), any(), any(), any(), any()) }
         }
     }
 

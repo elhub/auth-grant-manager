@@ -3,6 +3,9 @@ package no.elhub.auth.v1.requesthandlers.movein
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -16,6 +19,7 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.NON_EXISTING_METERING_POINT
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.SERVER_ERROR_METERING_POINT
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_1
+import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceTestData.VALID_METERING_POINT_2
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.meteringPointsServiceHttpClient
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApi
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsApiConfig
@@ -28,6 +32,8 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.MeteringPointWriteAccessDecision
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.MeteringPointId
@@ -42,6 +48,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
     val requestedBy = AuthorizationAgent(VALID_PARTY_ID, AgentType.OrganizationEntity)
     val requestedPrincipal = AuthorizationAgent(VALID_ORGANISATION_NUMBER, AgentType.Organization)
     val requestedOf = AuthorizationAgent("person-1", AgentType.Person)
+    val authorizationRulesService = mockk<AuthorizationRulesService>()
     val moveInDate = LocalDate(2026, 10, 1)
     val tokenProvider = object : JwtTokenProvider {
         override suspend fun getToken(): String = "token"
@@ -59,12 +66,34 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
             meteringPointsServiceHttpClient,
             tokenProvider,
         )
-        handler = MoveInAndChangeOfEnergySupplierRequestHandler(meteringPointsService, organisationsService)
+        handler = MoveInAndChangeOfEnergySupplierRequestHandler(
+            meteringPointsService,
+            organisationsService,
+            authorizationRulesService,
+        )
     }
 
-    fun details(meteringPointId: String = VALID_METERING_POINT_1) =
+    beforeTest {
+        clearMocks(authorizationRulesService)
+        coEvery {
+            authorizationRulesService.checkMeteringPointWriteAccess(any(), any())
+        } returns MeteringPointWriteAccessDecision(
+            authorized = false,
+            unauthorizedMeteringPoints = listOf(
+                VALID_METERING_POINT_1,
+                NON_EXISTING_METERING_POINT,
+                SERVER_ERROR_METERING_POINT,
+            ),
+        )
+    }
+
+    fun details(vararg meteringPointIds: String) =
         AuthorizationRequestTypeDetails.MoveInAndChangeOfEnergySupplierForOrganization(
-            meteringPointIds = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create(meteringPointId))),
+            meteringPointIds = ResourceConstraint.MeteringPoints(
+                (meteringPointIds.ifEmpty { arrayOf(VALID_METERING_POINT_1) })
+                    .map { MeteringPointId.create(it) }
+                    .toSet(),
+            ),
             moveInDate = moveInDate,
         )
 
@@ -98,7 +127,7 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
                 },
             )
             put("moveInDate", moveInDate.toString())
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
         (result.validTo > Clock.System.now()) shouldBe true
@@ -126,6 +155,25 @@ class MoveInAndChangeOfEnergySupplierRequestHandlerTest : FunSpec({
         }
 
         error.clientError shouldBe ClientError.ServerError
+    }
+
+    test("rejects move-in when the principal can write a requested metering point") {
+        clearMocks(authorizationRulesService)
+        coEvery {
+            authorizationRulesService.checkMeteringPointWriteAccess(any(), any())
+        } returns MeteringPointWriteAccessDecision(
+            authorized = false,
+            unauthorizedMeteringPoints = listOf(VALID_METERING_POINT_2),
+        )
+
+        shouldThrow<RequestPreparationError.RequestedPrincipalHasMeteringPointWriteAccess> {
+            handler.validateAndGetRequestTypeSpecificDetails(
+                details = details(VALID_METERING_POINT_1, VALID_METERING_POINT_2),
+                requestedBy = requestedBy,
+                requestedPrincipal = requestedPrincipal,
+                requestedOf = requestedOf,
+            )
+        }
     }
 
     test("throws an organisation lookup failure when the organisation cannot be found") {

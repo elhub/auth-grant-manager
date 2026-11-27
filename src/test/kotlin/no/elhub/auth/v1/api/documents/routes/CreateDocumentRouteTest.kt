@@ -5,8 +5,13 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
+import io.ktor.client.request.accept
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -115,7 +120,7 @@ class CreateDocumentRouteTest : FunSpec({
         requestedBy = authorizedAgent,
         requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization),
         requestedOf = AuthorizationAgent("999888772", AgentType.Organization),
-        approvedBy = null,
+        decidedBy = null,
         authorizationGrants = null,
         pdfBytes = ByteArray(0),
     )
@@ -125,6 +130,25 @@ class CreateDocumentRouteTest : FunSpec({
         pdfGenerator = mockk()
         pdfSigner = mockk()
         agentService = mockk()
+    }
+
+    test("POST / rejects PDF-only Accept before creating a document") {
+        val document = responseDocument()
+        coEvery { agentService.resolve(any()) } returnsMany listOf(document.requestedPrincipal.right(), document.requestedOf.right())
+        coEvery { handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any()) } returns document
+
+        testApplication {
+            setupAppWith(authorizedAgent) { route(agentService, handler) }
+
+            val response = createClient {}.post("/") {
+                accept(ContentType.Application.Pdf)
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+            }
+
+            response.status shouldBe HttpStatusCode.NotAcceptable
+            coVerify(exactly = 0) { handler.createAuthorizationDocument(any(), any(), any(), any(), any(), any()) }
+        }
     }
 
     test("POST / rejects unsupported query parameters without calling the handler") {

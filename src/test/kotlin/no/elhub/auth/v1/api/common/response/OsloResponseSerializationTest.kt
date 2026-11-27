@@ -38,8 +38,8 @@ import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class OsloResponseSerializationTest : FunSpec({
     val winter = Instant.parse("2026-01-15T12:34:56.123456789Z")
@@ -71,7 +71,7 @@ class OsloResponseSerializationTest : FunSpec({
     val grant = AuthorizationGrant.new(
         type = AuthorizationGrantType.Persistent,
         sourceType = AuthorizationGrantSourceType.Request,
-        sourceId = UUID.randomUUID(),
+        sourceId = Uuid.random(),
         principal = agent,
         grantedBy = agent,
         grantedTo = agent,

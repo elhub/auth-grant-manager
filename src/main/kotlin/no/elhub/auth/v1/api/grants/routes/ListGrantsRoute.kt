@@ -4,12 +4,12 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.elhub.auth.v0.features.common.Pagination
 import no.elhub.auth.v1.api.common.GrantResourceType
 import no.elhub.auth.v1.api.common.PAGE_NUMBER_PARAM
 import no.elhub.auth.v1.api.common.PAGE_SIZE_PARAM
 import no.elhub.auth.v1.api.common.STATUS_FILTER_PARAM
 import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.api.common.parsePagination
 import no.elhub.auth.v1.api.common.validateEnumListParam
 import no.elhub.auth.v1.api.common.validateQueryParameters
 import no.elhub.auth.v1.api.grants.response.toGetCollectionResponse
@@ -20,7 +20,7 @@ import no.elhub.auth.v1.domain.AuthorizationGrantStatus
 import no.elhub.auth.v1.domain.AuthorizationGrantType
 import no.elhub.auth.v1.domain.GrantAgentFilters
 import no.elhub.auth.v1.features.grants.ListGrantsHandler
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 internal const val TYPE_FILTER_PARAM = "filter[type]"
 internal const val GRANTED_BY_FILTER_PARAM = "filter[grantedBy]"
@@ -40,10 +40,7 @@ fun Route.route(handler: ListGrantsHandler) {
             APPROVED_BY_FILTER_PARAM,
             GRANTED_TO_FILTER_PARAM,
         )
-        val pagination = Pagination.from(
-            pageParam = call.request.queryParameters[PAGE_NUMBER_PARAM],
-            sizeParam = call.request.queryParameters[PAGE_SIZE_PARAM],
-        )
+        val pagination = call.parsePagination()
 
         val statuses = validateEnumListParam<AuthorizationGrantStatus>(
             call.request.queryParameters[STATUS_FILTER_PARAM],
@@ -80,7 +77,7 @@ private fun parseAgentIds(param: String?, paramName: String): List<Authorization
             id.matches(Regex("[0-9]{13}")) -> AuthorizationAgent(id, AgentType.OrganizationEntity)
 
             else -> try {
-                AuthorizationAgent(UUID.fromString(id).toString(), AgentType.Person)
+                AuthorizationAgent(Uuid.parse(id).toString(), AgentType.Person)
             } catch (_: IllegalArgumentException) {
                 throw InputError.InvalidQueryParameterError(
                     "Invalid $paramName value '$param'. Expected comma-separated Person UUIDs, 9-digit organization numbers or 13-digit GLNs."

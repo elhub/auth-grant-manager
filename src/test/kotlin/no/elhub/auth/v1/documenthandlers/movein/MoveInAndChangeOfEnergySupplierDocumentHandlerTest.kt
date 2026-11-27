@@ -4,6 +4,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -31,6 +34,8 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.MeteringPointWriteAccessDecision
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.DocumentLanguage
@@ -51,6 +56,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )
+    val authorizationRulesService = mockk<AuthorizationRulesService>()
     val validFrom = LocalDate(2026, 10, 1)
     val tokenProvider = object : JwtTokenProvider {
         override suspend fun getToken(): String = "token"
@@ -72,12 +78,34 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             client = meteringPointsServiceHttpClient,
             tokenProvider = tokenProvider,
         )
-        handler = MoveInAndChangeOfEnergySupplierDocumentHandler(meteringPointsService, organisationsService)
+        handler = MoveInAndChangeOfEnergySupplierDocumentHandler(
+            meteringPointsService,
+            organisationsService,
+            authorizationRulesService,
+        )
     }
 
-    fun specification(meteringPointId: String = VALID_METERING_POINT_1) =
+    beforeTest {
+        clearMocks(authorizationRulesService)
+        coEvery {
+            authorizationRulesService.checkMeteringPointWriteAccess(any(), any())
+        } returns MeteringPointWriteAccessDecision(
+            authorized = false,
+            unauthorizedMeteringPoints = listOf(
+                VALID_METERING_POINT_1,
+                VALID_METERING_POINT_2,
+                NON_EXISTING_METERING_POINT,
+            ),
+        )
+    }
+
+    fun specification(vararg meteringPointIds: String) =
         DocumentSpecification.MoveInAndChangeOfEnergySupplierForOrganization(
-            meteringPointIds = ResourceConstraint.MeteringPoints(setOf(MeteringPointId.create(meteringPointId))),
+            meteringPointIds = ResourceConstraint.MeteringPoints(
+                (meteringPointIds.ifEmpty { arrayOf(VALID_METERING_POINT_1) })
+                    .map { MeteringPointId.create(it) }
+                    .toSet(),
+            ),
             validFrom = validFrom,
         )
 
@@ -106,7 +134,7 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                 }
             )
             put("validFrom", validFrom.toString())
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
         val pdfContent = details.pdfContent
@@ -123,6 +151,20 @@ class MoveInAndChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
     test("throws when a requested metering point cannot be found") {
         shouldThrow<DocumentPreparationError.RequestedMeteringPointsNotFound> {
             handler.prepare(specification(NON_EXISTING_METERING_POINT), context)
+        }
+    }
+
+    test("rejects move-in documents when the principal can write a requested metering point") {
+        clearMocks(authorizationRulesService)
+        coEvery {
+            authorizationRulesService.checkMeteringPointWriteAccess(any(), any())
+        } returns MeteringPointWriteAccessDecision(
+            authorized = false,
+            unauthorizedMeteringPoints = listOf(VALID_METERING_POINT_2),
+        )
+
+        shouldThrow<DocumentPreparationError.RequestedPrincipalHasMeteringPointWriteAccess> {
+            handler.prepare(specification(VALID_METERING_POINT_1, VALID_METERING_POINT_2), context)
         }
     }
 

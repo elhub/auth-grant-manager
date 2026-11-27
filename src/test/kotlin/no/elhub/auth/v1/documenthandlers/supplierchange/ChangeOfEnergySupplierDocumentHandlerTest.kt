@@ -4,6 +4,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -31,6 +34,8 @@ import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.O
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_ID
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceTestData.VALID_PARTY_NAME
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.organisationsServiceHttpClient
+import no.elhub.auth.v1.common.AuthorizationRulesService
+import no.elhub.auth.v1.common.MeteringPointWriteAccessDecision
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.DocumentLanguage
@@ -51,6 +56,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         language = DocumentLanguage.EN,
         externalReference = "reference-1",
     )
+    val authorizationRulesService = mockk<AuthorizationRulesService>()
     val tokenProvider = object : JwtTokenProvider {
         override suspend fun getToken(): String = "token"
     }
@@ -71,7 +77,21 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
             client = meteringPointsServiceHttpClient,
             tokenProvider = tokenProvider,
         )
-        handler = ChangeOfEnergySupplierDocumentHandler(meteringPointsService, organisationsService)
+        handler = ChangeOfEnergySupplierDocumentHandler(
+            meteringPointsService,
+            organisationsService,
+            authorizationRulesService,
+        )
+    }
+
+    beforeTest {
+        clearMocks(authorizationRulesService)
+        coEvery {
+            authorizationRulesService.checkMeteringPointWriteAccess(any(), any())
+        } returns MeteringPointWriteAccessDecision(
+            authorized = true,
+            unauthorizedMeteringPoints = emptyList(),
+        )
     }
 
     val specification = DocumentSpecification.ChangeOfEnergySupplierForOrganization(
@@ -102,7 +122,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     )
                 }
             )
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
         val pdfContent = details.pdfContent
@@ -137,6 +157,30 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
         }
 
         error.clientError shouldBe ClientError.ServerError
+    }
+
+    test("rejects supplier-change documents unless the principal can write every requested metering point") {
+        clearMocks(authorizationRulesService)
+        coEvery {
+            authorizationRulesService.checkMeteringPointWriteAccess(any(), any())
+        } returns MeteringPointWriteAccessDecision(
+            authorized = false,
+            unauthorizedMeteringPoints = listOf(VALID_METERING_POINT_2),
+        )
+
+        shouldThrow<DocumentPreparationError.RequestedPrincipalCannotWriteAllMeteringPoints> {
+            handler.prepare(
+                DocumentSpecification.ChangeOfEnergySupplierForOrganization(
+                    ResourceConstraint.MeteringPoints(
+                        setOf(
+                            MeteringPointId.create(VALID_METERING_POINT_1),
+                            MeteringPointId.create(VALID_METERING_POINT_2),
+                        ),
+                    ),
+                ),
+                context,
+            )
+        }
     }
 
     test("stores metadata for every requested metering point in a stable order") {
@@ -188,7 +232,7 @@ class ChangeOfEnergySupplierDocumentHandlerTest : FunSpec({
                     )
                 }
             )
-            put("balanceSupplierName", VALID_PARTY_NAME)
+            put("energySupplierName", VALID_PARTY_NAME)
             put("organizationName", VALID_ORGANISATION_NAME)
         }
 

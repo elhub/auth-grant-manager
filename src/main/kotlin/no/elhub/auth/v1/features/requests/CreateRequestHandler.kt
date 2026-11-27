@@ -1,5 +1,7 @@
 package no.elhub.auth.v1.features.requests
 
+import no.elhub.auth.v1.api.common.errors.InputError
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
 import no.elhub.auth.v1.domain.requests.AuthorizationRequestSpecification
@@ -17,6 +19,7 @@ class CreateRequestHandler(
     private val energySupplierFrameworkAgreementHandler: EnergySupplierFrameworkAgreementRequestHandler,
     private val redirectUriValidator: RedirectUriValidator,
     private val requestRepository: RequestRepository,
+    private val authorizationRulesService: AuthorizationRulesService,
 ) {
     suspend operator fun invoke(
         specification: AuthorizationRequestSpecification,
@@ -30,6 +33,9 @@ class CreateRequestHandler(
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
         )
+        if (!authorizationRulesService.canActOnBehalfOf(requestedOf, requestedPrincipal)) {
+            throw InputError.RequestedOfRequestedPrincipalMismatch()
+        }
         redirectUriValidator.validate(specification.redirectUri, requestedBy)
 
         val requestTypeSpecificDetails = when (val details = specification.details) {

@@ -36,13 +36,13 @@ import no.elhub.auth.v1.features.requests.GetRequestError
 import no.elhub.auth.v1.features.requests.GetRequestHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class GetRequestRouteTest : FunSpec({
     val handler = mockk<GetRequestHandler>()
     val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
-    val requestId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    val requestId = Uuid.parse("123e4567-e89b-12d3-a456-426614174000")
     val timestamp = Instant.parse("2026-10-01T08:00:00Z")
     val request = AuthorizationRequest(
         id = requestId,
@@ -59,7 +59,7 @@ class GetRequestRouteTest : FunSpec({
         requestedBy = authorizedAgent,
         requestedPrincipal = AuthorizationAgent("999888771", AgentType.OrganizationEntity),
         requestedOf = AuthorizationAgent("person-1", AgentType.Person),
-        approvedBy = null,
+        decidedBy = null,
         authorizationGrants = null,
     )
 
@@ -116,7 +116,7 @@ class GetRequestRouteTest : FunSpec({
         )
         coEvery { handler(requestId, authorizedAgent) } returns request.copy(
             status = AuthorizationRequestStatus.Approved,
-            approvedBy = request.requestedOf,
+            decidedBy = request.requestedOf,
             authorizationGrants = listOf(grant),
         )
 
@@ -129,7 +129,7 @@ class GetRequestRouteTest : FunSpec({
 
             response.status shouldBe HttpStatusCode.OK
             val body = response.body<JsonApiGetAuthorizationRequestResponse>()
-            body.data.relationships.approvedBy.shouldNotBeNull().data.id shouldBe request.requestedOf.id
+            body.data.relationships.decidedBy.shouldNotBeNull().data.id shouldBe request.requestedOf.id
             val grants = body.data.relationships.authorizationGrants.shouldNotBeNull().data
             grants.map { it.id } shouldBe listOf(grant.id.toString())
             grants.map { it.type } shouldBe listOf(GrantResourceType.ConsumableGrant)

@@ -25,7 +25,7 @@ import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.features.documents.ConfirmDocumentHandler
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 class ConfirmDocumentRouteTest : FunSpec({
     val authorizedAgent = AuthorizationAgent("123456789", AgentType.OrganizationEntity)
@@ -110,7 +110,7 @@ class ConfirmDocumentRouteTest : FunSpec({
                 if (case.expectedStatus == HttpStatusCode.NoContent) {
                     response.bodyAsText() shouldBe ""
                     coVerify(exactly = 1) {
-                        handler(UUID.fromString(documentId), authorizedAgent, match { it.contentEquals(case.bytes) })
+                        handler(Uuid.parse(documentId), authorizedAgent, match { it.contentEquals(case.bytes) })
                     }
                 } else {
                     response.contentType()?.withoutParameters() shouldBe jsonApiContentType

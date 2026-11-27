@@ -64,10 +64,10 @@ class AuthorizationRequestTest : FunSpec({
             requestedBy = requestedBy,
             requestedPrincipal = requestedPrincipal,
             requestedOf = requestedOf,
-            approvedBy = null,
+            decidedBy = null,
             authorizationGrants = null,
         )
-        approvedBy shouldBe null
+        decidedBy shouldBe null
         authorizationGrants shouldBe null
     }
 

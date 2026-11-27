@@ -37,8 +37,8 @@ import no.elhub.auth.v1.features.requests.UpdateRequestError
 import no.elhub.auth.v1.features.requests.UpdateRequestHandler
 import no.elhub.auth.v1.repositories.RepositoryReadError
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class UpdateRequestRouteTest : FunSpec({
     val handler = mockk<UpdateRequestHandler>()
@@ -64,6 +64,23 @@ class UpdateRequestRouteTest : FunSpec({
     ) = """{"data":{"id":"$dataId","type":"$type","attributes":{"status":"$status","textLanguage":"$textLanguage"}}}"""
 
     beforeTest { clearMocks(handler) }
+
+    test("PATCH rejects PDF-only Accept before updating a request") {
+        coEvery { handler(any(), any(), any(), any()) } returns request
+
+        testApplication {
+            setupAppWith(requestedOf) { route(V1_REQUESTS_PATH) { route(handler) } }
+
+            val response = createClient {}.patch(path) {
+                accept(ContentType.Application.Pdf)
+                contentType(ContentType.Application.Json)
+                setBody(body())
+            }
+
+            response.status shouldBe HttpStatusCode.NotAcceptable
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
+    }
 
     test("PATCH rejects unsupported query parameters without calling the handler") {
         testApplication {
@@ -92,7 +109,7 @@ class UpdateRequestRouteTest : FunSpec({
         )
         coEvery { handler(id, requestedOf, AuthorizationRequestStatus.Approved, TextLanguage.NN) } returns request.copy(
             status = AuthorizationRequestStatus.Approved,
-            approvedBy = requestedOf,
+            decidedBy = requestedOf,
             authorizationGrants = listOf(grant),
             textLanguage = TextLanguage.NN,
         )
@@ -159,7 +176,7 @@ class UpdateRequestRouteTest : FunSpec({
     }
 
     listOf(
-        "a body ID that does not match the path ID" to UUID.randomUUID().toString(),
+        "a body ID that does not match the path ID" to Uuid.random().toString(),
         "an invalid body ID" to "not-a-uuid",
     ).forEach { (description, dataId) ->
         test("PATCH returns 409 for $description without calling the handler") {
@@ -207,10 +224,14 @@ class UpdateRequestRouteTest : FunSpec({
                     route(V1_REQUESTS_PATH) { route(handler) }
                 }
 
-                val response = client.patchJson(path, body())
+                val response = client.patch(path) {
+                    accept(ContentType.Application.Json)
+                    contentType(ContentType.Application.Json)
+                    setBody(body())
+                }
 
                 response.status shouldBe status
-                response.contentType()?.withoutParameters() shouldBe jsonApiContentType
+                response.contentType()?.withoutParameters() shouldBe ContentType.Application.Json
                 response.body<JsonApiErrorCollection>().errors.single().status shouldBe status.value.toString()
             }
         }

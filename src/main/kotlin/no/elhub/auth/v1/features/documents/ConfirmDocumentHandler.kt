@@ -10,7 +10,7 @@ import no.elhub.auth.v1.domain.AuthorizationDocument
 import no.elhub.auth.v1.domain.AuthorizationDocumentStatus
 import no.elhub.auth.v1.repositories.DocumentRepository
 import org.slf4j.LoggerFactory
-import java.util.UUID
+import kotlin.uuid.Uuid
 import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class ConfirmDocumentHandler(
@@ -22,7 +22,7 @@ class ConfirmDocumentHandler(
     private val logger = LoggerFactory.getLogger(ConfirmDocumentHandler::class.java)
 
     suspend operator fun invoke(
-        id: UUID,
+        id: Uuid,
         authorizedAgent: AuthorizationAgent,
         signedFile: ByteArray,
     ): AuthorizationDocument {

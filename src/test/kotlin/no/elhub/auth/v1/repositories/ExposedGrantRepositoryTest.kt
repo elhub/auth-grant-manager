@@ -33,10 +33,10 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.util.UUID
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 import no.elhub.auth.v0.features.common.party.AuthorizationPartyTable as AuthorizationAgentTable
 
 class ExposedGrantRepositoryTest : FunSpec({
@@ -57,9 +57,9 @@ class ExposedGrantRepositoryTest : FunSpec({
     val future = Instant.parse("2100-01-01T00:00:00Z")
     val past = Instant.parse("2000-01-01T00:00:00Z")
 
-    fun agent(type: AgentType) = AuthorizationAgent(UUID.randomUUID().toString(), type)
+    fun agent(type: AgentType) = AuthorizationAgent(Uuid.random().toString(), type)
 
-    suspend fun auditRows(grantId: UUID) = withTransaction {
+    suspend fun auditRows(grantId: Uuid) = withTransaction {
         AuthorizationAuditLogTable.selectAll().where { AuthorizationAuditLogTable.grantId eq grantId }.toList()
     }
 
@@ -89,7 +89,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     val unconstrained = GrantedAuthorizationScope(PermissionCapability.Read, ResourceType.MeteringPointContract, emptyList())
 
     suspend fun insertGrant(
-        sourceId: UUID = UUID.randomUUID(),
+        sourceId: Uuid = Uuid.random(),
         sourceType: AuthorizationGrantSourceType = AuthorizationGrantSourceType.Document,
         type: AuthorizationGrantType = AuthorizationGrantType.Consumable,
         status: DatabaseGrantStatus = DatabaseGrantStatus.Active,
@@ -266,7 +266,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     }
 
     test("find throws a modeled not found error for an unknown grant ID") {
-        val id = UUID.randomUUID()
+        val id = Uuid.random()
 
         shouldThrow<RepositoryReadError.NotFoundError> { repository.find(id) }.detail shouldBe "Grant not found: $id"
     }
@@ -279,7 +279,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
         val result = repository.findBySourceIds(
             AuthorizationGrantSourceType.Document,
-            listOf(first.sourceId, second.sourceId, first.sourceId, UUID.randomUUID()),
+            listOf(first.sourceId, second.sourceId, first.sourceId, Uuid.random()),
         )
 
         result.keys shouldBe setOf(first.sourceId, second.sourceId)
@@ -317,7 +317,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("findBySourceIds returns an empty map for empty input or unknown sources") {
         repository.findBySourceIds(AuthorizationGrantSourceType.Document, emptyList()) shouldBe emptyMap()
-        repository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(UUID.randomUUID())) shouldBe emptyMap()
+        repository.findBySourceIds(AuthorizationGrantSourceType.Document, listOf(Uuid.random())) shouldBe emptyMap()
     }
 
     test("findAll includes principal and recipient once but excludes grantor-only, approver-only and unrelated agents") {
@@ -608,7 +608,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("insert persists all fields, reuses agents and round-trips scopes and typed constraints") {
         val template = insertGrant()
-        val grant = template.copy(id = UUID.randomUUID(), sourceId = UUID.randomUUID(), scopes = listOf(constrained, unconstrained))
+        val grant = template.copy(id = Uuid.random(), sourceId = Uuid.random(), scopes = listOf(constrained, unconstrained))
         val existing = agentRepository.findOrInsert(grant.principal.type, grant.principal.id)
 
         assertGrant(repository.insert(grant), grant)
@@ -623,7 +623,7 @@ class ExposedGrantRepositoryTest : FunSpec({
 
     test("insert persists a persistent grant without an end date") {
         val template = insertGrant(type = AuthorizationGrantType.Persistent)
-        val grant = template.copy(id = UUID.randomUUID(), sourceId = UUID.randomUUID(), validTo = null)
+        val grant = template.copy(id = Uuid.random(), sourceId = Uuid.random(), validTo = null)
 
         repository.insert(grant) shouldBe grant
         repository.find(grant.id) shouldBe grant
@@ -633,8 +633,8 @@ class ExposedGrantRepositoryTest : FunSpec({
     test("insert returns Pending when an Active template has a future validFrom") {
         val template = insertGrant()
         val grant = template.copy(
-            id = UUID.randomUUID(),
-            sourceId = UUID.randomUUID(),
+            id = Uuid.random(),
+            sourceId = Uuid.random(),
             validFrom = future,
             validTo = future + 1.days,
         )
@@ -651,10 +651,10 @@ class ExposedGrantRepositoryTest : FunSpec({
             AuthorizationGrantStatus.entries.forEach { status ->
                 val person = agent(AgentType.Person)
                 val grant = template.copy(
-                    id = UUID.randomUUID(),
+                    id = Uuid.random(),
                     type = type,
                     sourceType = AuthorizationGrantSourceType.Request,
-                    sourceId = UUID.randomUUID(),
+                    sourceId = Uuid.random(),
                     principal = person,
                     grantedBy = person,
                     grantedTo = person,
@@ -675,8 +675,8 @@ class ExposedGrantRepositoryTest : FunSpec({
         val template = insertGrant()
         val person = agent(AgentType.Person)
         val grant = template.copy(
-            id = UUID.randomUUID(),
-            sourceId = UUID.randomUUID(),
+            id = Uuid.random(),
+            sourceId = Uuid.random(),
             principal = person,
             grantedBy = person,
             grantedTo = person,
@@ -817,7 +817,7 @@ class ExposedGrantRepositoryTest : FunSpec({
     }
 
     test("update throws a modeled write not found error for an unknown grant") {
-        val id = UUID.randomUUID()
+        val id = Uuid.random()
         val changedBy = agent(AgentType.Person)
 
         shouldThrow<RepositoryWriteError.NotFoundError> { repository.update(id, AuthorizationGrantStatus.Revoked, changedBy, changedBy) }

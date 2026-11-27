@@ -40,7 +40,7 @@ Set the shared variables and those for each selected flow. Running both flows is
 | `BANKID_SCOPE` | `esign/nnin esign esign/qtsa`. |
 | `BANKID_SIGNING_API` | BankID PAdES signing-order endpoint. |
 | `BANKID_SIGN_BASE_URL` | Browser signing-site base URL. |
-| `BANKID_REDIRECT_URL` | HTTPS signing return URL. |
+| `BANKID_REDIRECT_URL` | HTTPS signing return URL with a hostname that BankID preprod can resolve. |
 | `NATIONAL_IDENTITY_NUMBER` | BankID test person and v0 document subject. |
 | `BANKID_TEST_OTP`, `BANKID_TEST_PASSWORD` | BankID test person's credentials. |
 

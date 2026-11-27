@@ -22,9 +22,9 @@ import no.elhub.auth.v1.domain.PermissionCapability
 import no.elhub.auth.v1.domain.RequestedAuthorizationScope
 import no.elhub.auth.v1.domain.ResourceConstraint
 import no.elhub.auth.v1.domain.ResourceType
-import java.util.UUID
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
 class DocumentToGrantsTest : FunSpec({
     val meteringPointIds = setOf(
@@ -34,8 +34,8 @@ class DocumentToGrantsTest : FunSpec({
     )
     val requestedBy = AuthorizationAgent("7080005053246", AgentType.OrganizationEntity)
     val requestedPrincipal = AuthorizationAgent("999888771", AgentType.Organization)
-    val requestedOf = AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)
-    val approvedBy = AuthorizationAgent(UUID.randomUUID().toString(), AgentType.Person)
+    val requestedOf = AuthorizationAgent(Uuid.random().toString(), AgentType.Person)
+    val approvedBy = AuthorizationAgent(Uuid.random().toString(), AgentType.Person)
     val moveInDate = Instant.parse("2026-09-30T22:00:00Z")
 
     context("EnergySupplierFrameworkAgreement") {
@@ -68,7 +68,7 @@ class DocumentToGrantsTest : FunSpec({
             grant.type shouldBe AuthorizationGrantType.Persistent
             grant.status shouldBe AuthorizationGrantStatus.Active
             grant.sourceType shouldBe AuthorizationGrantSourceType.Document
-            grant.sourceId shouldBe UUID.fromString(document.id)
+            grant.sourceId shouldBe Uuid.parse(document.id)
             grant.principal shouldBe requestedPrincipal
             grant.grantedBy shouldBe requestedOf
             grant.grantedTo shouldBe requestedBy
@@ -80,7 +80,7 @@ class DocumentToGrantsTest : FunSpec({
                     constraints = listOf(contractTypeConstraint),
                 ),
             )
-            grant.validFrom shouldBe startOfToday
+            grant.validFrom shouldBe now
             grant.validTo shouldBe null
             grant.createdAt shouldBe now
             grant.updatedAt shouldBe now
@@ -93,19 +93,19 @@ class DocumentToGrantsTest : FunSpec({
         val laterFuture = Instant.parse("2027-12-01T00:00:00Z")
 
         listOf(
-            Triple(null, null, startOfToday to null),
-            Triple(null, future, startOfToday to future),
-            Triple(past, null, startOfToday to null),
-            Triple(past, future, startOfToday to future),
-            Triple(startOfToday, null, startOfToday to null),
-            Triple(earlierToday, null, earlierToday to null),
+            Triple(null, null, now to null),
+            Triple(null, future, now to future),
+            Triple(past, null, now to null),
+            Triple(past, future, now to future),
+            Triple(startOfToday, null, now to null),
+            Triple(earlierToday, null, now to null),
             Triple(now, null, now to null),
             Triple(now + 1.nanoseconds, null, (now + 1.nanoseconds) to null),
             Triple(laterToday, null, laterToday to null),
             Triple(future, null, future to null),
             Triple(future, laterFuture, future to laterFuture),
             Triple(future, future + 1.nanoseconds, future to (future + 1.nanoseconds)),
-            Triple(null, laterToday, startOfToday to laterToday),
+            Triple(null, laterToday, now to laterToday),
         ).forEach { (requestedFrom, requestedTo, expected) ->
             test("requested $requestedFrom..$requestedTo gives grant ${expected.first}..${expected.second}") {
                 val grant = document.copy(
@@ -141,16 +141,16 @@ class DocumentToGrantsTest : FunSpec({
         }
 
         listOf(
-            "2026-07-01T10:00:00Z" to "2026-06-30T22:00:00Z",
-            "2026-10-26T23:30:00Z" to "2026-10-26T23:00:00Z",
-            "2026-03-29T10:00:00Z" to "2026-03-28T23:00:00Z",
-            "2026-10-25T10:00:00Z" to "2026-10-24T22:00:00Z",
-        ).forEach { (approvalTime, expectedStart) ->
-            test("uses the Oslo start of day when approved at $approvalTime") {
+            "2026-07-01T10:00:00Z",
+            "2026-10-26T23:30:00Z",
+            "2026-03-29T10:00:00Z",
+            "2026-10-25T10:00:00Z",
+        ).forEach { approvalTime ->
+            test("starts at confirmation when confirmed at $approvalTime") {
                 val now = Instant.parse(approvalTime)
                 val grant = document.toGrants(approvedBy, now).single()
 
-                grant.validFrom shouldBe Instant.parse(expectedStart)
+                grant.validFrom shouldBe now
                 grant.createdAt shouldBe now
                 grant.updatedAt shouldBe now
             }
@@ -249,12 +249,12 @@ class DocumentToGrantsTest : FunSpec({
             grant.type shouldBe AuthorizationGrantType.Consumable
             grant.status shouldBe AuthorizationGrantStatus.Active
             grant.sourceType shouldBe AuthorizationGrantSourceType.Document
-            grant.sourceId shouldBe UUID.fromString(document.id)
+            grant.sourceId shouldBe Uuid.parse(document.id)
             grant.principal shouldBe requestedPrincipal
             grant.grantedBy shouldBe requestedOf
             grant.grantedTo shouldBe requestedBy
             grant.approvedBy shouldBe approvedBy
-            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validFrom shouldBe now
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             grant.createdAt shouldBe now
             grant.updatedAt shouldBe now
@@ -269,7 +269,7 @@ class DocumentToGrantsTest : FunSpec({
                 requestedGrantValidTo = Instant.parse("2025-02-01T00:00:00Z"),
             ).toGrants(approvedBy, now).single()
 
-            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validFrom shouldBe now
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             grant.createdAt shouldBe now
             grant.updatedAt shouldBe now
@@ -314,8 +314,8 @@ class DocumentToGrantsTest : FunSpec({
             grants.map { it.validFrom }.toSet().size shouldBe 1
             grants.map { it.validTo }.toSet().size shouldBe 1
             grants.forEach { grant ->
-                grant.sourceId shouldBe UUID.fromString(document.id)
-                grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+                grant.sourceId shouldBe Uuid.parse(document.id)
+                grant.validFrom shouldBe now
                 grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
                 grant.createdAt shouldBe now
                 grant.updatedAt shouldBe now
@@ -426,12 +426,12 @@ class DocumentToGrantsTest : FunSpec({
             grant.type shouldBe AuthorizationGrantType.Consumable
             grant.status shouldBe AuthorizationGrantStatus.Active
             grant.sourceType shouldBe AuthorizationGrantSourceType.Document
-            grant.sourceId shouldBe UUID.fromString(document.id)
+            grant.sourceId shouldBe Uuid.parse(document.id)
             grant.principal shouldBe requestedPrincipal
             grant.grantedBy shouldBe requestedOf
             grant.grantedTo shouldBe requestedBy
             grant.approvedBy shouldBe approvedBy
-            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validFrom shouldBe now
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             grant.createdAt shouldBe now
             grant.updatedAt shouldBe now
@@ -446,7 +446,7 @@ class DocumentToGrantsTest : FunSpec({
                 requestedGrantValidTo = Instant.parse("2025-02-01T00:00:00Z"),
             ).toGrants(approvedBy, now).single()
 
-            grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+            grant.validFrom shouldBe now
             grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
             grant.createdAt shouldBe now
             grant.updatedAt shouldBe now
@@ -499,8 +499,8 @@ class DocumentToGrantsTest : FunSpec({
             grants.map { it.validFrom }.toSet().size shouldBe 1
             grants.map { it.validTo }.toSet().size shouldBe 1
             grants.forEach { grant ->
-                grant.sourceId shouldBe UUID.fromString(document.id)
-                grant.validFrom shouldBe Instant.parse("2026-10-25T23:00:00Z")
+                grant.sourceId shouldBe Uuid.parse(document.id)
+                grant.validFrom shouldBe now
                 grant.validTo shouldBe Instant.parse("2028-10-26T22:00:00Z")
                 grant.createdAt shouldBe now
                 grant.updatedAt shouldBe now

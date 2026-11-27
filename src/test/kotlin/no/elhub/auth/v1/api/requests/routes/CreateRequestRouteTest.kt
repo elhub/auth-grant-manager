@@ -5,9 +5,14 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.call.body
+import io.ktor.client.request.accept
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,6 +28,7 @@ import no.elhub.auth.v0.postJson
 import no.elhub.auth.v0.setupAppWith
 import no.elhub.auth.v1.api.common.assertUnsupportedQueryParameters
 import no.elhub.auth.v1.api.requests.response.JsonApiGetAuthorizationRequestResponse
+import no.elhub.auth.v1.common.AuthorizationRulesService
 import no.elhub.auth.v1.common.auth.AgentType
 import no.elhub.auth.v1.common.auth.AuthorizationAgent
 import no.elhub.auth.v1.domain.AuthorizationRequest
@@ -36,8 +42,8 @@ import no.elhub.auth.v1.features.requests.CreateRequestHandler
 import no.elhub.auth.v1.features.requests.creation.RedirectUriValidator
 import no.elhub.auth.v1.repositories.RequestRepository
 import no.elhub.devxp.jsonapi.response.JsonApiErrorCollection
-import java.util.UUID
 import kotlin.time.Instant
+import kotlin.uuid.Uuid
 import no.elhub.auth.v0.features.common.party.PartyService as AgentService
 
 class CreateRequestRouteTest : FunSpec({
@@ -69,7 +75,7 @@ class CreateRequestRouteTest : FunSpec({
     lateinit var agentService: AgentService
 
     fun savedRequest() = AuthorizationRequest(
-        id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+        id = Uuid.parse("123e4567-e89b-12d3-a456-426614174000"),
         requestType = AuthorizationRequestType.EnergySupplierFrameworkAgreement,
         status = AuthorizationRequestStatus.Pending,
         requestedScopes = emptyList(),
@@ -85,13 +91,31 @@ class CreateRequestRouteTest : FunSpec({
         requestedBy = authorizedAgent,
         requestedPrincipal = requestedPrincipal,
         requestedOf = requestedOf,
-        approvedBy = null,
+        decidedBy = null,
         authorizationGrants = null,
     )
 
     beforeAny {
         handler = mockk()
         agentService = mockk()
+    }
+
+    test("POST / rejects PDF-only Accept before creating a request") {
+        coEvery { agentService.resolve(any()) } returnsMany listOf(requestedPrincipal.right(), requestedOf.right())
+        coEvery { handler(any(), any(), any(), any()) } returns savedRequest()
+
+        testApplication {
+            setupAppWith(authorizedAgent) { route(agentService, handler) }
+
+            val response = createClient {}.post("/") {
+                accept(ContentType.Application.Pdf)
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+            }
+
+            response.status shouldBe HttpStatusCode.NotAcceptable
+            coVerify(exactly = 0) { handler(any(), any(), any(), any()) }
+        }
     }
 
     test("POST / rejects unsupported query parameters without calling the handler") {
@@ -119,7 +143,14 @@ class CreateRequestRouteTest : FunSpec({
                 agents.getValue("requestedOf").right(),
             )
             val repository = mockk<RequestRepository>()
-            val creationHandler = CreateRequestHandler(mockk(), mockk(), mockk(), mockk<RedirectUriValidator>(relaxed = true), repository)
+            val creationHandler = CreateRequestHandler(
+                mockk(),
+                mockk(),
+                mockk(),
+                mockk<RedirectUriValidator>(relaxed = true),
+                repository,
+                mockk<AuthorizationRulesService>(),
+            )
 
             testApplication {
                 setupAppWith(agents.getValue("requestedBy")) {
