@@ -12,6 +12,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
@@ -60,6 +61,13 @@ class ExternalServiceStubs(private val baseUrl: String) {
         /** The PDP lets [requestedOf] act on behalf of [principal]. No other combination is allowed. */
         suspend fun stubAgentRepresentativeDecision(requestedOf: Organization, principal: Organization) =
             this@ExternalServiceStubs.allowRepresentative(requestedOf.number, principal.number)
+
+        /** The PDP reports which of the requested points the organization cannot write to. */
+        suspend fun stubMeteringPointWriteAccess(
+            principalInternalId: String,
+            meteringPointIds: List<String>,
+            unauthorizedMeteringPointIds: List<String>,
+        ) = registerMeteringPointWriteAccess(principalInternalId, meteringPointIds, unauthorizedMeteringPointIds)
     }
 
     inner class Persons {
@@ -229,6 +237,52 @@ class ExternalServiceStubs(private val baseUrl: String) {
         }
     }
 
+    private suspend fun registerMeteringPointWriteAccess(
+        principalInternalId: String,
+        meteringPointIds: List<String>,
+        unauthorizedMeteringPointIds: List<String>,
+    ) = stub(
+        priority = 1,
+        request = {
+            put("method", "POST")
+            put("urlPath", METERING_POINT_WRITE_ROUTE)
+            putJsonArray("bodyPatterns") {
+                add(
+                    buildJsonObject {
+                        putJsonObject("matchesJsonPath") {
+                            put("expression", "$.input.payload")
+                            put(
+                                "equalToJson",
+                                buildJsonObject {
+                                    putJsonArray("MeteringPoints") {
+                                        meteringPointIds.sorted().forEach { id ->
+                                            add(buildJsonObject { put("MeteringPointID", id) })
+                                        }
+                                    }
+                                    putJsonObject("subject") {
+                                        put("actingGLN", principalInternalId)
+                                        putJsonArray("authorizedFunctions") {
+                                            add(buildJsonObject { put("functionName", "EndUser") })
+                                        }
+                                    }
+                                }.toString()
+                            )
+                        }
+                    }
+                )
+            }
+        },
+        response = buildJsonObject {
+            putJsonObject("result") {
+                put("authorized", unauthorizedMeteringPointIds.isEmpty())
+                putJsonArray("unauthorizedMeteringPoints") {
+                    unauthorizedMeteringPointIds.forEach { add(JsonPrimitive(it)) }
+                }
+                putJsonObject("tokenInfo") { put("tokenStatus", "verified") }
+            }
+        }.toString(),
+    )
+
     private suspend fun registerEdielFailure(gln: String, status: Int) = stub(
         priority = 1,
         request = {
@@ -302,7 +356,6 @@ class ExternalServiceStubs(private val baseUrl: String) {
 
     suspend fun registerMeteringPoint(
         id: String,
-        endUserId: String,
         postalCode: String,
         meterNumber: String,
         blockedForSwitching: Boolean = false,
@@ -311,7 +364,7 @@ class ExternalServiceStubs(private val baseUrl: String) {
         request = {
             put("method", "GET")
             put("urlPath", "$METERING_POINTS_PATH/metering-points/$id")
-            putJsonObject("queryParameters") { putJsonObject("endUserId") { put("equalTo", endUserId) } }
+            putJsonObject("queryParameters") { putJsonObject("endUserId") { put("absent", true) } }
         },
         response = """
             {"data":{"id":"$id","type":"MeteringPoint","attributes":{
@@ -398,5 +451,6 @@ class ExternalServiceStubs(private val baseUrl: String) {
         private const val SERVICE_TOKEN = "acceptance-service-token"
         private const val AGENT_APPROVER_ROUTE = "/v1/data/v3/token/agent/approver"
         private const val AGENT_REPRESENTATIVE_ROUTE = "/v1/data/v3/token/agent/representative"
+        private const val METERING_POINT_WRITE_ROUTE = "/v1/data/v3/meteringpoint/meteringpoint/write"
     }
 }
