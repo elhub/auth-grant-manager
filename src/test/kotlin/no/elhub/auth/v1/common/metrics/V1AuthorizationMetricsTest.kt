@@ -18,6 +18,8 @@ import no.elhub.auth.v1.repositories.DatabaseRequestStatus
 import no.elhub.auth.v1.repositories.ExposedAgentRepository
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 class V1AuthorizationMetricsTest : FunSpec({
@@ -39,6 +41,7 @@ class V1AuthorizationMetricsTest : FunSpec({
         approved: Boolean = false,
         rejected: Boolean = false,
         timestamped: Boolean = true,
+        validUntil: Instant = now() + 1.days,
     ) = withTransaction {
         val party = agentRepository.findOrInsert(AgentType.Person, Uuid.random().toString()).id
         AuthorizationRequestTable.insert {
@@ -50,11 +53,17 @@ class V1AuthorizationMetricsTest : FunSpec({
             it[requestedOf] = party
             it[decidedBy] = if (approved) party else null
             it[approvedAt] = if (approved && timestamped) now() else null
+            it[validTo] = validUntil
             it[meta] = JsonObject(emptyMap())
         }
     }
 
-    suspend fun insertDocument(type: AuthorizationDocumentType, approved: Boolean = false, timestamped: Boolean = true) = withTransaction {
+    suspend fun insertDocument(
+        type: AuthorizationDocumentType,
+        approved: Boolean = false,
+        timestamped: Boolean = true,
+        validUntil: Instant = now() + 1.days,
+    ) = withTransaction {
         val party = agentRepository.findOrInsert(AgentType.Person, Uuid.random().toString()).id
         AuthorizationDocumentTable.insert {
             it[documentType] = type
@@ -63,21 +72,26 @@ class V1AuthorizationMetricsTest : FunSpec({
             it[requestedOf] = party
             it[decidedBy] = if (approved) party else null
             it[signedAt] = if (approved && timestamped) now() else null
+            it[validTo] = validUntil
             it[meta] = JsonObject(emptyMap())
             it[file] = ByteArray(0)
         }
     }
 
-    test("refresh publishes created, approved and rejected counts per type") {
+    test("refresh publishes created totals and current status counts per type") {
         val supplierChange = AuthorizationRequestType.ChangeOfEnergySupplierForOrganization
+        val frameworkAgreement = AuthorizationDocumentType.EnergySupplierFrameworkAgreement
+        val pastValidTo = now() - 1.days
         insertRequest(supplierChange)
+        insertRequest(supplierChange, validUntil = pastValidTo)
         insertRequest(supplierChange, approved = true)
-        insertRequest(supplierChange, approved = true, timestamped = false)
+        insertRequest(supplierChange, approved = true, timestamped = false, validUntil = pastValidTo)
         insertRequest(supplierChange, rejected = true)
-        insertRequest(supplierChange, approved = true, rejected = true)
-        insertDocument(AuthorizationDocumentType.EnergySupplierFrameworkAgreement, approved = true)
-        insertDocument(AuthorizationDocumentType.EnergySupplierFrameworkAgreement, approved = true, timestamped = false)
-        insertDocument(AuthorizationDocumentType.EnergySupplierFrameworkAgreement)
+        insertRequest(supplierChange, approved = true, rejected = true, validUntil = pastValidTo)
+        insertDocument(frameworkAgreement)
+        insertDocument(frameworkAgreement, validUntil = pastValidTo)
+        insertDocument(frameworkAgreement, approved = true)
+        insertDocument(frameworkAgreement, approved = true, timestamped = false, validUntil = pastValidTo)
 
         val registry = SimpleMeterRegistry()
         val metrics = V1AuthorizationMetrics(registry)
@@ -93,13 +107,20 @@ class V1AuthorizationMetricsTest : FunSpec({
         fun value(name: String, type: Enum<*>, state: MetricState) =
             registry.get(name).tag("type", type.name).tag("state", state.label).gauge().value().toLong()
 
-        val frameworkAgreement = AuthorizationDocumentType.EnergySupplierFrameworkAgreement
-        value(REQUESTS_METRIC, supplierChange, MetricState.Created) shouldBe 5
+        value(REQUESTS_METRIC, supplierChange, MetricState.Created) shouldBe 6
         value(REQUESTS_METRIC, supplierChange, MetricState.Approved) shouldBe 2
         value(REQUESTS_METRIC, supplierChange, MetricState.Rejected) shouldBe 2
+        value(REQUESTS_METRIC, supplierChange, MetricState.Pending) shouldBe 1
+        value(REQUESTS_METRIC, supplierChange, MetricState.Expired) shouldBe 1
         value(REQUESTS_METRIC, AuthorizationRequestType.EnergySupplierFrameworkAgreement, MetricState.Created) shouldBe 0
-        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Created) shouldBe 3
+        value(REQUESTS_METRIC, AuthorizationRequestType.EnergySupplierFrameworkAgreement, MetricState.Pending) shouldBe 0
+        value(REQUESTS_METRIC, AuthorizationRequestType.EnergySupplierFrameworkAgreement, MetricState.Expired) shouldBe 0
+        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Created) shouldBe 4
         value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Approved) shouldBe 2
+        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Pending) shouldBe 1
+        value(DOCUMENTS_METRIC, frameworkAgreement, MetricState.Expired) shouldBe 1
         value(DOCUMENTS_METRIC, AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization, MetricState.Approved) shouldBe 0
+        value(DOCUMENTS_METRIC, AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization, MetricState.Pending) shouldBe 0
+        value(DOCUMENTS_METRIC, AuthorizationDocumentType.ChangeOfEnergySupplierForOrganization, MetricState.Expired) shouldBe 0
     }
 })
