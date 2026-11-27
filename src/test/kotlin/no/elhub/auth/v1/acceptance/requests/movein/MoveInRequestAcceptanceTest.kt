@@ -22,7 +22,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.time.toKotlinInstant
 
 private val customerMeteringPointIds = listOf("707057500000000001", "707057500000000002")
-private const val customerOrganizationElhubInternalId = "internal-org-1"
+private const val CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID = "internal-org-1"
 private val oslo = ZoneId.of("Europe/Oslo")
 private val todayInOslo get() = LocalDate.now(oslo)
 
@@ -45,9 +45,9 @@ class MoveInRequestAcceptanceTest : FunSpec({
 
         externalServices.organizationsService.stubPartyByIdAndType(exampleSupplier)
         externalServices.organizationsService.stubBrregOrganizationByNumber(customerOrganization)
-        externalServices.registerOrganizationIdentification(customerOrganization.number, customerOrganizationElhubInternalId)
+        externalServices.registerOrganizationIdentification(customerOrganization.number, CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID)
         externalServices.pdpService.stubMeteringPointWriteAccess(
-            customerOrganizationElhubInternalId,
+            CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID,
             meteringPointIds,
             unauthorizedMeteringPointIds = meteringPointIds,
         )
@@ -182,9 +182,9 @@ class MoveInRequestAcceptanceTest : FunSpec({
     test("Creating a move-in request is rejected when the organization already has write access to one requested metering point") {
         externalServices.pdpService.stubAuthInfo(supplier = exampleSupplier)
         externalServices.pdpService.stubAgentRepresentativeDecision(customerOrganization, customerOrganization)
-        externalServices.registerOrganizationIdentification(customerOrganization.number, customerOrganizationElhubInternalId)
+        externalServices.registerOrganizationIdentification(customerOrganization.number, CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID)
         externalServices.pdpService.stubMeteringPointWriteAccess(
-            customerOrganizationElhubInternalId,
+            CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID,
             customerMeteringPointIds,
             unauthorizedMeteringPointIds = listOf(customerMeteringPointIds.last()),
         )

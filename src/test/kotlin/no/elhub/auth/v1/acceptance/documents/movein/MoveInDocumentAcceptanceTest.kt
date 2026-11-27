@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toKotlinInstant
 
 private val customerMeteringPointIds = listOf("707057500000000001", "707057500000000002")
-private const val customerOrganizationElhubInternalId = "internal-org-1"
+private const val CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID = "internal-org-1"
 private val documentSigner = Person(id = "d6784082-8344-e733-e053-02058d0a6752", nationalIdentityNumber = "02916297702")
 
 class MoveInDocumentAcceptanceTest : FunSpec({
@@ -48,9 +48,9 @@ class MoveInDocumentAcceptanceTest : FunSpec({
 
         externalServices.organizationsService.stubPartyByIdAndType(exampleSupplier)
         externalServices.organizationsService.stubBrregOrganizationByNumber(customerOrganization)
-        externalServices.registerOrganizationIdentification(customerOrganization.number, customerOrganizationElhubInternalId)
+        externalServices.registerOrganizationIdentification(customerOrganization.number, CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID)
         externalServices.pdpService.stubMeteringPointWriteAccess(
-            customerOrganizationElhubInternalId,
+            CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID,
             meteringPointIds,
             unauthorizedMeteringPointIds = meteringPointIds,
         )
@@ -185,9 +185,9 @@ class MoveInDocumentAcceptanceTest : FunSpec({
     test("Creating a move-in document is rejected when the organization already has write access to one requested metering point") {
         externalServices.pdpService.stubAuthInfo(supplier = exampleSupplier)
         externalServices.pdpService.stubAgentRepresentativeDecision(customerOrganization, customerOrganization)
-        externalServices.registerOrganizationIdentification(customerOrganization.number, customerOrganizationElhubInternalId)
+        externalServices.registerOrganizationIdentification(customerOrganization.number, CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID)
         externalServices.pdpService.stubMeteringPointWriteAccess(
-            customerOrganizationElhubInternalId,
+            CUSTOMER_ORGANIZATION_ELHUB_INTERNAL_ID,
             customerMeteringPointIds,
             unauthorizedMeteringPointIds = listOf(customerMeteringPointIds.last()),
         )
