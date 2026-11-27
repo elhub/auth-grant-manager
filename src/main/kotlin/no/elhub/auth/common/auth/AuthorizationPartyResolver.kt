@@ -8,6 +8,37 @@ const val AUTHINFO_POLICY_ROUTE = "/v1/data/v3/token/authinfo"
 
 private val log = LoggerFactory.getLogger("AuthorizationPartyResolver")
 
+fun resolveAuthenticatedActor(response: AuthInfoPolicy.Response): AuthorizationParty? {
+    val tokenInfo = response.tokenInfo ?: return null
+    val type: PartyType
+    val id: String?
+    when (tokenInfo.tokenType) {
+        TokenType.ENDUSER -> {
+            val authInfo = response.authInfo ?: return null
+            if (authInfo.error != null) return null
+            type = PartyType.Person
+            id = when (authInfo.actingType?.trim()?.lowercase()) {
+                "person" -> authInfo.actingId
+                "organisation" -> authInfo.originalId
+                else -> return null
+            }
+        }
+
+        TokenType.MASKINPORTEN -> {
+            type = PartyType.Organization
+            id = tokenInfo.partyId
+        }
+
+        TokenType.ELHUB_SERVICE -> {
+            type = PartyType.System
+            id = tokenInfo.partyId
+        }
+
+        else -> return null
+    }
+    return id?.takeIf { it.isNotBlank() }?.let { AuthorizationParty(it, type) }
+}
+
 fun resolveAuthorizedParty(response: AuthInfoPolicy.Response): AuthorizationParty? = when (response.tokenInfo?.tokenType) {
     TokenType.MASKINPORTEN -> resolveMaskinportenParty(response)
 

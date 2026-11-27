@@ -17,6 +17,7 @@ class UpdateGrantHandler(
         authorizedAgent: AuthorizationAgent,
         status: AuthorizationGrantStatus,
         type: AuthorizationGrantType,
+        actor: AuthorizationAgent,
     ): AuthorizationGrant {
         val isSystem = authorizedAgent.type == AgentType.System
         if (isSystem && status == AuthorizationGrantStatus.Revoked) {
@@ -44,7 +45,7 @@ class UpdateGrantHandler(
         }
 
         return try {
-            grantRepository.update(id, status)
+            grantRepository.update(id, status, authorizedAgent, actor)
         } catch (error: RepositoryWriteError.ConflictError) {
             throw UpdateGrantError.InvalidTransition()
         } catch (error: RepositoryWriteError.ExpiredError) {

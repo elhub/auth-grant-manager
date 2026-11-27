@@ -4,6 +4,10 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.util.AttributeKey
 
 val AuthorizedPartyKey = AttributeKey<AuthorizationParty>("AuthorizedParty")
+val AuthenticatedActorKey = AttributeKey<AuthorizationParty>("AuthenticatedActor")
 
 val ApplicationCall.authorizedParty: AuthorizationParty
     get() = attributes[AuthorizedPartyKey]
+
+val ApplicationCall.authenticatedActor: AuthorizationParty?
+    get() = attributes.getOrNull(AuthenticatedActorKey)

@@ -23,6 +23,7 @@ import no.elhub.auth.v1.domain.ResourceType
 import no.elhub.auth.v1.domain.grantValidityStatus
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.compoundAnd
 import org.jetbrains.exposed.v1.core.compoundOr
@@ -64,7 +65,12 @@ interface GrantRepository {
     ): Page<AuthorizationGrant>
 
     suspend fun insert(grant: AuthorizationGrant): AuthorizationGrant
-    suspend fun update(grantId: Uuid, newStatus: AuthorizationGrantStatus): AuthorizationGrant
+    suspend fun update(
+        grantId: Uuid,
+        newStatus: AuthorizationGrantStatus,
+        changedByPrincipal: AuthorizationAgent,
+        changedByActor: AuthorizationAgent,
+    ): AuthorizationGrant
 }
 
 class ExposedGrantRepository(
@@ -277,7 +283,12 @@ class ExposedGrantRepository(
         )
     }
 
-    override suspend fun update(grantId: Uuid, newStatus: AuthorizationGrantStatus): AuthorizationGrant = withTransaction {
+    override suspend fun update(
+        grantId: Uuid,
+        newStatus: AuthorizationGrantStatus,
+        changedByPrincipal: AuthorizationAgent,
+        changedByActor: AuthorizationAgent,
+    ): AuthorizationGrant = withTransaction {
         val row = AuthorizationGrantTable.selectAll()
             .where { AuthorizationGrantTable.id eq grantId }
             .forUpdate(ForUpdateOption.PostgreSQL.ForNoKeyUpdate)
@@ -301,10 +312,22 @@ class ExposedGrantRepository(
             else -> null
         } ?: throw RepositoryWriteError.ConflictError("Invalid transition for grant $grantId from $status to $newStatus")
 
-        AuthorizationGrantTable.updateReturning(where = { AuthorizationGrantTable.id eq grantId }) {
+        val updated = AuthorizationGrantTable.updateReturning(where = { AuthorizationGrantTable.id eq grantId }) {
             it[AuthorizationGrantTable.status] = target
             it[updatedAt] = now
-        }.single().toAuthorizationGrant(
+        }.single()
+
+        AuthorizationAuditLogTable.insert {
+            it[AuthorizationAuditLogTable.grantId] = grantId
+            it[changedAt] = now
+            it[AuthorizationAuditLogTable.changedByPrincipal] = changedByPrincipal.id
+            it[AuthorizationAuditLogTable.changedByActor] = changedByActor.id
+            it[valueChanged] = "status"
+            it[valueBefore] = row[AuthorizationGrantTable.status].name
+            it[valueAfter] = target.name
+        }
+
+        updated.toAuthorizationGrant(
             principal = agentRepository.find(row[AuthorizationGrantTable.principal].toKotlinUuid()).toAuthorizationAgent(),
             grantedBy = agentRepository.find(row[AuthorizationGrantTable.grantedBy].toKotlinUuid()).toAuthorizationAgent(),
             grantedTo = agentRepository.find(row[AuthorizationGrantTable.grantedTo].toKotlinUuid()).toAuthorizationAgent(),
@@ -428,6 +451,19 @@ enum class DatabaseGrantStatus {
     Active,
     Revoked,
     Exhausted,
+}
+
+object AuthorizationAuditLogTable : Table("auth_v1.authorization_audit_log") {
+    val grantId = uuid("authorization_grant_id").references(AuthorizationGrantTable.id)
+    val changedAt = timestamp("changed_at")
+    val changedByPrincipal = varchar("changed_by_principal", 64)
+    val changedByActor = varchar("changed_by_actor", 64)
+    val valueChanged = varchar("value_changed", 64).nullable()
+    val valueBefore = varchar("value_before", 255).nullable()
+    val valueAfter = varchar("value_after", 255).nullable()
+    val message = text("message").nullable()
+
+    override val primaryKey = PrimaryKey(grantId, changedAt)
 }
 
 object AuthorizationGrantScopeTable : UuidTable("auth_v1.authorization_grant_scope") {
