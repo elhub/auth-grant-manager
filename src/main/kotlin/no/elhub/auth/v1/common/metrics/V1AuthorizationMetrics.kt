@@ -25,6 +25,8 @@ enum class MetricState(val label: String) {
     Created("created"),
     Approved("approved"),
     Rejected("rejected"),
+    Pending("pending"),
+    Expired("expired"),
 }
 
 class V1AuthorizationMetrics(registry: MeterRegistry) {
@@ -40,12 +42,18 @@ class V1AuthorizationMetrics(registry: MeterRegistry) {
         registry = registry,
         name = REQUESTS_METRIC,
         types = AuthorizationRequestType.entries,
-        states = listOf(MetricState.Created, MetricState.Approved, MetricState.Rejected),
+        states = listOf(MetricState.Created, MetricState.Approved, MetricState.Rejected, MetricState.Pending, MetricState.Expired),
         countsSql = """
             SELECT request_type::text AS type,
                    count(*) AS created,
                    count(*) FILTER (WHERE status = 'Pending' AND decided_by IS NOT NULL) AS approved,
-                   count(*) FILTER (WHERE status = 'Rejected') AS rejected
+                   count(*) FILTER (WHERE status = 'Rejected') AS rejected,
+                   count(*) FILTER (
+                       WHERE status = 'Pending' AND decided_by IS NULL AND valid_to > CURRENT_TIMESTAMP
+                   ) AS pending,
+                   count(*) FILTER (
+                       WHERE status = 'Pending' AND decided_by IS NULL AND valid_to <= CURRENT_TIMESTAMP
+                   ) AS expired
             FROM auth_v1.authorization_request
             GROUP BY request_type
         """,
@@ -55,11 +63,13 @@ class V1AuthorizationMetrics(registry: MeterRegistry) {
         registry = registry,
         name = DOCUMENTS_METRIC,
         types = AuthorizationDocumentType.entries,
-        states = listOf(MetricState.Created, MetricState.Approved),
+        states = listOf(MetricState.Created, MetricState.Approved, MetricState.Pending, MetricState.Expired),
         countsSql = """
             SELECT document_type::text AS type,
                    count(*) AS created,
-                   count(*) FILTER (WHERE decided_by IS NOT NULL) AS approved
+                   count(*) FILTER (WHERE decided_by IS NOT NULL) AS approved,
+                   count(*) FILTER (WHERE decided_by IS NULL AND valid_to > CURRENT_TIMESTAMP) AS pending,
+                   count(*) FILTER (WHERE decided_by IS NULL AND valid_to <= CURRENT_TIMESTAMP) AS expired
             FROM auth_v1.authorization_document
             GROUP BY document_type
         """,
