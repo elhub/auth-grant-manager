@@ -393,6 +393,7 @@ class ExternalServiceStubs(private val baseUrl: String) {
         const val AUTH_PERSONS_PATH = "/auth-persons"
         const val ORGANISATIONS_PATH = "/organisations"
         const val METERING_POINTS_PATH = "/metering-points-service"
+        const val END_USERS_PATH = "/end-users-service"
         const val IDP_TOKEN_PATH = "/idp/token"
         const val EDIEL_PATH = "/ediel"
         private const val SERVICE_TOKEN = "acceptance-service-token"

@@ -10,6 +10,7 @@ ktor:
       - no.elhub.auth.v0.features.businessprocesses.datasharing.StromprisServiceModuleKt.stromprisServiceModule
       - no.elhub.auth.v0.features.businessprocesses.ediel.EdielServiceModuleKt.edielServiceModule
       - no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsServiceModuleKt.meteringPointsServiceModule
+      - no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersServiceModuleKt.endUsersServiceModule
       - no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsServiceModuleKt.organisationsServiceModule
       - no.elhub.auth.v0.features.businessprocesses.BusinessProcessesModuleKt.businessProcessesModule
       - no.elhub.auth.common.api.openapi.ModuleKt.module
@@ -65,6 +66,11 @@ authPersons:
     clientSecret: ${AUTH_PERSONS_IDP_CLIENT_SECRET}
 
 structureData:
+  endUsersService:
+    serviceUrl: ${STRUCTURE_DATA_END_USERS_SERVICE_URL}
+    idp:
+      clientId: ${STRUCTURE_DATA_END_USERS_SERVICE_IDP_CLIENT_ID}
+      clientSecret: ${STRUCTURE_DATA_END_USERS_SERVICE_IDP_CLIENT_SECRET}
   meteringPointsService:
     serviceUrl: ${STRUCTURE_DATA_METERING_POINTS_SERVICE_URL}
     idp:

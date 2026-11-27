@@ -50,9 +50,8 @@ class ChangeOfEnergySupplierDocumentHandler(
         }
 
         val meteringPoints = try {
-            meteringPointsService.getMeteringPointsForOrganisation(
-                meteringPointIds = meteringPointIds,
-                elhubInternalId = requestedPrincipalElhubInternalId,
+            meteringPointsService.getMeteringPointsByIds(
+                meteringPointIds = meteringPointIds
             )
         } catch (e: MeteringPointsLookupException) {
             throw e.clientError.toDocumentPreparationError()

@@ -49,9 +49,8 @@ class ChangeOfEnergySupplierRequestHandler(
         }
 
         val meteringPoints = try {
-            meteringPointsService.getMeteringPointsForOrganisation(
+            meteringPointsService.getMeteringPointsByIds(
                 meteringPointIds = meteringPointIds,
-                elhubInternalId = requestedPrincipalElhubInternalId,
             )
         } catch (e: MeteringPointsLookupException) {
             throw e.clientError.toRequestPreparationError()

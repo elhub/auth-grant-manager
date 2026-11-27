@@ -7,7 +7,6 @@ import arrow.core.raise.either
 import arrow.core.right
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
-import no.elhub.auth.common.structuredata.meteringpoints.AccessType.SHARED
 import no.elhub.auth.common.structuredata.organisations.PartyStatus
 import no.elhub.auth.common.structuredata.organisations.PartyType
 import no.elhub.auth.v0.features.businessprocesses.BusinessProcessError
@@ -24,6 +23,9 @@ import no.elhub.auth.v0.features.businessprocesses.ediel.RedirectUriDomainValida
 import no.elhub.auth.v0.features.businessprocesses.ediel.redirectUriFor
 import no.elhub.auth.v0.features.businessprocesses.ediel.validateRedirectUriDomain
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.CurrentEndUserNotFoundException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUserLookupException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
 import no.elhub.auth.v0.features.common.CreateScopeData
@@ -54,6 +56,7 @@ private fun changeOfBalanceSupplierGrantValidTo() =
     todayOslo().plus(DatePeriod(years = CHANGE_OF_BALANCE_SUPPLIER_GRANT_VALID_YEARS))
 
 class ChangeOfBalanceSupplierBusinessHandler(
+    private val endUsersService: EndUsersService,
     private val meteringPointsService: MeteringPointsService,
     private val organisationsService: OrganisationsService,
     private val stromprisService: StromprisService,
@@ -161,9 +164,8 @@ class ChangeOfBalanceSupplierBusinessHandler(
             return ChangeOfBalanceSupplierValidationError.MissingRequestedFrom.left()
         }
 
-        val meteringPoint = meteringPointsService.getMeteringPointByIdAndElhubInternalId(
+        val meteringPoint = meteringPointsService.getMeteringPointById(
             meteringPointId = model.requestedForMeteringPointId,
-            elhubInternalId = model.requestedFrom.id
         ).mapLeft { err ->
             return when (err) {
                 ClientError.NotFound -> ChangeOfBalanceSupplierValidationError.MeteringPointNotFound.left()
@@ -175,7 +177,19 @@ class ChangeOfBalanceSupplierBusinessHandler(
             }
         }.getOrElse { return ChangeOfBalanceSupplierValidationError.MeteringPointNotFound.left() }
 
-        if (meteringPoint.data.relationships.endUser == null || meteringPoint.data.attributes?.accessType == SHARED) {
+        val endUserResponse = try {
+            endUsersService.getEndUserByMeteringPointId(meteringPointId = model.requestedForMeteringPointId)
+        } catch (error: EndUserLookupException) {
+            return when (error) {
+                is CurrentEndUserNotFoundException -> ChangeOfBalanceSupplierValidationError.RequestedFromNotMeteringPointEndUser
+                else -> ChangeOfBalanceSupplierValidationError.UnexpectedError
+            }.left()
+        }
+        val currentEndUserId = endUserResponse.data.attributes?.endUserId
+            ?.takeIf { it.isNotBlank() }
+            ?: return ChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+
+        if (currentEndUserId != model.requestedFrom.id) {
             return ChangeOfBalanceSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
         }
 
