@@ -1,7 +1,6 @@
 package no.elhub.auth.v0.features.businessprocesses.structuredata.endusers
 
-import io.kotest.assertions.arrow.core.shouldBeLeft
-import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -13,14 +12,16 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import no.elhub.auth.common.ELHUB_TRACE_ID_HEADER
 import no.elhub.auth.common.TRACE_ID_MDC_KEY
 import no.elhub.auth.v0.features.businessprocesses.common.JwtTokenProvider
-import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
 import org.slf4j.MDC
+import java.io.IOException
 import java.util.UUID
 
 class EndUsersApiTest : FunSpec({
@@ -34,7 +35,7 @@ class EndUsersApiTest : FunSpec({
     val serviceUrl = "http://localhost:8080"
     val config = EndUsersApiConfig(serviceUrl)
     val tokenProvider = mockk<JwtTokenProvider>()
-    coEvery { tokenProvider.getToken() } returns "token"
+    var errorStatus = HttpStatusCode.NotFound
 
     val client = HttpClient(MockEngine) {
         install(ContentNegotiation) {
@@ -67,7 +68,7 @@ class EndUsersApiTest : FunSpec({
                 } else {
                     respond(
                         content = """{"errors":[{"status":"404","title":"Not Found","detail":"End user not found"}]}""",
-                        status = HttpStatusCode.NotFound,
+                        status = errorStatus,
                         headers = headersOf(HttpHeaders.ContentType, "application/json"),
                     )
                 }
@@ -77,6 +78,9 @@ class EndUsersApiTest : FunSpec({
     val service = EndUsersApi(config, client, tokenProvider)
 
     beforeTest {
+        clearMocks(tokenProvider)
+        coEvery { tokenProvider.getToken() } returns "token"
+        errorStatus = HttpStatusCode.NotFound
         capturedMeteringPointId = null
         capturedAuthorizationHeader = null
         capturedTraceIdHeader = null
@@ -90,24 +94,56 @@ class EndUsersApiTest : FunSpec({
     test("queries an end user by metering point ID") {
         val response = service.getEndUserByMeteringPointId(meteringPointId)
 
-        response.shouldBeRight()
         capturedMeteringPointId shouldBe meteringPointId
         capturedAuthorizationHeader shouldBe "Bearer token"
         capturedTraceIdHeader shouldBe traceId
-        response.value.data.attributes?.endUserUniqueId shouldBe endUserId
+        response.data.attributes?.endUserUniqueId shouldBe endUserId
     }
 
-    test("maps an unknown end user to not found") {
-        val response = service.getEndUserByMeteringPointId(anotherMeteringPointId)
+    test("throws when the current end user is not found") {
+        shouldThrow<CurrentEndUserNotFoundException> {
+            service.getEndUserByMeteringPointId(anotherMeteringPointId)
+        }
+    }
 
-        response.shouldBeLeft()
-        response.value shouldBe ClientError.NotFound
+    listOf(HttpStatusCode.BadRequest, HttpStatusCode.Unauthorized, HttpStatusCode.InternalServerError).forEach { status ->
+        test("throws a lookup exception when the end user service returns HTTP ${status.value}") {
+            errorStatus = status
+
+            val thrown = shouldThrow<EndUserLookupException> {
+                service.getEndUserByMeteringPointId(anotherMeteringPointId)
+            }
+
+            thrown.message shouldBe "EndUsersService returned HTTP ${status.value}"
+        }
+    }
+
+    test("propagates unexpected token provider failures unchanged") {
+        val failure = IOException("Token endpoint unavailable")
+        coEvery { tokenProvider.getToken() } throws failure
+
+        val thrown = shouldThrow<IOException> {
+            service.getEndUserByMeteringPointId(meteringPointId)
+        }
+
+        thrown shouldBe failure
+    }
+
+    test("propagates cancellation unchanged") {
+        val cancellation = CancellationException("Lookup cancelled")
+        coEvery { tokenProvider.getToken() } throws cancellation
+
+        val thrown = shouldThrow<CancellationException> {
+            service.getEndUserByMeteringPointId(meteringPointId)
+        }
+
+        thrown shouldBe cancellation
     }
 
     test("omits the trace header when no trace ID is available") {
         MDC.remove(TRACE_ID_MDC_KEY)
 
-        service.getEndUserByMeteringPointId(meteringPointId).shouldBeRight()
+        service.getEndUserByMeteringPointId(meteringPointId)
 
         capturedTraceIdHeader.shouldBeNull()
     }

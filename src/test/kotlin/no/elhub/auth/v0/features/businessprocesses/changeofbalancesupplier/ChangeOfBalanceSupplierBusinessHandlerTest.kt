@@ -3,6 +3,7 @@ package no.elhub.auth.v0.features.businessprocesses.changeofbalancesupplier
 import arrow.core.Either
 import io.kotest.assertions.arrow.core.shouldBeLeft
 import io.kotest.assertions.arrow.core.shouldBeRight
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
@@ -28,6 +29,8 @@ import no.elhub.auth.v0.features.businessprocesses.ediel.EdielPartyRedirectRespo
 import no.elhub.auth.v0.features.businessprocesses.ediel.EdielRedirectUrlsDto
 import no.elhub.auth.v0.features.businessprocesses.ediel.EdielService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.CurrentEndUserNotFoundException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUserLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApi
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsApiConfig
@@ -63,6 +66,7 @@ import no.elhub.auth.v0.features.requests.common.CreateRequestBusinessModel
 import no.elhub.auth.v0.features.requests.create.command.TEXT_VERSION_KEY
 import no.elhub.devxp.jsonapi.response.JsonApiResponseResourceObject
 import org.slf4j.MDC
+import java.io.IOException
 import java.util.UUID
 
 private val VALID_PARTY = AuthorizationParty(id = VALID_PARTY_ID, type = Organization)
@@ -126,7 +130,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                     )
                 )
             )
-            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(any()) } returns Either.Right(
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(any()) } returns
                 EndUserResponse(
                     data = JsonApiResponseResourceObject(
                         id = END_USER_ID_1,
@@ -134,7 +138,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                         attributes = EndUserAttributes(endUserUniqueId = END_USER_ID_1, endUserType = EndUserType.Person, endUserId = END_USER_ID_1)
                     )
                 )
-            )
         }
 
         afterTest {
@@ -208,7 +211,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         }
 
         test("request validation fails when requestedFrom is not found") {
-            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } returns Either.Left(ClientError.NotFound)
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } throws CurrentEndUserNotFoundException()
             val model =
                 CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -231,7 +234,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
         }
 
         test("request validation fails on end user response not having endUserId") {
-            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } returns Either.Right(
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(VALID_METERING_POINT_1) } returns
                 EndUserResponse(
                     data = JsonApiResponseResourceObject(
                         id = END_USER_ID_1,
@@ -239,7 +242,6 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                         attributes = EndUserAttributes(endUserUniqueId = END_USER_ID_1, endUserType = EndUserType.Person)
                     )
                 )
-            )
             val model =
                 CreateRequestBusinessModel(
                     authorizedParty = AUTHORIZED_PARTY,
@@ -645,7 +647,7 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
                 mockkEndUsersService.getEndUserByMeteringPointId(
                     any()
                 )
-            } returns Either.Left(ClientError.ServerError)
+            } throws EndUserLookupException("EndUsersService returned HTTP 500")
 
             val model =
                 CreateRequestBusinessModel(
@@ -666,6 +668,31 @@ class ChangeOfBalanceSupplierBusinessHandlerTest :
 
             handler.validateAndReturnRequestCommand(model)
                 .shouldBeLeft(BusinessProcessError.Unexpected(ChangeOfBalanceSupplierValidationError.UnexpectedError.message))
+        }
+
+        test("request validation propagates unexpected end user lookup failures") {
+            val failure = IOException("End user service unavailable")
+            coEvery { mockkEndUsersService.getEndUserByMeteringPointId(any()) } throws failure
+            val model = CreateRequestBusinessModel(
+                authorizedParty = AUTHORIZED_PARTY,
+                requestType = AuthorizationRequest.Type.ChangeOfBalanceSupplierForPerson,
+                requestedBy = VALID_PARTY,
+                requestedFrom = END_USER,
+                meta = CreateRequestBusinessMeta(
+                    requestedFromName = "From",
+                    requestedForMeteringPointId = VALID_METERING_POINT_1,
+                    requestedForMeteringPointAddress = "addr",
+                    balanceSupplierName = "Supplier",
+                    balanceSupplierContractName = "Contract",
+                    redirectURI = "https://example.com",
+                ),
+            )
+
+            val thrown = shouldThrow<IOException> {
+                handler.validateAndReturnRequestCommand(model)
+            }
+
+            thrown shouldBe failure
         }
 
         test("strompris service is not called if validateBalanceSupplierContractName is false, assuming all previous validations pass") {

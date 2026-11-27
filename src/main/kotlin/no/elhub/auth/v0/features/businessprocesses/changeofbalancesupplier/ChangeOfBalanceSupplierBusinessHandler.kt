@@ -23,6 +23,8 @@ import no.elhub.auth.v0.features.businessprocesses.ediel.RedirectUriDomainValida
 import no.elhub.auth.v0.features.businessprocesses.ediel.redirectUriFor
 import no.elhub.auth.v0.features.businessprocesses.ediel.validateRedirectUriDomain
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.CurrentEndUserNotFoundException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUserLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
@@ -175,19 +177,17 @@ class ChangeOfBalanceSupplierBusinessHandler(
             }
         }.getOrElse { return ChangeOfBalanceSupplierValidationError.MeteringPointNotFound.left() }
 
-        val currentEndUserId = endUsersService.getEndUserByMeteringPointId(meteringPointId = model.requestedForMeteringPointId).fold(
-            ifLeft = { err ->
-                return when (err) {
-                    ClientError.NotFound -> ChangeOfBalanceSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()
-                    else -> ChangeOfBalanceSupplierValidationError.UnexpectedError.left()
-                }
-            },
-            ifRight = { response ->
-                response.data.attributes?.endUserId
-                    ?.takeIf { it.isNotBlank() }
-                    ?: return ChangeOfBalanceSupplierValidationError.UnexpectedError.left()
-            }
-        )
+        val endUserResponse = try {
+            endUsersService.getEndUserByMeteringPointId(meteringPointId = model.requestedForMeteringPointId)
+        } catch (error: EndUserLookupException) {
+            return when (error) {
+                is CurrentEndUserNotFoundException -> ChangeOfBalanceSupplierValidationError.RequestedFromNotMeteringPointEndUser
+                else -> ChangeOfBalanceSupplierValidationError.UnexpectedError
+            }.left()
+        }
+        val currentEndUserId = endUserResponse.data.attributes?.endUserId
+            ?.takeIf { it.isNotBlank() }
+            ?: return ChangeOfBalanceSupplierValidationError.UnexpectedError.left()
 
         if (currentEndUserId != model.requestedFrom.id) {
             return ChangeOfBalanceSupplierValidationError.RequestedFromNotMeteringPointEndUser.left()

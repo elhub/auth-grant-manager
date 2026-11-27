@@ -23,6 +23,8 @@ import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesuppl
 import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesupplier.domain.toMoveInAndChangeOfBalanceSupplierBusinessModel
 import no.elhub.auth.v0.features.businessprocesses.moveinandchangeofbalancesupplier.domain.toRequestCommand
 import no.elhub.auth.v0.features.businessprocesses.structuredata.common.ClientError
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.CurrentEndUserNotFoundException
+import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUserLookupException
 import no.elhub.auth.v0.features.businessprocesses.structuredata.endusers.EndUsersService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.meteringpoints.MeteringPointsService
 import no.elhub.auth.v0.features.businessprocesses.structuredata.organisations.OrganisationsService
@@ -188,20 +190,19 @@ class MoveInAndChangeOfBalanceSupplierBusinessHandler(
             }
         }.getOrElse { return MoveInAndChangeOfBalanceSupplierValidationError.MeteringPointNotFound.left() }
 
-        val currentEndUserId = endUsersService.getEndUserByMeteringPointId(meteringPointId = model.requestedForMeteringPointId)
-            .fold(
-                ifLeft = { err ->
-                    when (err) {
-                        ClientError.NotFound -> null
-                        else -> return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
-                    }
-                },
-                ifRight = { response ->
-                    response.data.attributes?.endUserId
-                        ?.takeIf { it.isNotBlank() }
-                        ?: return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
-                }
-            )
+        val endUserResponse = try {
+            endUsersService.getEndUserByMeteringPointId(meteringPointId = model.requestedForMeteringPointId)
+        } catch (error: EndUserLookupException) {
+            when (error) {
+                is CurrentEndUserNotFoundException -> null
+                else -> return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+            }
+        }
+        val currentEndUserId = endUserResponse?.let { response ->
+            response.data.attributes?.endUserId
+                ?.takeIf { it.isNotBlank() }
+                ?: return MoveInAndChangeOfBalanceSupplierValidationError.UnexpectedError.left()
+        }
 
         if (currentEndUserId == model.requestedFrom.id) {
             return MoveInAndChangeOfBalanceSupplierValidationError.RequestedFromIsMeteringPointEndUser.left()
